@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Backtracking Visualizer">
+    <title>Backtracking — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 690px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .problem-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .visual-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.backtrack {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .problem-box {
+        padding: 20px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        margin-bottom: 18px;
+    }
+
+    .problem-box h3 {
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+    }
+
+    .problem-box p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.88rem;
+    }
+
+    .size-control {
+        margin: 20px 0;
+    }
+
+    .size-control label {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 800;
+        font-size: 0.88rem;
+        margin-bottom: 10px;
+    }
+
+    .size-value {
+        color: var(--purple);
+        font-weight: 950;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        accent-color: var(--purple);
+        cursor: pointer;
+    }
+
+    .board-wrap {
+        display: flex;
+        justify-content: center;
+        padding: 8px 0 22px;
+    }
+
+    .chessboard {
+        width: min(420px, 100%);
+        aspect-ratio: 1;
+        display: grid;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 6px solid white;
+        box-shadow: 0 12px 35px rgba(70,60,100,0.12);
+    }
+
+    .queen-cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(1.4rem, 5vw, 2.5rem);
+        transition: 0.2s ease;
+    }
+
+    .queen-cell.light {
+        background: #fff4e9;
+    }
+
+    .queen-cell.dark {
+        background: #dcccf4;
+    }
+
+    .queen-cell.current {
+        box-shadow: inset 0 0 0 4px rgba(139,114,216,0.55);
+    }
+
+    .queen-cell.testing {
+        background: #fff0bf;
+    }
+
+    .queen-cell.conflict {
+        background: #ffdce8;
+        animation: shake 0.3s ease;
+    }
+
+    .queen-cell.solution {
+        background: #dff7eb;
+    }
+
+    @keyframes shake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        25% {
+            transform: translateX(-4px);
+        }
+        75% {
+            transform: translateX(4px);
+        }
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .stat {
+        padding: 13px 8px;
+        text-align: center;
+        border-radius: 15px;
+        background: #faf8ff;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-size: 0.72rem;
+    }
+
+    .stat strong {
+        font-size: 1.15rem;
+    }
+
+    .state-box {
+        min-height: 355px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .empty-state {
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .decision-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .decision-card {
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 13px;
+        border-radius: 17px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .decision-number {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 950;
+    }
+
+    .decision-card strong {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .decision-card small {
+        color: var(--muted);
+        font-size: 0.72rem;
+    }
+
+    .decision-tag {
+        padding: 6px 9px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 900;
+    }
+
+    .decision-tag.try {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .decision-tag.back {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .decision-tag.accept {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .summary {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.55;
+        font-size: 0.86rem;
+    }
+
+    .visual-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .visual-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .visual-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        align-items: flex-end;
+        margin-bottom: 28px;
+    }
+
+    .visual-top h2 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.06em;
+    }
+
+    .visual-top p {
+        color: var(--muted);
+        max-width: 600px;
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .tree-area {
+        overflow-x: auto;
+        padding: 15px 5px 25px;
+    }
+
+    .tree {
+        min-width: 760px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tree-node {
+        min-width: 190px;
+        padding: 14px 18px;
+        border-radius: 17px;
+        background: white;
+        border: 2px solid #ded8f5;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(80,70,110,0.07);
+    }
+
+    .tree-node.root {
+        background: var(--lavender);
+        border-color: #c9bbed;
+    }
+
+    .tree-node.good {
+        background: var(--mint);
+        border-color: #a7d8bc;
+    }
+
+    .tree-node.bad {
+        background: var(--pink);
+        border-color: #f0b8ca;
+    }
+
+    .tree-node .symbol {
+        font-size: 1.05rem;
+        font-weight: 950;
+    }
+
+    .tree-node small {
+        display: block;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    .connector {
+        width: 2px;
+        height: 20px;
+        background: #c9c2dc;
+    }
+
+    .branches {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        position: relative;
+    }
+
+    .branches::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: #c9c2dc;
+    }
+
+    .branch {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .algorithm-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 650px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .visual-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .visual-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .visual-card {
+            padding: 24px 18px;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Constraint Solving · Backtracking</div>
+
+
+<h1>
+    Try.<br>
+    <span class="gradient">Fail. Try Again.</span>
+</h1>
+
+<p>
+    Explore Backtracking through an interactive N-Queens puzzle.
+    Watch the algorithm place queens, detect conflicts, undo decisions,
+    and continue searching until it discovers a valid solution.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Choose</strong>
+    <span>Build a candidate solution.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Check</strong>
+    <span>Test whether the choice works.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Backtrack</strong>
+    <span>Undo bad choices and continue.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+
+<div class="layout">
+
+    <div class="panel problem-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>♟ N-Queens Playground</h2>
+                <p>Can you watch the AI find a safe arrangement?</p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div class="problem-box">
+            <h3>What is the challenge?</h3>
+            <p>
+                Place one queen in every row so that no two queens
+                share the same column or diagonal. Backtracking
+                explores choices and reverses them whenever a
+                constraint is violated.
+            </p>
+        </div>
+
+        <div class="size-control">
+            <label for="sizeRange">
+                <span>Board Size</span>
+                <span id="sizeValue" class="size-value">4 × 4</span>
+            </label>
+
+            <input
+                id="sizeRange"
+                type="range"
+                min="4"
+                max="8"
+                value="4"
+            >
+        </div>
+
+        <div class="board-wrap">
+            <div id="chessboard" class="chessboard"></div>
+        </div>
+
+        <div class="controls">
+            <button id="solveBtn" class="btn btn-primary">
+                ✦ Start Backtracking
+            </button>
+
+            <button id="stepBtn" class="btn btn-blue">
+                → Next Step
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset
+            </button>
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <small>Steps</small>
+                <strong id="stepsCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Placements</small>
+                <strong id="placementsCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Backtracks</small>
+                <strong id="backtracksCount">0</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="panel visual-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>✦ Behind The State</h2>
+                <p>
+                    Follow each decision made by the backtracking
+                    search.
+                </p>
+            </div>
+        </div>
+
+        <div id="stateBox" class="state-box">
+
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧩</span>
+                    <strong>Ready to explore.</strong>
+                    <p>
+                        Start the algorithm to watch candidate
+                        positions get tested and reversed.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="visual-section">
+
+
+<div class="visual-card">
+
+    <div class="visual-top">
+
+        <div>
+            <div class="eyebrow">Decision Tree</div>
+
+            <h2>
+                Every wrong turn<br>
+                teaches the search.
+            </h2>
+
+            <p>
+                Backtracking does not permanently commit to every
+                decision. When a partial solution cannot lead to
+                a valid final solution, the algorithm removes the
+                latest choice and explores another possibility.
+            </p>
+        </div>
+
+        <button id="treeBtn" class="btn btn-green">
+            Show Example Tree
+        </button>
+
+    </div>
+
+    <div id="treeArea" class="tree-area">
+
+        <div class="empty-state">
+            <div>
+                <span class="emoji">🌳</span>
+                <strong>Decision tree waiting.</strong>
+                <p>
+                    Click the button to see how choices branch
+                    and unsuccessful paths are abandoned.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="algorithm-section">
+
+
+<div class="section-heading">
+
+    <div class="mini">
+        Understand the algorithm
+    </div>
+
+    <h2>
+        What exactly is Backtracking?
+    </h2>
+
+    <p>
+        Backtracking is a systematic search technique that builds
+        a solution incrementally. When the current partial solution
+        violates a constraint or cannot lead to a solution, the
+        algorithm goes back and tries another choice.
+    </p>
+
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+
+        <div class="concept-icon">
+            🧱
+        </div>
+
+        <h3>
+            Build incrementally
+        </h3>
+
+        <p>
+            The algorithm constructs a possible solution one
+            decision at a time instead of generating every complete
+            possibility first.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">
+            🔍
+        </div>
+
+        <h3>
+            Check constraints
+        </h3>
+
+        <p>
+            Before continuing, the current choice is checked
+            against the constraints of the problem.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">
+            ↩️
+        </div>
+
+        <h3>
+            Undo decisions
+        </h3>
+
+        <p>
+            If a choice causes a conflict, the algorithm removes
+            it and returns to the previous decision point.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">
+            🎯
+        </div>
+
+        <h3>
+            Find a solution
+        </h3>
+
+        <p>
+            The search succeeds when all required decisions have
+            been made while satisfying every constraint.
+        </p>
+
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+
+    <div class="mini">
+        Implementation
+    </div>
+
+    <h2>
+        The recursive idea.
+    </h2>
+
+    <p>
+        This simplified implementation demonstrates the core
+        structure used by the interactive N-Queens visualizer.
+    </p>
+
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">
+            backtracking.js
+        </span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">solve</span>(row) {
+
+<span class="kw">if</span> (row === size) {
+    <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="kw">for</span> (<span class="kw">let</span> column = <span class="num">0</span>; column &lt; size; column++) {
+
+    <span class="kw">if</span> (!<span class="fn">isSafe</span>(row, column)) {
+        <span class="kw">continue</span>;
+    }
+
+    board[row] = column;
+
+    <span class="kw">if</span> (<span class="fn">solve</span>(row + <span class="num">1</span>)) {
+        <span class="kw">return</span> <span class="kw">true</span>;
+    }
+
+    <span class="comment">// The choice did not lead to a solution.</span>
+    board[row] = -<span class="num">1</span>;
+}
+
+<span class="kw">return</span> <span class="kw">false</span>;
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Worst-case time complexity</span>
+    <strong>O(N!)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Auxiliary space</span>
+    <strong>O(N)</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    const chessboard = document.getElementById("chessboard");
+    const sizeRange = document.getElementById("sizeRange");
+    const sizeValue = document.getElementById("sizeValue");
+
+    const solveBtn = document.getElementById("solveBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const statusBadge = document.getElementById("statusBadge");
+    const stateBox = document.getElementById("stateBox");
+    const treeBtn = document.getElementById("treeBtn");
+    const treeArea = document.getElementById("treeArea");
+
+    const stepsCount = document.getElementById("stepsCount");
+    const placementsCount = document.getElementById("placementsCount");
+    const backtracksCount = document.getElementById("backtracksCount");
+
+    let size = 4;
+    let board = [];
+    let currentRow = 0;
+    let currentColumn = 0;
+    let steps = 0;
+    let placements = 0;
+    let backtracks = 0;
+    let running = false;
+    let solved = false;
+    let timer = null;
+
+    function initializeBoard() {
+        board = Array(size).fill(-1);
+        currentRow = 0;
+        currentColumn = 0;
+        steps = 0;
+        placements = 0;
+        backtracks = 0;
+        running = false;
+        solved = false;
+
+        if (timer !== null) {
+            clearTimeout(timer);
+            timer = null;
+        }
+
+        updateStats();
+        setStatus("Ready");
+        renderBoard();
+
+        stateBox.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧩</span>
+                    <strong>Ready to explore.</strong>
+                    <p>
+                        Start the algorithm to watch candidate
+                        positions get tested and reversed.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderBoard(testRow = -1, testColumn = -1, conflict = false) {
+        chessboard.innerHTML = "";
+
+        chessboard.style.gridTemplateColumns =
+            `repeat(${size}, 1fr)`;
+
+        for (let row = 0; row < size; row++) {
+            for (let column = 0; column < size; column++) {
+
+                const cell = document.createElement("div");
+
+                cell.className =
+                    "queen-cell " +
+                    ((row + column) % 2 === 0 ? "light" : "dark");
+
+                if (row === testRow && column === testColumn) {
+                    cell.classList.add(
+                        conflict ? "conflict" : "testing"
+                    );
+                }
+
+                if (board[row] === column) {
+                    cell.textContent = "♛";
+
+                    if (row < currentRow || solved) {
+                        cell.classList.add("solution");
+                    } else {
+                        cell.classList.add("current");
+                    }
+                }
+
+                chessboard.appendChild(cell);
+            }
+        }
+    }
+
+    function isSafe(row, column) {
+        for (let previousRow = 0; previousRow < row; previousRow++) {
+
+            const previousColumn = board[previousRow];
+
+            if (previousColumn === column) {
+                return false;
+            }
+
+            const sameDiagonal =
+                Math.abs(previousRow - row) ===
+                Math.abs(previousColumn - column);
+
+            if (sameDiagonal) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function updateStats() {
+        stepsCount.textContent = steps;
+        placementsCount.textContent = placements;
+        backtracksCount.textContent = backtracks;
+    }
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById("toast");
+
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        clearTimeout(showToast.timer);
+
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+    }
+
+    function addDecision(title, description, tag, tagClass) {
+        const existing = stateBox.querySelector(".decision-list");
+
+        if (!existing) {
+            stateBox.innerHTML = `
+                <div class="decision-list"></div>
+            `;
+        }
+
+        const list = stateBox.querySelector(".decision-list");
+
+        const card = document.createElement("div");
+
+        card.className = "decision-card";
+
+        card.innerHTML = `
+            <div class="decision-number">
+                ${steps}
+            </div>
+
+            <div>
+                <strong>${title}</strong>
+                <small>${description}</small>
+            </div>
+
+            <span class="decision-tag ${tagClass}">
+                ${tag}
+            </span>
+        `;
+
+        list.prepend(card);
+
+        while (list.children.length > 8) {
+            list.removeChild(list.lastElementChild);
+        }
+    }
+
+    function performStep() {
+        if (solved) {
+            return;
+        }
+
+        if (currentRow >= size) {
+            solved = true;
+            running = false;
+            setStatus("Solved", "done");
+            renderBoard();
+            showToast("Solution found! 🎯");
+            return;
+        }
+
+        steps++;
+
+        let foundPosition = false;
+
+        while (currentColumn < size) {
+
+            const testColumn = currentColumn;
+
+            currentColumn++;
+
+            renderBoard(currentRow, testColumn, false);
+
+            if (isSafe(currentRow, testColumn)) {
+
+                board[currentRow] = testColumn;
+                placements++;
+
+                addDecision(
+                    `Place queen at row ${currentRow + 1}`,
+                    `Column ${testColumn + 1} is currently safe.`,
+                    "Accepted",
+                    "accept"
+                );
+
+                currentRow++;
+                currentColumn = 0;
+
+                foundPosition = true;
+
+                updateStats();
+                renderBoard();
+
+                if (currentRow === size) {
+                    solved = true;
+                    running = false;
+                    setStatus("Solved", "done");
+                    showToast("All queens placed successfully! 🎯");
+                } else {
+                    setStatus("Searching", "running");
+                }
+
+                return;
+            }
+
+            addDecision(
+                `Test row ${currentRow + 1}, column ${testColumn + 1}`,
+                "This position conflicts with an existing queen.",
+                "Rejected",
+                "back"
+            );
+
+            renderBoard(currentRow, testColumn, true);
+            updateStats();
+        }
+
+        if (!foundPosition) {
+
+            if (currentRow === 0) {
+                solved = true;
+                running = false;
+                setStatus("No solution", "done");
+                showToast("No solution exists for this board.");
+                renderBoard();
+                return;
+            }
+
+            currentRow--;
+
+            const previousColumn = board[currentRow];
+
+            board[currentRow] = -1;
+            currentColumn = previousColumn + 1;
+
+            backtracks++;
+
+            addDecision(
+                `Backtrack from row ${currentRow + 1}`,
+                `Undo column ${previousColumn + 1} and try another choice.`,
+                "Backtrack",
+                "back"
+            );
+
+            setStatus("Backtracking", "backtrack");
+
+            updateStats();
+            renderBoard();
+        }
+
+        updateStats();
+    }
+
+    function startSolving() {
+        if (running || solved) {
+            return;
+        }
+
+        running = true;
+        setStatus("Searching", "running");
+        solveBtn.disabled = true;
+        sizeRange.disabled = true;
+
+        function animate() {
+            if (!running || solved) {
+                solveBtn.disabled = solved;
+                return;
+            }
+
+            performStep();
+
+            if (running && !solved) {
+                timer = setTimeout(animate, 260);
+            }
+        }
+
+        animate();
+    }
+
+    function manualStep() {
+        if (running || solved) {
+            return;
+        }
+
+        sizeRange.disabled = true;
+        performStep();
+    }
+
+    function reset() {
+        sizeRange.disabled = false;
+        solveBtn.disabled = false;
+        initializeBoard();
+    }
+
+    function buildExampleTree() {
+
+        treeArea.innerHTML = `
+            <div class="tree">
+
+                <div class="tree-node root">
+                    <div class="symbol">
+                        Row 1
+                    </div>
+                    <small>
+                        Try a column
+                    </small>
+                </div>
+
+                <div class="connector"></div>
+
+                <div class="branches">
+
+                    <div class="branch">
+
+                        <div class="tree-node">
+                            <div class="symbol">
+                                Column 1
+                            </div>
+                            <small>
+                                Place queen
+                            </small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node bad">
+                            <div class="symbol">
+                                Conflict
+                            </div>
+                            <small>
+                                Path rejected
+                            </small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node bad">
+                            <div class="symbol">
+                                ↩ Backtrack
+                            </div>
+                            <small>
+                                Undo choice
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <div class="branch">
+
+                        <div class="tree-node good">
+                            <div class="symbol">
+                                Column 2
+                            </div>
+                            <small>
+                                Place queen
+                            </small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node good">
+                            <div class="symbol">
+                                Next Row
+                            </div>
+                            <small>
+                                Continue search
+                            </small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node good">
+                            <div class="symbol">
+                                Solution
+                            </div>
+                            <small>
+                                All constraints satisfied
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <div class="branch">
+
+                        <div class="tree-node">
+                            <div class="symbol">
+                                Column 3
+                            </div>
+                            <small>
+                                Another candidate
+                            </small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node">
+                            <div class="symbol">
+                                Check
+                            </div>
+                            <small>
+                                Test constraints
+                            </small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node">
+                            <div class="symbol">
+                                Continue
+                            </div>
+                            <small>
+                                Explore if safe
+                            </small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+        showToast("Backtracking tree revealed.");
+    }
+
+    sizeRange.addEventListener("input", () => {
+        size = Number(sizeRange.value);
+        sizeValue.textContent = `${size} × ${size}`;
+        reset();
+    });
+
+    solveBtn.addEventListener("click", startSolving);
+    stepBtn.addEventListener("click", manualStep);
+    resetBtn.addEventListener("click", reset);
+    treeBtn.addEventListener("click", buildExampleTree);
+
+    initializeBoard();
+</script>
+
+</body>
+</html>

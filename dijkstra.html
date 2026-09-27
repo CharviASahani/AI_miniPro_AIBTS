@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Dijkstra's Algorithm">
+    <title>Dijkstra — AI Behind The State</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .game-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .game-layout {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.82);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .graph-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .graph-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        height: 390px;
+        margin: 5px auto 20px;
+        border-radius: 25px;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255,220,232,0.38), transparent 25%),
+            radial-gradient(circle at 80% 70%, rgba(223,247,235,0.40), transparent 30%),
+            #fbfaff;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .graph-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .edge {
+        stroke: #c8c1d9;
+        stroke-width: 3;
+        transition: 0.3s ease;
+    }
+
+    .edge.active {
+        stroke: var(--purple);
+        stroke-width: 5;
+    }
+
+    .edge.final {
+        stroke: var(--green);
+        stroke-width: 7;
+    }
+
+    .edge-label {
+        fill: #665f78;
+        font-size: 13px;
+        font-weight: 900;
+        text-anchor: middle;
+        dominant-baseline: middle;
+    }
+
+    .node {
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        transform: translate(-50%, -50%);
+        border: 0;
+        border-radius: 50%;
+        background: white;
+        color: var(--ink);
+        box-shadow:
+            0 7px 20px rgba(70,60,100,0.12),
+            inset 0 0 0 3px #ddd7ed;
+        font-weight: 950;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: 0.25s ease;
+        z-index: 5;
+    }
+
+    .node:hover {
+        transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .node.start {
+        background: var(--pink);
+        box-shadow:
+            0 8px 20px rgba(216,111,150,0.18),
+            inset 0 0 0 3px #e9a5bb;
+    }
+
+    .node.target {
+        background: var(--mint);
+        box-shadow:
+            0 8px 20px rgba(88,166,124,0.18),
+            inset 0 0 0 3px #a7d8bc;
+    }
+
+    .node.visited {
+        background: var(--lavender);
+        box-shadow:
+            0 8px 20px rgba(139,114,216,0.18),
+            inset 0 0 0 3px #c5b7ec;
+        animation: nodePop 0.35s ease;
+    }
+
+    .node.current {
+        background: var(--yellow);
+        box-shadow:
+            0 8px 24px rgba(212,168,62,0.25),
+            inset 0 0 0 3px #e4c86f;
+        animation: pulse 0.8s ease-in-out infinite alternate;
+    }
+
+    .node.path {
+        background: var(--mint);
+        box-shadow:
+            0 9px 25px rgba(88,166,124,0.24),
+            inset 0 0 0 4px #79c197;
+        animation: nodePop 0.4s ease;
+    }
+
+    @keyframes nodePop {
+        0% { transform: translate(-50%, -50%) scale(0.82); }
+        70% { transform: translate(-50%, -50%) scale(1.08); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes pulse {
+        from {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        to {
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+    }
+
+    .distance-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .distance-card {
+        padding: 11px 8px;
+        text-align: center;
+        border-radius: 15px;
+        background: #faf8ff;
+        border: 1px solid var(--border);
+    }
+
+    .distance-card small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-size: 0.68rem;
+    }
+
+    .distance-card strong {
+        font-size: 1rem;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .game-message {
+        text-align: center;
+        min-height: 28px;
+        color: var(--muted);
+        font-weight: 750;
+        margin-bottom: 12px;
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .state-header {
+        margin-bottom: 20px;
+    }
+
+    .state-header h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .state-header p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+        margin-top: 6px;
+    }
+
+    .thinking-box {
+        min-height: 390px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .empty-state {
+        min-height: 340px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .step-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .step-card {
+        padding: 14px;
+        border-radius: 17px;
+        background: white;
+        border: 1px solid var(--border);
+        animation: slideIn 0.35s ease both;
+    }
+
+    .step-card.current {
+        background: var(--yellow);
+        border-color: rgba(212,168,62,0.28);
+    }
+
+    .step-card.done {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.28);
+    }
+
+    .step-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .step-top strong {
+        font-size: 0.9rem;
+    }
+
+    .step-number {
+        display: inline-flex;
+        width: 27px;
+        height: 27px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-size: 0.72rem;
+        font-weight: 950;
+    }
+
+    .step-card p {
+        color: var(--muted);
+        font-size: 0.79rem;
+        line-height: 1.5;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .summary {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.55;
+        font-size: 0.86rem;
+    }
+
+    .reveal-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .reveal-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .reveal-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        align-items: flex-end;
+        margin-bottom: 28px;
+    }
+
+    .reveal-top h2 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.06em;
+    }
+
+    .reveal-top p {
+        color: var(--muted);
+        max-width: 600px;
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .path-display {
+        min-height: 140px;
+        padding: 25px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .path-pill {
+        padding: 12px 17px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-weight: 950;
+        box-shadow: 0 6px 15px rgba(88,166,124,0.10);
+        animation: slideIn 0.35s ease both;
+    }
+
+    .path-arrow {
+        color: var(--purple);
+        font-weight: 950;
+        font-size: 1.3rem;
+    }
+
+    .algorithm-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 650px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) { background: #fff1f5; }
+    .concept:nth-child(2) { background: #eef7ff; }
+    .concept:nth-child(3) { background: #f2efff; }
+    .concept:nth-child(4) { background: #effaf4; }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red { background: #ff9db6; }
+    .dot.yellow { background: #ffd98a; }
+    .dot.green { background: #9ee3bd; }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw { color: #d6b9ff; }
+    .fn { color: #9fd8ff; }
+    .num { color: #ffd899; }
+    .comment { color: #9993ad; }
+    .str { color: #a9e6c5; }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .game-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .reveal-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .reveal-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .graph-wrapper {
+            height: 330px;
+        }
+
+        .node {
+            width: 50px;
+            height: 50px;
+        }
+
+        .distance-strip {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .reveal-card {
+            padding: 24px 18px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Graphs · Shortest Path</div>
+
+
+<h1>
+    Find the<br>
+    <span class="gradient">Shortest Path.</span>
+</h1>
+
+<p>
+    Watch Dijkstra's algorithm explore a weighted graph,
+    compare distances, and gradually discover the shortest
+    route from the starting node to the destination.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Choose</strong>
+        <span>Pick a starting point.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Explore</strong>
+    <span>Watch distances change.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Discover</strong>
+    <span>Reveal the shortest route.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="game-section">
+
+
+<div class="game-layout">
+
+    <div class="panel graph-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>🗺️ Weighted Graph</h2>
+                <p>Find the shortest path from A to G.</p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div id="gameMessage" class="game-message">
+            Press "Run Dijkstra" to begin the search.
+        </div>
+
+        <div class="graph-wrapper" id="graphWrapper">
+
+            <svg class="graph-svg" viewBox="0 0 600 390"
+                 preserveAspectRatio="none">
+
+                <line id="edgeAB" class="edge"
+                      x1="90" y1="80" x2="230" y2="55"></line>
+
+                <line id="edgeAC" class="edge"
+                      x1="90" y1="80" x2="105" y2="205"></line>
+
+                <line id="edgeBC" class="edge"
+                      x1="230" y1="55" x2="105" y2="205"></line>
+
+                <line id="edgeBD" class="edge"
+                      x1="230" y1="55" x2="350" y2="155"></line>
+
+                <line id="edgeCD" class="edge"
+                      x1="105" y1="205" x2="350" y2="155"></line>
+
+                <line id="edgeCE" class="edge"
+                      x1="105" y1="205" x2="220" y2="315"></line>
+
+                <line id="edgeDE" class="edge"
+                      x1="350" y1="155" x2="220" y2="315"></line>
+
+                <line id="edgeDF" class="edge"
+                      x1="350" y1="155" x2="490" y2="255"></line>
+
+                <line id="edgeEF" class="edge"
+                      x1="220" y1="315" x2="490" y2="255"></line>
+
+                <line id="edgeFG" class="edge"
+                      x1="490" y1="255" x2="530" y2="100"></line>
+
+                <line id="edgeDG" class="edge"
+                      x1="350" y1="155" x2="530" y2="100"></line>
+
+                <text class="edge-label" x="160" y="57">4</text>
+                <text class="edge-label" x="91" y="143">2</text>
+                <text class="edge-label" x="168" y="125">1</text>
+                <text class="edge-label" x="292" y="96">5</text>
+                <text class="edge-label" x="228" y="183">8</text>
+                <text class="edge-label" x="145" y="267">10</text>
+                <text class="edge-label" x="286" y="235">2</text>
+                <text class="edge-label" x="420" y="195">6</text>
+                <text class="edge-label" x="355" y="295">3</text>
+                <text class="edge-label" x="515" y="177">1</text>
+                <text class="edge-label" x="442" y="115">7</text>
+
+            </svg>
+
+            <button class="node start"
+                    data-node="A"
+                    style="left:15%;top:20%;"
+                    aria-label="Node A">
+                A
+            </button>
+
+            <button class="node"
+                    data-node="B"
+                    style="left:38.3%;top:14.1%;"
+                    aria-label="Node B">
+                B
+            </button>
+
+            <button class="node"
+                    data-node="C"
+                    style="left:17.5%;top:52.6%;"
+                    aria-label="Node C">
+                C
+            </button>
+
+            <button class="node"
+                    data-node="D"
+                    style="left:58.3%;top:39.7%;"
+                    aria-label="Node D">
+                D
+            </button>
+
+            <button class="node"
+                    data-node="E"
+                    style="left:36.7%;top:80.8%;"
+                    aria-label="Node E">
+                E
+            </button>
+
+            <button class="node"
+                    data-node="F"
+                    style="left:81.7%;top:65.4%;"
+                    aria-label="Node F">
+                F
+            </button>
+
+            <button class="node target"
+                    data-node="G"
+                    style="left:88.3%;top:25.6%;"
+                    aria-label="Node G">
+                G
+            </button>
+
+        </div>
+
+        <div class="distance-strip">
+            <div class="distance-card">
+                <small>A</small>
+                <strong id="distA">0</strong>
+            </div>
+
+            <div class="distance-card">
+                <small>B</small>
+                <strong id="distB">∞</strong>
+            </div>
+
+            <div class="distance-card">
+                <small>C</small>
+                <strong id="distC">∞</strong>
+            </div>
+
+            <div class="distance-card">
+                <small>D</small>
+                <strong id="distD">∞</strong>
+            </div>
+        </div>
+
+        <div class="controls" style="margin-top:14px;">
+            <button id="runBtn" class="btn btn-primary">
+                ▶ Run Dijkstra
+            </button>
+
+            <button id="stepBtn" class="btn btn-blue">
+                Step
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset
+            </button>
+        </div>
+
+    </div>
+
+    <div class="panel state-panel">
+
+        <div class="state-header">
+            <h2>✦ Behind The State</h2>
+
+            <p>
+                Follow the actual algorithm as it selects the
+                unvisited node with the smallest known distance
+                and relaxes its neighboring edges.
+            </p>
+        </div>
+
+        <div id="thinkingBox" class="thinking-box">
+
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧭</span>
+                    <strong>Ready to explore.</strong>
+
+                    <p>
+                        Start Dijkstra to see every state update,
+                        distance comparison, and node selection.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section id="reveal" class="reveal-section">
+
+
+<div class="reveal-card">
+
+    <div class="reveal-top">
+
+        <div>
+            <div class="eyebrow">Shortest Route</div>
+
+            <h2>Where does the path go?</h2>
+
+            <p>
+                Once Dijkstra finishes, the predecessor information
+                can be followed backwards from the destination to
+                reconstruct the shortest path.
+            </p>
+        </div>
+
+        <button id="pathBtn" class="btn btn-green">
+            Show Shortest Path
+        </button>
+
+    </div>
+
+    <div id="pathDisplay" class="path-display">
+
+        <div class="empty-state" style="min-height:90px;">
+            <div>
+                <span class="emoji">📍</span>
+                <strong>Run the algorithm first.</strong>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="algorithm-section">
+
+
+<div class="section-heading">
+
+    <div class="mini">
+        Understand the algorithm
+    </div>
+
+    <h2>So, what is Dijkstra?</h2>
+
+    <p>
+        Dijkstra's algorithm finds shortest paths from a starting
+        node to other nodes in a weighted graph when edge weights
+        are non-negative.
+    </p>
+
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+
+        <div class="concept-icon">🎯</div>
+
+        <h3>Start with zero</h3>
+
+        <p>
+            The starting node receives distance 0.
+            Every other node begins with an unknown distance,
+            represented here as infinity.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">🔎</div>
+
+        <h3>Pick the closest</h3>
+
+        <p>
+            The algorithm repeatedly selects the unvisited node
+            with the smallest currently known distance.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">🔗</div>
+
+        <h3>Relax the edges</h3>
+
+        <p>
+            For each neighbor, Dijkstra checks whether travelling
+            through the current node produces a shorter route.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">🏁</div>
+
+        <h3>Build the route</h3>
+
+        <p>
+            The predecessor of each improved node is stored.
+            Those predecessors can later reconstruct the shortest
+            path to the destination.
+        </p>
+
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+
+    <div class="mini">
+        Implementation
+    </div>
+
+    <h2>See the core idea.</h2>
+
+    <p>
+        This simplified implementation captures the central
+        distance-selection and relaxation process.
+    </p>
+
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">
+            dijkstra.js
+        </span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">dijkstra</span>(graph, start) {
+<span class="kw">const</span> distances = {};
+<span class="kw">const</span> visited = <span class="kw">new</span> Set();
+
+<span class="kw">for</span> (<span class="kw">const</span> node <span class="kw">of</span> graph) {
+    distances[node] = Infinity;
+}
+
+distances[start] = <span class="num">0</span>;
+
+<span class="kw">while</span> (visited.size &lt; graph.length) {
+
+    <span class="kw">const</span> current =
+        <span class="fn">findClosestUnvisited</span>(
+            distances,
+            visited
+        );
+
+    <span class="kw">if</span> (current === <span class="kw">null</span>) {
+        <span class="kw">break</span>;
+    }
+
+    visited.add(current);
+
+    <span class="kw">for</span> (<span class="kw">const</span> edge <span class="kw">of</span> graph[current]) {
+
+        <span class="kw">const</span> newDistance =
+            distances[current] + edge.weight;
+
+        <span class="kw">if</span> (
+            newDistance &lt; distances[edge.node]
+        ) {
+            distances[edge.node] = newDistance;
+        }
+    }
+}
+
+<span class="kw">return</span> distances;
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+
+    <span>
+        Time Complexity
+    </span>
+
+    <strong>
+        O((V + E) log V
+    </strong>
+
+</div>
+
+<div class="complexity-card">
+
+    <span>
+        Space Complexity
+    </span>
+
+    <strong>
+        O(V)
+    </strong>
+
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+
+
+<strong>
+    AI – Behind The State
+</strong>
+
+<br>
+
+<span>
+    Where Algorithms Become Learning Experiences.
+</span>
+
+
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const graph = {
+    A: [
+        { node: "B", weight: 4 },
+        { node: "C", weight: 2 }
+    ],
+
+    B: [
+        { node: "A", weight: 4 },
+        { node: "C", weight: 1 },
+        { node: "D", weight: 5 }
+    ],
+
+    C: [
+        { node: "A", weight: 2 },
+        { node: "B", weight: 1 },
+        { node: "D", weight: 8 },
+        { node: "E", weight: 10 }
+    ],
+
+    D: [
+        { node: "B", weight: 5 },
+        { node: "C", weight: 8 },
+        { node: "E", weight: 2 },
+        { node: "F", weight: 6 },
+        { node: "G", weight: 7 }
+    ],
+
+    E: [
+        { node: "C", weight: 10 },
+        { node: "D", weight: 2 },
+        { node: "F", weight: 3 }
+    ],
+
+    F: [
+        { node: "D", weight: 6 },
+        { node: "E", weight: 3 },
+        { node: "G", weight: 1 }
+    ],
+
+    G: [
+        { node: "D", weight: 7 },
+        { node: "F", weight: 1 }
+    ]
+};
+
+const nodes = Object.keys(graph);
+
+const nodeElements =
+    Array.from(document.querySelectorAll(".node"));
+
+const runBtn = document.getElementById("runBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+const pathBtn = document.getElementById("pathBtn");
+
+const statusBadge =
+    document.getElementById("statusBadge");
+
+const gameMessage =
+    document.getElementById("gameMessage");
+
+const thinkingBox =
+    document.getElementById("thinkingBox");
+
+const pathDisplay =
+    document.getElementById("pathDisplay");
+
+const toast =
+    document.getElementById("toast");
+
+const distanceElements = {
+    A: document.getElementById("distA"),
+    B: document.getElementById("distB"),
+    C: document.getElementById("distC"),
+    D: document.getElementById("distD")
+};
+
+let distances = {};
+let previous = {};
+let visited = new Set();
+let currentNode = null;
+let finished = false;
+let pathShown = false;
+let stepCount = 0;
+
+const edgeElements = {
+    "A-B": document.getElementById("edgeAB"),
+    "A-C": document.getElementById("edgeAC"),
+    "B-C": document.getElementById("edgeBC"),
+    "B-D": document.getElementById("edgeBD"),
+    "C-D": document.getElementById("edgeCD"),
+    "C-E": document.getElementById("edgeCE"),
+    "D-E": document.getElementById("edgeDE"),
+    "D-F": document.getElementById("edgeDF"),
+    "E-F": document.getElementById("edgeEF"),
+    "F-G": document.getElementById("edgeFG"),
+    "D-G": document.getElementById("edgeDG")
+};
+
+function initialize() {
+    distances = {};
+    previous = {};
+    visited = new Set();
+    currentNode = null;
+    finished = false;
+    pathShown = false;
+    stepCount = 0;
+
+    nodes.forEach(node => {
+        distances[node] = Infinity;
+        previous[node] = null;
+    });
+
+    distances.A = 0;
+
+    updateDistanceDisplay();
+    resetVisuals();
+
+    statusBadge.textContent = "● Ready";
+    statusBadge.className = "status";
+
+    gameMessage.textContent =
+        'Press "Run Dijkstra" to begin the search.';
+
+    thinkingBox.innerHTML = `
+        <div class="empty-state">
+            <div>
+                <span class="emoji">🧭</span>
+                <strong>Ready to explore.</strong>
+                <p>
+                    Start Dijkstra to see every state update,
+                    distance comparison, and node selection.
+                </p>
+            </div>
+        </div>
+    `;
+
+    pathDisplay.innerHTML = `
+        <div class="empty-state" style="min-height:90px;">
+            <div>
+                <span class="emoji">📍</span>
+                <strong>Run the algorithm first.</strong>
+            </div>
+        </div>
+    `;
+
+    runBtn.disabled = false;
+    stepBtn.disabled = false;
+    pathBtn.disabled = false;
+}
+
+function resetVisuals() {
+    nodeElements.forEach(node => {
+        node.classList.remove(
+            "visited",
+            "current",
+            "path"
+        );
+
+        if (node.dataset.node === "A") {
+            node.classList.add("start");
+        }
+
+        if (node.dataset.node === "G") {
+            node.classList.add("target");
+        }
+    });
+
+    Object.values(edgeElements).forEach(edge => {
+        edge.classList.remove("active", "final");
+    });
+}
+
+function updateDistanceDisplay() {
+    Object.keys(distanceElements).forEach(node => {
+        const value = distances[node];
+
+        distanceElements[node].textContent =
+            value === Infinity ? "∞" : value;
+    });
+}
+
+function getClosestUnvisited() {
+    let closest = null;
+    let smallestDistance = Infinity;
+
+    for (const node of nodes) {
+        if (
+            !visited.has(node) &&
+            distances[node] < smallestDistance
+        ) {
+            smallestDistance = distances[node];
+            closest = node;
+        }
+    }
+
+    return closest;
+}
+
+function edgeKey(a, b) {
+    const first = a < b ? a : b;
+    const second = a < b ? b : a;
+
+    return `${first}-${second}`;
+}
+
+function activateEdge(a, b) {
+    const edge = edgeElements[edgeKey(a, b)];
+
+    if (edge) {
+        edge.classList.add("active");
+    }
+}
+
+function addStep(title, description, type = "") {
+    const empty =
+        thinkingBox.querySelector(".empty-state");
+
+    if (empty) {
+        thinkingBox.innerHTML = "";
+    }
+
+    const step = document.createElement("div");
+
+    step.className =
+        `step-card ${type}`;
+
+    step.innerHTML = `
+        <div class="step-top">
+            <strong>${title}</strong>
+            <span class="step-number">${stepCount}</span>
+        </div>
+
+        <p>${description}</p>
+    `;
+
+    thinkingBox.appendChild(step);
+
+    thinkingBox.scrollTop =
+        thinkingBox.scrollHeight;
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    window.clearTimeout(showToast.timer);
+
+    showToast.timer =
+        window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+}
+
+function updateCurrentNodeVisual() {
+    nodeElements.forEach(node => {
+        node.classList.remove("current");
+
+        const name = node.dataset.node;
+
+        if (name === currentNode) {
+            node.classList.add("current");
+        }
+    });
+}
+
+function performStep() {
+    if (finished) {
+        return;
+    }
+
+    const nextNode = getClosestUnvisited();
+
+    if (nextNode === null) {
+        finishAlgorithm();
+        return;
+    }
+
+    currentNode = nextNode;
+
+    visited.add(currentNode);
+
+    stepCount++;
+
+    updateCurrentNodeVisual();
+
+    const currentElement =
+        document.querySelector(
+            `.node[data-node="${currentNode}"]`
+        );
+
+    if (currentElement) {
+        currentElement.classList.remove("current");
+        currentElement.classList.add("visited");
+    }
+
+    statusBadge.textContent =
+        `● Exploring ${currentNode}`;
+
+    statusBadge.className =
+        "status running";
+
+    gameMessage.textContent =
+        `Dijkstra selected ${currentNode} because it has the smallest known distance: ${distances[currentNode]}.`;
+
+    addStep(
+        `Exploring node ${currentNode}`,
+        `Current shortest known distance is <strong>${distances[currentNode]}</strong>. The algorithm now checks its neighboring nodes.`,
+        "current"
+    );
+
+    for (const edge of graph[currentNode]) {
+
+        if (visited.has(edge.node)) {
+            continue;
+        }
+
+        const candidate =
+            distances[currentNode] + edge.weight;
+
+        const oldDistance =
+            distances[edge.node];
+
+        activateEdge(
+            currentNode,
+            edge.node
+        );
+
+        if (candidate < oldDistance) {
+
+            distances[edge.node] = candidate;
+            previous[edge.node] = currentNode;
+
+            stepCount++;
+
+            addStep(
+                `Updated ${edge.node}`,
+                `Route through ${currentNode} costs <strong>${candidate}</strong>, improving the previous distance of <strong>${oldDistance === Infinity ? "∞" : oldDistance}</strong>.`,
+                "done"
+            );
+
+        } else {
+
+            stepCount++;
+
+            addStep(
+                `Checked ${edge.node}`,
+                `Route through ${currentNode} would cost <strong>${candidate}</strong>, so the existing distance of <strong>${oldDistance === Infinity ? "∞" : oldDistance}</strong> remains.`,
+                ""
+            );
+        }
+    }
+
+    updateDistanceDisplay();
+
+    if (currentNode === "G") {
+        finishAlgorithm();
+    }
+}
+
+function finishAlgorithm() {
+    finished = true;
+    currentNode = null;
+
+    nodeElements.forEach(node => {
+        node.classList.remove("current");
+    });
+
+    statusBadge.textContent =
+        "● Complete";
+
+    statusBadge.className =
+        "status done";
+
+    gameMessage.textContent =
+        `Dijkstra reached G. The shortest distance from A to G is ${distances.G}.`;
+
+    stepCount++;
+
+    addStep(
+        "Destination reached",
+        `The shortest known distance to G is <strong>${distances.G}</strong>. The predecessor chain can now reconstruct the route.`,
+        "done"
+    );
+
+    showToast("Shortest distance discovered.");
+}
+
+function runAlgorithm() {
+    initialize();
+
+    statusBadge.textContent =
+        "● Running";
+
+    statusBadge.className =
+        "status running";
+
+    gameMessage.textContent =
+        "Dijkstra is exploring the graph...";
+
+    runBtn.disabled = true;
+
+    let safetyCounter = 0;
+
+    function next() {
+
+        if (finished || safetyCounter > 20) {
+            runBtn.disabled = false;
+            return;
+        }
+
+        safetyCounter++;
+
+        performStep();
+
+        if (!finished) {
+            window.setTimeout(next, 650);
+        } else {
+            runBtn.disabled = false;
+        }
+    }
+
+    next();
+}
+
+function buildShortestPath() {
+    if (!finished) {
+        showToast("Run Dijkstra until it reaches G first.");
+        return;
+    }
+
+    if (pathShown) {
+        showToast("The shortest path is already visible.");
+        return;
+    }
+
+    const path = [];
+    let current = "G";
+
+    while (current !== null) {
+        path.unshift(current);
+        current = previous[current];
+    }
+
+    if (path[0] !== "A") {
+        showToast("No route could be reconstructed.");
+        return;
+    }
+
+    pathShown = true;
+
+    const pathHTML = path.map((node, index) => {
+
+        const pill = `
+            <span class="path-pill">
+                ${node}
+            </span>
+        `;
+
+        if (index === path.length - 1) {
+            return pill;
+        }
+
+        return `
+            ${pill}
+            <span class="path-arrow">→</span>
+        `;
+
+    }).join("");
+
+    pathDisplay.innerHTML = pathHTML;
+
+    for (let i = 0; i < path.length; i++) {
+
+        const nodeElement =
+            document.querySelector(
+                `.node[data-node="${path[i]}"]`
+            );
+
+        if (nodeElement) {
+            nodeElement.classList.add("path");
+        }
+
+        if (i < path.length - 1) {
+            const edge =
+                edgeElements[
+                    edgeKey(path[i], path[i + 1])
+                ];
+
+            if (edge) {
+                edge.classList.remove("active");
+                edge.classList.add("final");
+            }
+        }
+    }
+
+    const pathCost = distances.G;
+
+    const summary = document.createElement("div");
+
+    summary.style.width = "100%";
+    summary.style.marginTop = "14px";
+    summary.style.padding = "14px";
+    summary.style.borderRadius = "16px";
+    summary.style.background = "#e9e1ff";
+    summary.style.color = "#6855ad";
+    summary.style.fontWeight = "800";
+    summary.textContent =
+        `Shortest distance: ${pathCost}`;
+
+    pathDisplay.appendChild(summary);
+
+    showToast("Shortest route revealed.");
+}
+
+nodeElements.forEach(node => {
+
+    node.addEventListener("click", () => {
+
+        const selected =
+            node.dataset.node;
+
+        if (selected === "A") {
+            showToast("A is the starting node.");
+            return;
+        }
+
+        if (selected === "G") {
+            showToast("G is the destination node.");
+            return;
+        }
+
+        showToast(
+            `Node ${selected} is part of the weighted graph.`
+        );
+    });
+
+});
+
+runBtn.addEventListener(
+    "click",
+    runAlgorithm
+);
+
+stepBtn.addEventListener(
+    "click",
+    () => {
+
+        if (finished) {
+            showToast("The algorithm has already finished.");
+            return;
+        }
+
+        performStep();
+    }
+);
+
+resetBtn.addEventListener(
+    "click",
+    () => {
+        initialize();
+        showToast("Graph reset.");
+    }
+);
+
+pathBtn.addEventListener(
+    "click",
+    buildShortestPath
+);
+
+initialize();
+</script>
+
+</body>
+</html>

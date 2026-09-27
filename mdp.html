@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Markov Decision Process">
+    <title>MDP — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #d86f96;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --purple-dark: #6855ad;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #b88f2d;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 8% 4%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 92% 8%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 95%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    select,
+    input {
+        font: inherit;
+    }
+
+    button {
+        border: 0;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: var(--purple-dark);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(
+            100deg,
+            #7964c5,
+            #d66d98,
+            #6099d8
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70,60,100,0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .dashboard {
+        display: grid;
+        grid-template-columns: 0.95fr 1.25fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        line-height: 1.5;
+        margin-top: 5px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #80651e;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: var(--purple-dark);
+    }
+
+    .control-group {
+        margin-bottom: 20px;
+    }
+
+    .control-group label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--muted);
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    select,
+    input[type="number"] {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: #fffdf9;
+        color: var(--ink);
+        border-radius: 14px;
+        padding: 12px 14px;
+        outline: none;
+    }
+
+    select:focus,
+    input:focus {
+        border-color: rgba(139,114,216,0.45);
+        box-shadow: 0 0 0 4px rgba(139,114,216,0.08);
+    }
+
+    .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    input[type="range"] {
+        flex: 1;
+        accent-color: var(--purple);
+    }
+
+    .slider-value {
+        min-width: 48px;
+        text-align: center;
+        padding: 7px 9px;
+        border-radius: 10px;
+        background: var(--lavender);
+        color: var(--purple-dark);
+        font-weight: 900;
+        font-size: 0.8rem;
+    }
+
+    .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .btn {
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .formula-card {
+        margin-top: 22px;
+        padding: 18px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f5f0ff, #eef7ff);
+        border: 1px solid var(--border);
+    }
+
+    .formula-card .formula-label {
+        font-size: 0.72rem;
+        color: var(--muted);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+
+    .formula {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.08rem;
+        color: var(--purple-dark);
+        line-height: 1.6;
+    }
+
+    .graph-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.62), transparent 34%),
+            rgba(255,255,255,0.88);
+    }
+
+    .state-graph {
+        position: relative;
+        min-height: 390px;
+        margin-top: 10px;
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at center, rgba(233,225,255,0.35), transparent 55%),
+            #fbfaff;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .graph-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .edge {
+        stroke: #c8c1dc;
+        stroke-width: 2;
+        fill: none;
+    }
+
+    .edge.best {
+        stroke: var(--green);
+        stroke-width: 4;
+    }
+
+    .edge-text {
+        font-size: 11px;
+        font-weight: 800;
+        fill: #746d86;
+    }
+
+    .state-node {
+        position: absolute;
+        width: 112px;
+        height: 112px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: white;
+        border: 4px solid #ded8f5;
+        box-shadow: 0 12px 30px rgba(70,60,100,0.12);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: 0.35s ease;
+        z-index: 2;
+    }
+
+    .state-node:hover {
+        transform: translate(-50%, -50%) scale(1.06);
+    }
+
+    .state-node.active {
+        border-color: var(--purple);
+        background: var(--lavender);
+        box-shadow: 0 0 0 7px rgba(139,114,216,0.10),
+                    0 15px 35px rgba(80,65,120,0.15);
+    }
+
+    .state-node.policy {
+        border-color: var(--green);
+        background: var(--mint);
+    }
+
+    .state-node.terminal {
+        border-color: var(--orange);
+        background: var(--peach);
+    }
+
+    .state-name {
+        font-weight: 950;
+        font-size: 0.95rem;
+    }
+
+    .state-value {
+        margin-top: 4px;
+        color: var(--purple-dark);
+        font-size: 0.75rem;
+        font-weight: 900;
+    }
+
+    .state-action {
+        margin-top: 3px;
+        color: var(--green);
+        font-size: 0.68rem;
+        font-weight: 900;
+    }
+
+    .iteration-panel {
+        margin-top: 24px;
+    }
+
+    .iteration-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .iteration-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .iteration-count {
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #4779ad;
+        font-size: 0.75rem;
+        font-weight: 900;
+    }
+
+    .value-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .value-card {
+        padding: 14px;
+        border-radius: 17px;
+        background: #fff;
+        border: 1px solid var(--border);
+    }
+
+    .value-card.highlight {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.3);
+    }
+
+    .value-card small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        margin-bottom: 5px;
+    }
+
+    .value-card strong {
+        font-size: 1.15rem;
+    }
+
+    .policy-strip {
+        margin-top: 18px;
+        padding: 15px 17px;
+        border-radius: 18px;
+        background: var(--yellow);
+        color: #735b1c;
+        font-size: 0.85rem;
+        line-height: 1.55;
+    }
+
+    .transition-section {
+        margin-top: 24px;
+    }
+
+    .transition-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 18px;
+    }
+
+    .transition-table th,
+    .transition-table td {
+        padding: 12px 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+
+    .transition-table th {
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: #faf8ff;
+    }
+
+    .transition-table td {
+        background: rgba(255,255,255,0.72);
+    }
+
+    .probability {
+        font-weight: 900;
+        color: var(--blue-dark);
+    }
+
+    .reward-positive {
+        color: var(--green);
+        font-weight: 900;
+    }
+
+    .reward-negative {
+        color: var(--pink-dark);
+        font-weight: 900;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .concept {
+        padding: 23px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.88rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.8rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.35rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 1000px) {
+        .dashboard {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 700px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .value-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .state-graph {
+            min-height: 350px;
+        }
+
+        .state-node {
+            width: 88px;
+            height: 88px;
+        }
+
+        .state-name {
+            font-size: 0.78rem;
+        }
+
+        .state-value {
+            font-size: 0.65rem;
+        }
+
+        .state-action {
+            font-size: 0.58rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">
+        AI <span>–</span> Behind The State
+    </a>
+
+
+<a class="back" href="../index.html">
+    ← Back to Explore
+</a>
+
+
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Decision Making · Reinforcement Learning · MDP</div>
+
+
+<h1>
+    Teach an AI<br>
+    <span class="gradient">how to choose.</span>
+</h1>
+
+<p>
+    Explore a real Markov Decision Process. Watch an agent evaluate
+    uncertain transitions, rewards and future values, then discover
+    the policy that emerges through value iteration.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Build the World</strong>
+    <span>States, actions and probabilistic transitions.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Run Value Iteration</strong>
+    <span>Propagate future rewards through the state space.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Reveal the Policy</strong>
+    <span>See what action the optimal agent chooses.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="main-section">
+
+    <div class="dashboard">
+
+        <div class="panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>MDP Laboratory</h2>
+                    <p>Configure the agent's decision environment.</p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="presetSelect">Environment</label>
+
+                <select id="presetSelect">
+                    <option value="balanced">Balanced World</option>
+                    <option value="risky">Risky Shortcut</option>
+                    <option value="reward">Reward Rich</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="gamma">
+                    Discount Factor γ
+                </label>
+
+                <div class="slider-row">
+                    <input
+                        id="gamma"
+                        type="range"
+                        min="0"
+                        max="0.99"
+                        step="0.01"
+                        value="0.85"
+                    >
+
+                    <span id="gammaValue" class="slider-value">
+                        0.85
+                    </span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="iterations">
+                    Value Iteration Steps
+                </label>
+
+                <div class="slider-row">
+                    <input
+                        id="iterations"
+                        type="range"
+                        min="1"
+                        max="20"
+                        step="1"
+                        value="8"
+                    >
+
+                    <span id="iterationValue" class="slider-value">
+                        8
+                    </span>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button id="runBtn" class="btn btn-primary">
+                    ✦ Run Value Iteration
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    → Next Iteration
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ Reset
+                </button>
+            </div>
+
+            <div class="formula-card">
+
+                <div class="formula-label">
+                    Bellman Optimality Equation
+                </div>
+
+                <div class="formula">
+                    V(s) = max<sub>a</sub>
+                    Σ<sub>s′</sub>
+                    P(s′ | s,a)
+                    [ R(s,a,s′) + γV(s′) ]
+                </div>
+
+            </div>
+
+            <div class="policy-strip" id="policyExplanation">
+                Choose an environment and run value iteration.
+                The policy will emerge from the calculated state values.
+            </div>
+
+        </div>
+
+        <div class="panel graph-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>✦ State Space</h2>
+                    <p>
+                        Nodes are states. Arrows represent possible
+                        stochastic transitions.
+                    </p>
+                </div>
+            </div>
+
+            <div id="stateGraph" class="state-graph">
+
+                <svg
+                    id="graphSvg"
+                    class="graph-svg"
+                    viewBox="0 0 700 390"
+                    preserveAspectRatio="none"
+                    aria-hidden="true">
+                </svg>
+
+            </div>
+
+            <div class="iteration-panel">
+
+                <div class="iteration-header">
+                    <h3>Current Value Function</h3>
+
+                    <span id="iterationCount" class="iteration-count">
+                        Iteration 0
+                    </span>
+                </div>
+
+                <div id="valueGrid" class="value-grid"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="panel transition-section">
+
+        <div class="panel-title">
+            <div>
+                <h2>Transition Dynamics</h2>
+                <p>
+                    These probabilities define how the environment
+                    responds when the agent takes an action.
+                </p>
+            </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+
+            <table class="transition-table">
+
+                <thead>
+                    <tr>
+                        <th>From</th>
+                        <th>Action</th>
+                        <th>To</th>
+                        <th>Probability</th>
+                        <th>Reward</th>
+                    </tr>
+                </thead>
+
+                <tbody id="transitionBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="main-section">
+
+    <div class="section-heading">
+
+        <div class="mini">
+            Understand the model
+        </div>
+
+        <h2>
+            What makes an MDP an MDP?
+        </h2>
+
+        <p>
+            A Markov Decision Process gives an agent a mathematical
+            framework for making decisions when outcomes are uncertain.
+            The agent repeatedly observes a state, chooses an action,
+            receives a reward and transitions to another state.
+        </p>
+
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">◉</div>
+            <h3>States</h3>
+            <p>
+                A state represents the information needed to describe
+                the agent's current situation.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">↗</div>
+            <h3>Actions</h3>
+            <p>
+                Actions are choices available to the agent from a
+                particular state.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">◇</div>
+            <h3>Transitions</h3>
+            <p>
+                The environment may respond probabilistically, meaning
+                the same action can lead to different next states.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">★</div>
+            <h3>Rewards</h3>
+            <p>
+                Rewards quantify immediate outcomes while the discount
+                factor determines how strongly future rewards matter.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+
+        <div class="mini">
+            Implementation
+        </div>
+
+        <h2>
+            The decision rule behind the agent.
+        </h2>
+
+        <p>
+            Value iteration repeatedly applies the Bellman optimality
+            equation until the values describe the best achievable
+            long-term returns.
+        </p>
+
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">
+                value-iteration.js
+            </span>
+
+            <span></span>
+
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">valueIteration</span>(states, actions, gamma) {
+
+<span class="kw">let</span> values = {};
+
+<span class="kw">for</span> (<span class="kw">const</span> state <span class="kw">of</span> states) {
+    values[state] = <span class="num">0</span>;
+}
+
+<span class="kw">for</span> (<span class="kw">const</span> state <span class="kw">of</span> states) {
+
+    <span class="kw">let</span> bestValue = -Infinity;
+
+    <span class="kw">for</span> (<span class="kw">const</span> action <span class="kw">of</span> actions[state]) {
+
+        <span class="kw">let</span> actionValue = <span class="num">0</span>;
+
+        <span class="kw">for</span> (<span class="kw">const</span> transition <span class="kw">of</span> action.transitions) {
+
+            actionValue += transition.probability *
+                (
+                    transition.reward +
+                    gamma * values[transition.nextState]
+                );
+        }
+
+        bestValue = Math.<span class="fn">max</span>(
+            bestValue,
+            actionValue
+        );
+    }
+
+    newValues[state] = bestValue;
+}
+
+<span class="kw">return</span> newValues;
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+<section class="complexity">
+
+    <div class="complexity-card">
+        <span>Value Iteration Per Iteration</span>
+        <strong>O(|S| · |A| · |S|)</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Memory</span>
+        <strong>O(|S|)</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Core Principle</span>
+        <strong>Bellman Backup</strong>
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * Markov Decision Process
+ *
+ * This page implements a finite discounted MDP
+ * and performs actual synchronous value iteration.
+ *
+ * V(s) = max_a Σ P(s'|s,a)[R + γV(s')]
+ *
+ * The environment contains:
+ * - States
+ * - Actions
+ * - Probabilistic transitions
+ * - Rewards
+ * - Discount factor
+ * - Value iteration
+ * - Greedy policy extraction
+ */
+
+const presetSelect = document.getElementById("presetSelect");
+const gammaInput = document.getElementById("gamma");
+const iterationsInput = document.getElementById("iterations");
+
+const gammaValue = document.getElementById("gammaValue");
+const iterationValue = document.getElementById("iterationValue");
+
+const runBtn = document.getElementById("runBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const statusBadge = document.getElementById("statusBadge");
+const iterationCount = document.getElementById("iterationCount");
+
+const stateGraph = document.getElementById("stateGraph");
+const graphSvg = document.getElementById("graphSvg");
+
+const valueGrid = document.getElementById("valueGrid");
+const transitionBody = document.getElementById("transitionBody");
+const policyExplanation = document.getElementById("policyExplanation");
+
+const toast = document.getElementById("toast");
+
+let currentEnvironment;
+let values = {};
+let iteration = 0;
+let running = false;
+let animationTimer = null;
+
+const ENVIRONMENTS = {
+
+    balanced: {
+        states: [
+            "Start",
+            "Explore",
+            "Goal",
+            "Trap"
+        ],
+
+        actions: {
+            Start: ["Explore", "Wait"],
+            Explore: ["Advance", "Retreat"],
+            Goal: ["Finish"],
+            Trap: ["Recover"]
+        },
+
+        transitions: {
+
+            Start: {
+                Explore: [
+                    { nextState: "Explore", probability: 0.85, reward: 0 },
+                    { nextState: "Trap", probability: 0.15, reward: -2 }
+                ],
+
+                Wait: [
+                    { nextState: "Start", probability: 1, reward: -0.2 }
+                ]
+            },
+
+            Explore: {
+                Advance: [
+                    { nextState: "Goal", probability: 0.75, reward: 5 },
+                    { nextState: "Trap", probability: 0.25, reward: -3 }
+                ],
+
+                Retreat: [
+                    { nextState: "Start", probability: 0.9, reward: 0 },
+                    { nextState: "Explore", probability: 0.1, reward: -0.1 }
+                ]
+            },
+
+            Goal: {
+                Finish: [
+                    { nextState: "Goal", probability: 1, reward: 10 }
+                ]
+            },
+
+            Trap: {
+                Recover: [
+                    { nextState: "Explore", probability: 0.8, reward: 1 },
+                    { nextState: "Trap", probability: 0.2, reward: -1 }
+                ]
+            }
+        }
+    },
+
+    risky: {
+        states: [
+            "Start",
+            "Shortcut",
+            "Goal",
+            "Trap"
+        ],
+
+        actions: {
+            Start: ["Shortcut", "Safe"],
+            Shortcut: ["Push", "Return"],
+            Goal: ["Finish"],
+            Trap: ["Recover"]
+        },
+
+        transitions: {
+
+            Start: {
+                Shortcut: [
+                    { nextState: "Goal", probability: 0.55, reward: 8 },
+                    { nextState: "Trap", probability: 0.45, reward: -6 }
+                ],
+
+                Safe: [
+                    { nextState: "Shortcut", probability: 0.95, reward: 1 },
+                    { nextState: "Start", probability: 0.05, reward: 0 }
+                ]
+            },
+
+            Shortcut: {
+                Push: [
+                    { nextState: "Goal", probability: 0.8, reward: 5 },
+                    { nextState: "Trap", probability: 0.2, reward: -5 }
+                ],
+
+                Return: [
+                    { nextState: "Start", probability: 1, reward: 0 }
+                ]
+            },
+
+            Goal: {
+                Finish: [
+                    { nextState: "Goal", probability: 1, reward: 10 }
+                ]
+            },
+
+            Trap: {
+                Recover: [
+                    { nextState: "Start", probability: 0.7, reward: 0 },
+                    { nextState: "Trap", probability: 0.3, reward: -1 }
+                ]
+            }
+        }
+    },
+
+    reward: {
+        states: [
+            "Start",
+            "Garden",
+            "Treasure",
+            "Danger"
+        ],
+
+        actions: {
+            Start: ["Garden", "Rush"],
+            Garden: ["Collect", "Return"],
+            Treasure: ["Enjoy"],
+            Danger: ["Escape"]
+        },
+
+        transitions: {
+
+            Start: {
+                Garden: [
+                    { nextState: "Garden", probability: 0.9, reward: 1 },
+                    { nextState: "Danger", probability: 0.1, reward: -1 }
+                ],
+
+                Rush: [
+                    { nextState: "Treasure", probability: 0.45, reward: 12 },
+                    { nextState: "Danger", probability: 0.55, reward: -4 }
+                ]
+            },
+
+            Garden: {
+                Collect: [
+                    { nextState: "Treasure", probability: 0.65, reward: 8 },
+                    { nextState: "Garden", probability: 0.35, reward: 2 }
+                ],
+
+                Return: [
+                    { nextState: "Start", probability: 1, reward: 0 }
+                ]
+            },
+
+            Treasure: {
+                Enjoy: [
+                    { nextState: "Treasure", probability: 1, reward: 9 }
+                ]
+            },
+
+            Danger: {
+                Escape: [
+                    { nextState: "Garden", probability: 0.85, reward: 1 },
+                    { nextState: "Danger", probability: 0.15, reward: -2 }
+                ]
+            }
+        }
+    }
+};
+
+const NODE_POSITIONS = {
+    Start: { x: 17, y: 50 },
+    Explore: { x: 43, y: 28 },
+    Shortcut: { x: 43, y: 28 },
+    Garden: { x: 43, y: 28 },
+    Goal: { x: 78, y: 20 },
+    Treasure: { x: 78, y: 20 },
+    Trap: { x: 78, y: 76 },
+    Danger: { x: 78, y: 76 }
+};
+
+function cloneEnvironment(environment) {
+    return JSON.parse(JSON.stringify(environment));
+}
+
+function setStatus(text, type = "") {
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    window.clearTimeout(showToast.timer);
+
+    showToast.timer = window.setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2400);
+}
+
+function getInitialValues() {
+    const initialValues = {};
+
+    for (const state of currentEnvironment.states) {
+        initialValues[state] = 0;
+    }
+
+    return initialValues;
+}
+
+function calculateActionValue(state, action, valueTable) {
+
+    const transitions =
+        currentEnvironment.transitions[state][action];
+
+    let total = 0;
+
+    for (const transition of transitions) {
+        total += transition.probability *
+            (
+                transition.reward +
+                Number(gammaInput.value) *
+                valueTable[transition.nextState]
+            );
+    }
+
+    return total;
+}
+
+function calculateNextValues(oldValues) {
+
+    const nextValues = {};
+
+    for (const state of currentEnvironment.states) {
+
+        const actions =
+            currentEnvironment.actions[state];
+
+        if (!actions || actions.length === 0) {
+            nextValues[state] = 0;
+            continue;
+        }
+
+        let bestValue = -Infinity;
+
+        for (const action of actions) {
+
+            const actionValue =
+                calculateActionValue(
+                    state,
+                    action,
+                    oldValues
+                );
+
+            bestValue =
+                Math.max(bestValue, actionValue);
+        }
+
+        nextValues[state] = bestValue;
+    }
+
+    return nextValues;
+}
+
+function getBestAction(state) {
+
+    const actions =
+        currentEnvironment.actions[state];
+
+    if (!actions || actions.length === 0) {
+        return null;
+    }
+
+    let bestAction = actions[0];
+    let bestValue = -Infinity;
+
+    for (const action of actions) {
+
+        const actionValue =
+            calculateActionValue(
+                state,
+                action,
+                values
+            );
+
+        if (actionValue > bestValue) {
+            bestValue = actionValue;
+            bestAction = action;
+        }
+    }
+
+    return {
+        action: bestAction,
+        value: bestValue
+    };
+}
+
+function formatNumber(number) {
+    if (!Number.isFinite(number)) {
+        return "0.00";
+    }
+
+    return number.toFixed(2);
+}
+
+function renderValues() {
+
+    valueGrid.innerHTML = "";
+
+    for (const state of currentEnvironment.states) {
+
+        const best = getBestAction(state);
+
+        const card = document.createElement("div");
+
+        card.className = "value-card";
+
+        if (best) {
+            card.classList.add("highlight");
+        }
+
+        const small = document.createElement("small");
+        small.textContent = state;
+
+        const strong = document.createElement("strong");
+        strong.textContent = formatNumber(values[state]);
+
+        card.appendChild(small);
+        card.appendChild(strong);
+
+        valueGrid.appendChild(card);
+    }
+
+    iterationCount.textContent =
+        "Iteration " + iteration;
+}
+
+function renderTransitions() {
+
+    transitionBody.innerHTML = "";
+
+    for (const state of currentEnvironment.states) {
+
+        const actions =
+            currentEnvironment.actions[state];
+
+        for (const action of actions) {
+
+            const transitions =
+                currentEnvironment.transitions[state][action];
+
+            for (const transition of transitions) {
+
+                const row = document.createElement("tr");
+
+                const from = document.createElement("td");
+                from.textContent = state;
+
+                const actionCell = document.createElement("td");
+                actionCell.textContent = action;
+
+                const to = document.createElement("td");
+                to.textContent = transition.nextState;
+
+                const probability = document.createElement("td");
+                probability.className = "probability";
+                probability.textContent =
+                    Math.round(transition.probability * 100) + "%";
+
+                const reward = document.createElement("td");
+
+                reward.textContent =
+                    transition.reward > 0
+                        ? "+" + transition.reward
+                        : transition.reward;
+
+                reward.className =
+                    transition.reward >= 0
+                        ? "reward-positive"
+                        : "reward-negative";
+
+                row.appendChild(from);
+                row.appendChild(actionCell);
+                row.appendChild(to);
+                row.appendChild(probability);
+                row.appendChild(reward);
+
+                transitionBody.appendChild(row);
+            }
+        }
+    }
+}
+
+function getNodePosition(state) {
+
+    if (NODE_POSITIONS[state]) {
+        return NODE_POSITIONS[state];
+    }
+
+    return { x: 50, y: 50 };
+}
+
+function createGraph() {
+
+    stateGraph
+        .querySelectorAll(".state-node")
+        .forEach(node => node.remove());
+
+    graphSvg.innerHTML = "";
+
+    const edgeDefinitions = [];
+
+    for (const state of currentEnvironment.states) {
+
+        const actions =
+            currentEnvironment.actions[state];
+
+        for (const action of actions) {
+
+            const transitions =
+                currentEnvironment.transitions[state][action];
+
+            for (const transition of transitions) {
+
+                edgeDefinitions.push({
+                    from: state,
+                    to: transition.nextState,
+                    probability: transition.probability,
+                    action
+                });
+            }
+        }
+    }
+
+    const grouped = new Map();
+
+    for (const edge of edgeDefinitions) {
+
+        const key = edge.from + "→" + edge.to;
+
+        if (!grouped.has(key)) {
+            grouped.set(key, []);
+        }
+
+        grouped.get(key).push(edge);
+    }
+
+    for (const edges of grouped.values()) {
+
+        const first = edges[0];
+
+        const fromPosition =
+            getNodePosition(first.from);
+
+        const toPosition =
+            getNodePosition(first.to);
+
+        const x1 = fromPosition.x * 7;
+        const y1 = fromPosition.y * 3.9;
+
+        const x2 = toPosition.x * 7;
+        const y2 = toPosition.y * 3.9;
+
+        const line =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "line"
+            );
+
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+
+        line.classList.add("edge");
+
+        graphSvg.appendChild(line);
+
+        const text =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "text"
+            );
+
+        text.setAttribute(
+            "x",
+            (x1 + x2) / 2
+        );
+
+        text.setAttribute(
+            "y",
+            (y1 + y2) / 2 - 5
+        );
+
+        text.setAttribute(
+            "text-anchor",
+            "middle"
+        );
+
+        text.classList.add("edge-text");
+
+        text.textContent =
+            Math.round(first.probability * 100) + "%";
+
+        graphSvg.appendChild(text);
+    }
+
+    for (const state of currentEnvironment.states) {
+
+        const position =
+            getNodePosition(state);
+
+        const node =
+            document.createElement("div");
+
+        node.className = "state-node";
+
+        node.dataset.state = state;
+
+        node.style.left = position.x + "%";
+        node.style.top = position.y + "%";
+
+        const name =
+            document.createElement("div");
+
+        name.className = "state-name";
+        name.textContent = state;
+
+        const value =
+            document.createElement("div");
+
+        value.className = "state-value";
+        value.textContent =
+            "V = " + formatNumber(values[state]);
+
+        node.appendChild(name);
+        node.appendChild(value);
+
+        const best = getBestAction(state);
+
+        if (best) {
+
+            const action =
+                document.createElement("div");
+
+            action.className = "state-action";
+
+            action.textContent =
+                "→ " + best.action;
+
+            node.appendChild(action);
+        }
+
+        if (
+            state === "Goal" ||
+            state === "Treasure"
+        ) {
+            node.classList.add("terminal");
+        }
+
+        stateGraph.appendChild(node);
+    }
+
+    updateGraphPolicy();
+}
+
+function updateGraphPolicy() {
+
+    const nodes =
+        stateGraph.querySelectorAll(".state-node");
+
+    nodes.forEach(node => {
+
+        const state = node.dataset.state;
+
+        node.classList.remove(
+            "active",
+            "policy"
+        );
+
+        const best = getBestAction(state);
+
+        if (best) {
+            node.classList.add("policy");
+        }
+    });
+
+    const edges =
+        graphSvg.querySelectorAll(".edge");
+
+    edges.forEach(edge => {
+        edge.classList.remove("best");
+    });
+}
+
+function renderAll() {
+    renderValues();
+    renderTransitions();
+    createGraph();
+}
+
+function resetMDP() {
+
+    window.clearInterval(animationTimer);
+
+    running = false;
+
+    currentEnvironment =
+        cloneEnvironment(
+            ENVIRONMENTS[presetSelect.value]
+        );
+
+    values = getInitialValues();
+
+    iteration = 0;
+
+    setStatus("Ready");
+
+    policyExplanation.textContent =
+        "All state values begin at 0. Run value iteration to propagate immediate and future rewards through the environment.";
+
+    renderAll();
+
+    showToast("MDP reset successfully.");
+}
+
+function performIteration() {
+
+    const nextValues =
+        calculateNextValues(values);
+
+    values = nextValues;
+
+    iteration++;
+
+    renderAll();
+
+    setStatus(
+        "Iteration " + iteration,
+        "running"
+    );
+
+    const startBest =
+        getBestAction(
+            currentEnvironment.states[0]
+        );
+
+    if (startBest) {
+
+        policyExplanation.innerHTML =
+            "<strong>Current policy:</strong> " +
+            "from <strong>" +
+            currentEnvironment.states[0] +
+            "</strong>, the agent prefers " +
+            "<strong>" +
+            startBest.action +
+            "</strong> " +
+            "with an estimated action value of " +
+            formatNumber(startBest.value) +
+            ".";
+    }
+}
+
+function runIterations() {
+
+    window.clearInterval(animationTimer);
+
+    const target =
+        Number(iterationsInput.value);
+
+    if (iteration >= target) {
+        iteration = 0;
+        values = getInitialValues();
+        renderAll();
+    }
+
+    running = true;
+
+    setStatus("Computing...", "running");
+
+    let steps = 0;
+
+    animationTimer =
+        window.setInterval(() => {
+
+            if (steps >= target) {
+
+                window.clearInterval(animationTimer);
+
+                running = false;
+
+                setStatus(
+                    "Policy Ready",
+                    "done"
+                );
+
+                showToast(
+                    "Optimal policy extracted."
+                );
+
+                return;
+            }
+
+            performIteration();
+
+            steps++;
+
+        }, 500);
+}
+
+function updateGammaDisplay() {
+
+    gammaValue.textContent =
+        Number(gammaInput.value).toFixed(2);
+}
+
+function updateIterationDisplay() {
+
+    iterationValue.textContent =
+        iterationsInput.value;
+}
+
+presetSelect.addEventListener(
+    "change",
+    resetMDP
+);
+
+gammaInput.addEventListener(
+    "input",
+    () => {
+        updateGammaDisplay();
+
+        if (!running) {
+            renderAll();
+        }
+    }
+);
+
+iterationsInput.addEventListener(
+    "input",
+    updateIterationDisplay
+);
+
+runBtn.addEventListener(
+    "click",
+    runIterations
+);
+
+stepBtn.addEventListener(
+    "click",
+    () => {
+
+        if (running) {
+            showToast(
+                "The agent is still calculating."
+            );
+            return;
+        }
+
+        performIteration();
+
+        setStatus(
+            "Step Complete",
+            "done"
+        );
+    }
+);
+
+resetBtn.addEventListener(
+    "click",
+    resetMDP
+);
+
+updateGammaDisplay();
+updateIterationDisplay();
+resetMDP();
+
+</script>
+
+</body>
+</html>

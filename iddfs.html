@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Iterative Deepening Depth-First Search">
+    <title>IDDFS — AI Behind The State</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    select,
+    input {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 710px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .visual-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 70px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.70), transparent 34%),
+            rgba(255,255,255,0.88);
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 36%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .settings {
+        display: grid;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .setting {
+        padding: 16px;
+        border-radius: 19px;
+        background: #fffdf9;
+        border: 1px solid var(--border);
+    }
+
+    .setting label {
+        display: block;
+        font-weight: 850;
+        margin-bottom: 8px;
+    }
+
+    .setting small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.76rem;
+        margin-top: 7px;
+        line-height: 1.5;
+    }
+
+    select {
+        width: 100%;
+        border: 1px solid rgba(55,48,80,0.12);
+        border-radius: 13px;
+        padding: 11px 13px;
+        background: white;
+        color: var(--ink);
+        outline: none;
+        cursor: pointer;
+    }
+
+    select:focus {
+        border-color: rgba(139,114,216,0.45);
+        box-shadow: 0 0 0 4px rgba(139,114,216,0.08);
+    }
+
+    .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .goal-display {
+        padding: 18px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f2efff, #eef8ff);
+        text-align: center;
+        margin-bottom: 18px;
+    }
+
+    .goal-display .goal-label {
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .goal-display .goal-node {
+        font-size: 2rem;
+        font-weight: 950;
+        margin-top: 4px;
+        color: var(--purple);
+    }
+
+    .tree-wrapper {
+        overflow: auto;
+        min-height: 390px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        padding: 25px;
+    }
+
+    .tree {
+        min-width: 650px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .tree-level {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .tree-node {
+        min-width: 72px;
+        min-height: 65px;
+        padding: 10px 13px;
+        border-radius: 17px;
+        background: white;
+        border: 2px solid #ddd7ef;
+        box-shadow: 0 7px 18px rgba(80,70,110,0.06);
+        text-align: center;
+        transition: 0.25s ease;
+        position: relative;
+    }
+
+    .tree-node .node-value {
+        font-size: 1.15rem;
+        font-weight: 950;
+    }
+
+    .tree-node small {
+        display: block;
+        color: var(--muted);
+        margin-top: 4px;
+        font-size: 0.67rem;
+    }
+
+    .tree-node.current {
+        background: var(--lavender);
+        border-color: #bcaee9;
+        transform: translateY(-3px);
+    }
+
+    .tree-node.visited {
+        background: var(--blue);
+        border-color: #a8ccec;
+    }
+
+    .tree-node.path {
+        background: var(--mint);
+        border-color: #a5d7ba;
+        transform: scale(1.04);
+    }
+
+    .tree-node.goal {
+        background: var(--yellow);
+        border-color: #e4c86f;
+    }
+
+    .connector-row {
+        height: 22px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .connector-line {
+        width: 2px;
+        height: 22px;
+        background: #c9c2dc;
+    }
+
+    .iteration-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: var(--peach);
+        color: #995f3d;
+        font-weight: 850;
+        font-size: 0.74rem;
+        margin-bottom: 15px;
+    }
+
+    .log-box {
+        min-height: 190px;
+        max-height: 270px;
+        overflow: auto;
+        margin-top: 18px;
+        padding: 15px;
+        border-radius: 19px;
+        background: #fffdf9;
+        border: 1px solid var(--border);
+    }
+
+    .log-entry {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 9px 10px;
+        border-radius: 12px;
+        margin-bottom: 6px;
+        font-size: 0.8rem;
+        line-height: 1.45;
+    }
+
+    .log-entry:nth-child(odd) {
+        background: #faf7ff;
+    }
+
+    .log-number {
+        flex: 0 0 auto;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        font-size: 0.68rem;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 15px;
+    }
+
+    .stat {
+        padding: 13px 10px;
+        text-align: center;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid var(--border);
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.68rem;
+        margin-bottom: 4px;
+    }
+
+    .stat strong {
+        font-size: 1.15rem;
+    }
+
+    .algorithm-section,
+    .code-section,
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 670px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.35rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+        text-align: center;
+        max-width: 90%;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .tree-wrapper {
+            padding: 15px;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Pathfinding · IDDFS</div>
+
+
+<h1>
+    Search Deeper,<br>
+    <span class="gradient">Step by Step.</span>
+</h1>
+
+<p>
+    Explore Iterative Deepening Depth-First Search through an
+    interactive tree. IDDFS repeatedly performs depth-limited
+    DFS, increasing the depth limit until it finds the goal.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Set the Search</strong>
+        <span>Choose a goal and depth limit.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Watch IDDFS</strong>
+    <span>See each depth explored.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>Discover why repeated DFS works.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="visual-section">
+    <div class="layout">
+
+
+    <div class="panel control-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>🧭 IDDFS Explorer</h2>
+                <p>Configure the search and watch the algorithm explore.</p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div class="goal-display">
+            <div class="goal-label">Current Goal</div>
+            <div id="goalDisplay" class="goal-node">G</div>
+        </div>
+
+        <div class="settings">
+
+            <div class="setting">
+                <label for="goalSelect">Choose Goal Node</label>
+
+                <select id="goalSelect">
+                    <option value="G">G — depth 3</option>
+                    <option value="H">H — depth 3</option>
+                    <option value="I">I — depth 3</option>
+                    <option value="J">J — depth 3</option>
+                </select>
+
+                <small>
+                    Pick a target node for the IDDFS search.
+                </small>
+            </div>
+
+            <div class="setting">
+                <label for="speedSelect">Animation Speed</label>
+
+                <select id="speedSelect">
+                    <option value="700">Slow</option>
+                    <option value="400" selected>Normal</option>
+                    <option value="180">Fast</option>
+                </select>
+
+                <small>
+                    The search pauses briefly at each visited node.
+                </small>
+            </div>
+
+        </div>
+
+        <div class="buttons">
+            <button id="startBtn" class="btn btn-primary">
+                ▶ Start IDDFS
+            </button>
+
+            <button id="stepBtn" class="btn btn-blue">
+                → Step
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset
+            </button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <small>Depth Limit</small>
+                <strong id="depthStat">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Visited</small>
+                <strong id="visitedStat">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Iterations</small>
+                <strong id="iterationStat">0</strong>
+            </div>
+        </div>
+
+        <div id="logBox" class="log-box">
+            <div class="empty-state">
+                <div>
+                    <span style="font-size:2rem;display:block;margin-bottom:8px;">🔎</span>
+                    <strong>Search log is empty.</strong>
+                    <p style="margin-top:6px;">
+                        Start the algorithm to see each state.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="panel state-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>✦ Behind The State</h2>
+                <p>
+                    IDDFS starts with a shallow search and gradually
+                    increases the depth limit.
+                </p>
+            </div>
+        </div>
+
+        <div id="iterationBadge" class="iteration-badge">
+            Depth limit: 0
+        </div>
+
+        <div id="treeWrapper" class="tree-wrapper">
+
+            <div class="empty-state">
+                <div>
+                    <span class="emoji" style="font-size:2.7rem;display:block;margin-bottom:10px;">🌳</span>
+                    <strong>Ready to search.</strong>
+                    <p style="margin-top:7px;">
+                        Click "Start IDDFS" to explore the tree.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="algorithm-section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand the algorithm</div>
+
+    <h2>What is IDDFS?</h2>
+
+    <p>
+        Iterative Deepening Depth-First Search combines the
+        memory efficiency of DFS with the shallow-solution
+        behaviour of breadth-first search.
+    </p>
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+        <div class="concept-icon">🔁</div>
+        <h3>Repeat with a limit</h3>
+        <p>
+            IDDFS runs a depth-limited DFS repeatedly. The first
+            search may only explore depth 0, then depth 1, then
+            depth 2, and so on.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🌊</div>
+        <h3>Shallow first</h3>
+        <p>
+            Because smaller depth limits are searched first,
+            IDDFS can find a shallow goal without storing an
+            entire breadth-first frontier.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🧠</div>
+        <h3>Memory efficient</h3>
+        <p>
+            Like DFS, the algorithm mainly needs to keep track of
+            the current search path, making its memory requirement
+            much smaller than storing every frontier node.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🎯</div>
+        <h3>Stop at the goal</h3>
+        <p>
+            Once the target is reached within the current depth
+            limit, IDDFS stops and returns the discovered path.
+        </p>
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>The recursive idea.</h2>
+
+    <p>
+        The core of IDDFS is a depth-limited DFS called repeatedly
+        with a larger limit.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">iddfs.js</span>
+
+        <span></span>
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">depthLimitedSearch</span>(node, goal, limit, path) {
+
+<span class="kw">if</span> (node === goal) {
+    <span class="kw">return</span> path;
+}
+
+<span class="kw">if</span> (limit === <span class="num">0</span>) {
+    <span class="kw">return</span> <span class="kw">null</span>;
+}
+
+<span class="kw">for</span> (<span class="kw">const</span> child <span class="kw">of</span> graph[node]) {
+
+    <span class="kw">const</span> result =
+        <span class="fn">depthLimitedSearch</span>(
+            child,
+            goal,
+            limit - <span class="num">1</span>,
+            [...path, child]
+        );
+
+    <span class="kw">if</span> (result !== <span class="kw">null</span>) {
+        <span class="kw">return</span> result;
+    }
+}
+
+<span class="kw">return</span> <span class="kw">null</span>;
+
+
+}
+
+<span class="kw">function</span> <span class="fn">iddfs</span>(start, goal) {
+
+
+<span class="kw">for</span> (
+    <span class="kw">let</span> depth = <span class="num">0</span>;
+    ;
+    depth++
+) {
+
+    <span class="kw">const</span> result =
+        <span class="fn">depthLimitedSearch</span>(
+            start,
+            goal,
+            depth,
+            [start]
+        );
+
+    <span class="kw">if</span> (result !== <span class="kw">null</span>) {
+        <span class="kw">return</span> result;
+    }
+}
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Time Complexity</span>
+    <strong>O(b<sup>d</sup>)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Space Complexity</span>
+    <strong>O(d)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Key Idea</span>
+    <strong>DFS + Increasing Depth</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const graph = {
+    A: ["B", "C"],
+    B: ["D", "E"],
+    C: ["F", "G"],
+    D: ["H"],
+    E: ["I"],
+    F: ["J"],
+    G: [],
+    H: [],
+    I: [],
+    J: []
+};
+
+const positions = {
+    A: { level: 0, order: 0 },
+    B: { level: 1, order: 0 },
+    C: { level: 1, order: 1 },
+    D: { level: 2, order: 0 },
+    E: { level: 2, order: 1 },
+    F: { level: 2, order: 2 },
+    G: { level: 2, order: 3 },
+    H: { level: 3, order: 0 },
+    I: { level: 3, order: 1 },
+    J: { level: 3, order: 2 }
+};
+
+const statusBadge = document.getElementById("statusBadge");
+const goalSelect = document.getElementById("goalSelect");
+const speedSelect = document.getElementById("speedSelect");
+const goalDisplay = document.getElementById("goalDisplay");
+const startBtn = document.getElementById("startBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+const depthStat = document.getElementById("depthStat");
+const visitedStat = document.getElementById("visitedStat");
+const iterationStat = document.getElementById("iterationStat");
+const iterationBadge = document.getElementById("iterationBadge");
+const treeWrapper = document.getElementById("treeWrapper");
+const logBox = document.getElementById("logBox");
+const toast = document.getElementById("toast");
+
+let goal = "G";
+let depthLimit = 0;
+let iteration = 0;
+let totalVisited = 0;
+let running = false;
+let finished = false;
+let timer = null;
+let currentSequence = [];
+let sequenceIndex = 0;
+let currentPath = [];
+let foundPath = null;
+
+function getDepth(node) {
+    if (node === "A") {
+        return 0;
+    }
+
+    const queue = [{ node: "A", depth: 0 }];
+    const seen = new Set(["A"]);
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+
+        for (const child of graph[current.node]) {
+            if (seen.has(child)) {
+                continue;
+            }
+
+            if (child === node) {
+                return current.depth + 1;
+            }
+
+            seen.add(child);
+
+            queue.push({
+                node: child,
+                depth: current.depth + 1
+            });
+        }
+    }
+
+    return -1;
+}
+
+function buildDepthLimitedSequence(limit) {
+    const result = [];
+
+    function dfs(node, depth, path) {
+        result.push({
+            node,
+            depth,
+            path: [...path, node]
+        });
+
+        if (node === goal) {
+            return true;
+        }
+
+        if (depth === limit) {
+            return false;
+        }
+
+        for (const child of graph[node]) {
+            if (dfs(child, depth + 1, [...path, node])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    dfs("A", 0, []);
+
+    return result;
+}
+
+function setStatus(text, type) {
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2300);
+}
+
+function updateStats() {
+    depthStat.textContent = depthLimit;
+    visitedStat.textContent = totalVisited;
+    iterationStat.textContent = iteration;
+
+    iterationBadge.textContent =
+        "Depth limit: " + depthLimit;
+}
+
+function createNode(node, className = "") {
+    const element = document.createElement("div");
+
+    element.className = "tree-node " + className;
+
+    const value = document.createElement("div");
+    value.className = "node-value";
+    value.textContent = node;
+
+    const small = document.createElement("small");
+
+    if (node === goal) {
+        small.textContent = "GOAL";
+    } else {
+        small.textContent = "depth " + getDepth(node);
+    }
+
+    element.appendChild(value);
+    element.appendChild(small);
+
+    return element;
+}
+
+function renderTree(visitedNodes = [], pathNodes = []) {
+    treeWrapper.innerHTML = "";
+
+    const tree = document.createElement("div");
+    tree.className = "tree";
+
+    const levels = [
+        ["A"],
+        ["B", "C"],
+        ["D", "E", "F", "G"],
+        ["H", "I", "J"]
+    ];
+
+    levels.forEach((levelNodes, levelIndex) => {
+        const level = document.createElement("div");
+        level.className = "tree-level";
+
+        levelNodes.forEach(node => {
+            let className = "";
+
+            if (node === goal) {
+                className += " goal";
+            }
+
+            if (visitedNodes.includes(node)) {
+                className += " visited";
+            }
+
+            if (pathNodes.includes(node)) {
+                className += " path";
+            }
+
+            if (
+                currentPath.length > 0 &&
+                currentPath[currentPath.length - 1] === node
+            ) {
+                className += " current";
+            }
+
+            level.appendChild(createNode(node, className));
+        });
+
+        tree.appendChild(level);
+
+        if (levelIndex < levels.length - 1) {
+            const connector = document.createElement("div");
+            connector.className = "connector-row";
+
+            const line = document.createElement("div");
+            line.className = "connector-line";
+
+            connector.appendChild(line);
+            tree.appendChild(connector);
+        }
+    });
+
+    treeWrapper.appendChild(tree);
+}
+
+function clearLog() {
+    logBox.innerHTML = "";
+}
+
+function addLog(message) {
+    const entry = document.createElement("div");
+    entry.className = "log-entry";
+
+    const number = document.createElement("div");
+    number.className = "log-number";
+    number.textContent = logBox.children.length + 1;
+
+    const text = document.createElement("div");
+    text.textContent = message;
+
+    entry.appendChild(number);
+    entry.appendChild(text);
+
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+function initializeSearch() {
+    goal = goalSelect.value;
+    goalDisplay.textContent = goal;
+
+    depthLimit = 0;
+    iteration = 0;
+    totalVisited = 0;
+    running = false;
+    finished = false;
+    sequenceIndex = 0;
+    currentSequence = [];
+    currentPath = [];
+    foundPath = null;
+
+    clearTimeout(timer);
+
+    startBtn.disabled = false;
+    stepBtn.disabled = false;
+
+    setStatus("Ready");
+    clearLog();
+
+    logBox.innerHTML = `
+        <div class="empty-state">
+            <div>
+                <span style="font-size:2rem;display:block;margin-bottom:8px;">🔎</span>
+                <strong>Search log is empty.</strong>
+                <p style="margin-top:6px;">
+                    Start the algorithm to see each state.
+                </p>
+            </div>
+        </div>
+    `;
+
+    renderTree();
+    updateStats();
+}
+
+function prepareIteration() {
+    currentSequence = buildDepthLimitedSequence(depthLimit);
+    sequenceIndex = 0;
+    currentPath = [];
+
+    iteration++;
+
+    updateStats();
+
+    addLog(
+        "Starting depth-limited DFS with limit " +
+        depthLimit + "."
+    );
+}
+
+function processNextStep() {
+    if (finished) {
+        return;
+    }
+
+    if (sequenceIndex >= currentSequence.length) {
+        if (foundPath) {
+            finishSearch();
+            return;
+        }
+
+        depthLimit++;
+
+        prepareIteration();
+        processNextStep();
+        return;
+    }
+
+    const state = currentSequence[sequenceIndex];
+    sequenceIndex++;
+
+    totalVisited++;
+    currentPath = state.path;
+
+    const visitedNodes = currentSequence
+        .slice(0, sequenceIndex)
+        .map(item => item.node);
+
+    const reachedGoal = state.node === goal;
+
+    if (reachedGoal) {
+        foundPath = state.path;
+
+        addLog(
+            "Goal " + goal +
+            " reached at depth " +
+            state.depth + "."
+        );
+
+        renderTree(
+            visitedNodes,
+            foundPath
+        );
+
+        updateStats();
+
+        finishSearch();
+        return;
+    }
+
+    if (state.depth === depthLimit) {
+        addLog(
+            "Visited " +
+            state.node +
+            " — depth limit reached."
+        );
+    } else {
+        addLog(
+            "Visited " +
+            state.node +
+            " at depth " +
+            state.depth +
+            "."
+        );
+    }
+
+    renderTree(
+        visitedNodes,
+        []
+    );
+
+    updateStats();
+}
+
+function finishSearch() {
+    running = false;
+    finished = true;
+
+    startBtn.disabled = true;
+    stepBtn.disabled = true;
+
+    setStatus("Goal found", "done");
+
+    if (foundPath) {
+        currentPath = foundPath;
+
+        renderTree(
+            Array.from(new Set(
+                currentSequence
+                    .slice(0, sequenceIndex)
+                    .map(item => item.node)
+            )),
+            foundPath
+        );
+
+        addLog(
+            "Path found: " +
+            foundPath.join(" → ")
+        );
+
+        showToast(
+            "Goal found in " +
+            foundPath.length +
+            " nodes."
+        );
+    }
+
+    updateStats();
+}
+
+function automaticSearch() {
+    if (!running || finished) {
+        return;
+    }
+
+    processNextStep();
+
+    if (running && !finished) {
+        timer = setTimeout(
+            automaticSearch,
+            Number(speedSelect.value)
+        );
+    }
+}
+
+function startSearch() {
+    if (finished) {
+        initializeSearch();
+    }
+
+    if (!running) {
+        running = true;
+        setStatus("Searching...", "running");
+
+        if (iteration === 0) {
+            prepareIteration();
+        }
+
+        automaticSearch();
+    }
+}
+
+function stepSearch() {
+    if (finished) {
+        showToast("Search complete. Press Reset to try again.");
+        return;
+    }
+
+    if (running) {
+        return;
+    }
+
+    setStatus("Stepping...", "running");
+
+    if (iteration === 0) {
+        prepareIteration();
+    }
+
+    processNextStep();
+
+    if (!finished) {
+        setStatus("Paused");
+    }
+}
+
+goalSelect.addEventListener("change", () => {
+    goal = goalSelect.value;
+    goalDisplay.textContent = goal;
+
+    initializeSearch();
+
+    showToast("New goal selected: " + goal);
+});
+
+startBtn.addEventListener("click", startSearch);
+
+stepBtn.addEventListener("click", stepSearch);
+
+resetBtn.addEventListener("click", () => {
+    initializeSearch();
+    showToast("IDDFS search reset.");
+});
+
+initializeSearch();
+</script>
+
+</body>
+</html>

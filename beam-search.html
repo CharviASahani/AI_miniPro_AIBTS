@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Beam Search">
+    <title>Beam Search — AI Behind The State</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 690px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .workspace {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 34%),
+            rgba(255,255,255,0.88);
+    }
+
+    .visual-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.55;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .control-group {
+        margin-bottom: 20px;
+    }
+
+    .control-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .control-label strong {
+        font-size: 0.88rem;
+    }
+
+    .control-label span {
+        color: var(--purple);
+        font-weight: 900;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        accent-color: var(--purple);
+        cursor: pointer;
+    }
+
+    .select-box {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: white;
+        color: var(--ink);
+        outline: none;
+    }
+
+    .select-box:focus {
+        border-color: rgba(139,114,216,0.45);
+        box-shadow: 0 0 0 4px rgba(139,114,216,0.08);
+    }
+
+    .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .message {
+        margin-top: 18px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.55;
+        font-size: 0.86rem;
+    }
+
+    .beam-stage {
+        min-height: 430px;
+        padding: 18px;
+        border-radius: 23px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow-x: auto;
+    }
+
+    .levels {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        min-width: 650px;
+        padding: 15px 5px 25px;
+    }
+
+    .level {
+        flex: 1;
+        min-width: 175px;
+    }
+
+    .level-title {
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 0.82rem;
+        color: var(--muted);
+        font-weight: 850;
+    }
+
+    .level-title span {
+        display: inline-block;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .nodes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .node {
+        padding: 15px;
+        border-radius: 17px;
+        background: white;
+        border: 2px solid #e2dcef;
+        box-shadow: 0 7px 18px rgba(80,70,110,0.06);
+        transition: 0.25s ease;
+        text-align: center;
+    }
+
+    .node.active {
+        background: var(--blue);
+        border-color: #a9cdec;
+        transform: translateY(-2px);
+    }
+
+    .node.selected {
+        background: var(--mint);
+        border-color: #9ed0b5;
+    }
+
+    .node.pruned {
+        background: #fff1f5;
+        border-color: #f1bfd0;
+        opacity: 0.68;
+    }
+
+    .node-value {
+        font-size: 1.2rem;
+        font-weight: 950;
+    }
+
+    .node-label {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 0.74rem;
+    }
+
+    .node-score {
+        margin-top: 7px;
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.7rem;
+        font-weight: 900;
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 17px;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.74rem;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .legend-dot.blue {
+        background: #a9cdec;
+    }
+
+    .legend-dot.green {
+        background: #9ed0b5;
+    }
+
+    .legend-dot.pink {
+        background: #f1bfd0;
+    }
+
+    .stats {
+        margin-top: 17px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+    }
+
+    .stat {
+        padding: 13px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.75);
+        text-align: center;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .stat strong {
+        font-size: 1.2rem;
+    }
+
+    .info-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 650px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .workspace {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .beam-stage {
+            padding: 10px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Optimization · Beam Search</div>
+
+
+<h1>
+    Search Smarter,<br>
+    <span class="gradient">Not Everywhere.</span>
+</h1>
+
+<p>
+    Explore Beam Search through an interactive search landscape.
+    Instead of keeping every possibility, the algorithm keeps only
+    the most promising candidates at each level.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Set the Beam</strong>
+        <span>Choose how many candidates survive.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Search</strong>
+    <span>Expand and evaluate candidates.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Observe</strong>
+    <span>Watch weaker paths disappear.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+
+<div class="workspace">
+
+    <div class="panel control-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>🔎 Search Lab</h2>
+                <p>
+                    Adjust the beam width and watch the algorithm
+                    make its decisions.
+                </p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div class="control-group">
+
+            <div class="control-label">
+                <strong>Beam Width</strong>
+                <span id="beamValue">2</span>
+            </div>
+
+            <input
+                id="beamWidth"
+                type="range"
+                min="1"
+                max="4"
+                value="2"
+                aria-label="Beam width"
+            >
+
+        </div>
+
+        <div class="control-group">
+
+            <div class="control-label">
+                <strong>Search Depth</strong>
+                <span id="depthValue">4</span>
+            </div>
+
+            <input
+                id="searchDepth"
+                type="range"
+                min="2"
+                max="6"
+                value="4"
+                aria-label="Search depth"
+            >
+
+        </div>
+
+        <div class="control-group">
+
+            <div class="control-label">
+                <strong>Search Scenario</strong>
+            </div>
+
+            <select id="scenario" class="select-box">
+                <option value="balanced">Balanced Landscape</option>
+                <option value="narrow">Narrow Optimal Path</option>
+                <option value="wide">Wide Candidate Landscape</option>
+            </select>
+
+        </div>
+
+        <div class="btn-row">
+
+            <button id="runBtn" class="btn btn-primary">
+                ▶ Run Beam Search
+            </button>
+
+            <button id="stepBtn" class="btn btn-blue">
+                Step
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset
+            </button>
+
+        </div>
+
+        <div class="message" id="message">
+            Beam Search starts with the initial state and repeatedly
+            keeps only the strongest candidates according to their score.
+        </div>
+
+    </div>
+
+    <div class="panel visual-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>✦ Behind The State</h2>
+                <p>
+                    Blue nodes are candidates being considered,
+                    green nodes survive the beam, and pink nodes are pruned.
+                </p>
+            </div>
+        </div>
+
+        <div id="beamStage" class="beam-stage">
+            <div class="levels">
+
+                <div class="level">
+                    <div class="level-title">
+                        <span>Level 0</span>
+                    </div>
+
+                    <div class="nodes">
+                        <div class="node selected">
+                            <div class="node-value">Start</div>
+                            <div class="node-label">Initial state</div>
+                            <div class="node-score">score 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="level">
+                    <div class="level-title">
+                        <span>Level 1</span>
+                    </div>
+
+                    <div class="nodes">
+                        <div class="node">
+                            <div class="node-value">A</div>
+                            <div class="node-label">Candidate</div>
+                            <div class="node-score">score 8</div>
+                        </div>
+
+                        <div class="node">
+                            <div class="node-value">B</div>
+                            <div class="node-label">Candidate</div>
+                            <div class="node-score">score 6</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="level">
+                    <div class="level-title">
+                        <span>Level 2</span>
+                    </div>
+
+                    <div class="nodes">
+                        <div class="node">
+                            <div class="node-value">A1</div>
+                            <div class="node-label">Waiting</div>
+                        </div>
+
+                        <div class="node">
+                            <div class="node-value">B1</div>
+                            <div class="node-label">Waiting</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="level">
+                    <div class="level-title">
+                        <span>Goal</span>
+                    </div>
+
+                    <div class="nodes">
+                        <div class="node">
+                            <div class="node-value">?</div>
+                            <div class="node-label">Not reached</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-dot blue"></span>
+                Candidate
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot green"></span>
+                Survives beam
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot pink"></span>
+                Pruned
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <small>Depth</small>
+                <strong id="currentDepth">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Expanded</small>
+                <strong id="expandedCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Survivors</small>
+                <strong id="survivorCount">1</strong>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="info-section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand the algorithm</div>
+
+    <h2>What does Beam Search do?</h2>
+
+    <p>
+        Beam Search is a heuristic search strategy that explores
+        multiple candidates while limiting how many states survive
+        at each level.
+    </p>
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+        <div class="concept-icon">🌱</div>
+
+        <h3>Start with candidates</h3>
+
+        <p>
+            The algorithm begins with an initial state and expands
+            it into possible next states.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">📊</div>
+
+        <h3>Score possibilities</h3>
+
+        <p>
+            Every generated candidate receives a heuristic score
+            that estimates how promising the state is.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">✂️</div>
+
+        <h3>Prune the rest</h3>
+
+        <p>
+            Only the best candidates up to the selected beam width
+            are kept for the next search level.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🎯</div>
+
+        <h3>Reach a goal</h3>
+
+        <p>
+            The surviving candidates continue expanding until the
+            target depth is reached or a goal is discovered.
+        </p>
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>See the core idea.</h2>
+
+    <p>
+        This simplified implementation captures the central idea:
+        expand candidates, score them, sort them, and retain only
+        the strongest beam-width candidates.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">beam-search.js</span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">beamSearch</span>(start, beamWidth) {
+<span class="kw">let</span> beam = [start];
+
+<span class="kw">while</span> (beam.length &gt; <span class="num">0</span>) {
+
+    <span class="kw">const</span> candidates = [];
+
+    <span class="kw">for</span> (<span class="kw">const</span> state <span class="kw">of</span> beam) {
+        <span class="kw">const</span> nextStates =
+            <span class="fn">expand</span>(state);
+
+        candidates.push(...nextStates);
+    }
+
+    candidates.sort(
+        (a, b) =&gt; b.score - a.score
+    );
+
+    beam =
+        candidates.slice(<span class="num">0</span>, beamWidth);
+
+    <span class="kw">if</span> (<span class="fn">goalReached</span>(beam)) {
+        <span class="kw">return</span> beam;
+    }
+}
+
+<span class="kw">return</span> <span class="kw">null</span>;
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Beam Width</span>
+    <strong>b</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Search Depth</span>
+    <strong>d</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Approx. Expansion</span>
+    <strong>O(b × d)</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const beamWidthInput = document.getElementById("beamWidth");
+const searchDepthInput = document.getElementById("searchDepth");
+const scenarioInput = document.getElementById("scenario");
+
+const beamValue = document.getElementById("beamValue");
+const depthValue = document.getElementById("depthValue");
+
+const runBtn = document.getElementById("runBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const beamStage = document.getElementById("beamStage");
+const message = document.getElementById("message");
+const statusBadge = document.getElementById("statusBadge");
+
+const currentDepth = document.getElementById("currentDepth");
+const expandedCount = document.getElementById("expandedCount");
+const survivorCount = document.getElementById("survivorCount");
+
+let currentStep = 0;
+let totalExpanded = 0;
+let running = false;
+let timer = null;
+
+const scenarioData = {
+    balanced: [
+        [9, 8, 7, 6],
+        [9, 8, 7, 6],
+        [10, 9, 8, 5],
+        [12, 10, 9, 7],
+        [14, 12, 11, 8],
+        [16, 14, 12, 9]
+    ],
+
+    narrow: [
+        [9, 7, 6, 3],
+        [11, 8, 6, 4],
+        [15, 10, 8, 5],
+        [18, 13, 9, 6],
+        [23, 15, 10, 7],
+        [29, 17, 11, 8]
+    ],
+
+    wide: [
+        [10, 9, 8, 7],
+        [12, 11, 10, 9],
+        [15, 14, 13, 12],
+        [18, 17, 16, 15],
+        [22, 21, 20, 19],
+        [26, 25, 24, 23]
+    ]
+};
+
+beamWidthInput.addEventListener("input", () => {
+    beamValue.textContent = beamWidthInput.value;
+    resetSearch();
+});
+
+searchDepthInput.addEventListener("input", () => {
+    depthValue.textContent = searchDepthInput.value;
+    resetSearch();
+});
+
+scenarioInput.addEventListener("change", resetSearch);
+
+function showToast(text) {
+    const toast = document.getElementById("toast");
+
+    toast.textContent = text;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
+}
+
+function setStatus(text, type = "") {
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+function createNodesForLevel(depth) {
+    const width = Number(beamWidthInput.value);
+    const scenario = scenarioInput.value;
+    const scores = scenarioData[scenario][Math.min(depth - 1, 5)];
+
+    const count = Math.min(
+        scores.length,
+        Math.max(width + 1, 3)
+    );
+
+    const nodes = [];
+
+    for (let i = 0; i < count; i++) {
+        const baseScore = scores[i];
+
+        const variation =
+            depth * 0.35 -
+            i * 0.15;
+
+        nodes.push({
+            label:
+                String.fromCharCode(65 + i) +
+                (depth > 1 ? depth : ""),
+            score:
+                Math.round((baseScore + variation) * 10) / 10
+        });
+    }
+
+    return nodes;
+}
+
+function renderStage() {
+    const depthLimit = Number(searchDepthInput.value);
+    const width = Number(beamWidthInput.value);
+
+    let html = '<div class="levels">';
+
+    html += `
+        <div class="level">
+            <div class="level-title">
+                <span>Level 0</span>
+            </div>
+
+            <div class="nodes">
+                <div class="node selected">
+                    <div class="node-value">Start</div>
+                    <div class="node-label">Initial state</div>
+                    <div class="node-score">score 0</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    for (let level = 1; level <= depthLimit; level++) {
+
+        const candidates = createNodesForLevel(level);
+
+        const ranked = [...candidates].sort(
+            (a, b) => b.score - a.score
+        );
+
+        const survivors = ranked.slice(0, width);
+
+        html += `
+            <div class="level">
+                <div class="level-title">
+                    <span>Level ${level}</span>
+                </div>
+
+                <div class="nodes">
+        `;
+
+        candidates.forEach(candidate => {
+
+            const survived = survivors.some(
+                item => item.label === candidate.label
+            );
+
+            const visible =
+                level <= currentStep;
+
+            let className = "node";
+
+            if (!visible) {
+                className += "";
+            } else if (survived) {
+                className += " selected";
+            } else {
+                className += " pruned";
+            }
+
+            html += `
+                <div class="${className}">
+                    <div class="node-value">
+                        ${candidate.label}
+                    </div>
+
+                    <div class="node-label">
+                        ${
+                            !visible
+                                ? "Waiting"
+                                : survived
+                                    ? "Survives beam"
+                                    : "Pruned"
+                        }
+                    </div>
+
+                    <div class="node-score">
+                        score ${candidate.score}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+    }
+
+    html += "</div>";
+
+    beamStage.innerHTML = html;
+
+    currentDepth.textContent = Math.min(
+        currentStep,
+        depthLimit
+    );
+
+    survivorCount.textContent =
+        currentStep === 0
+            ? 1
+            : width;
+}
+
+function performStep() {
+    const depthLimit = Number(searchDepthInput.value);
+
+    if (currentStep >= depthLimit) {
+        finishSearch();
+        return;
+    }
+
+    currentStep++;
+    totalExpanded += 4;
+
+    renderStage();
+
+    if (currentStep === depthLimit) {
+        setStatus("Goal reached", "done");
+
+        message.innerHTML =
+            "Search reached the selected depth. The surviving beam contains only the strongest candidates kept at each level.";
+
+        showToast("Beam Search complete.");
+    } else {
+        setStatus(
+            "Searching level " + currentStep,
+            "running"
+        );
+
+        message.innerHTML =
+            "Level " + currentStep +
+            " expanded its candidates. Beam width " +
+            beamWidthInput.value +
+            " determines how many survive.";
+
+        showToast(
+            "Level " + currentStep + " explored."
+        );
+    }
+
+    expandedCount.textContent = totalExpanded;
+}
+
+function finishSearch() {
+    running = false;
+
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+
+    runBtn.disabled = false;
+    stepBtn.disabled = false;
+}
+
+function runSearch() {
+    resetSearch(false);
+
+    running = true;
+
+    runBtn.disabled = true;
+    stepBtn.disabled = true;
+
+    setStatus("Searching...", "running");
+
+    message.textContent =
+        "Beam Search is expanding candidates level by level and pruning weaker states.";
+
+    const depthLimit = Number(searchDepthInput.value);
+
+    timer = setInterval(() => {
+
+        if (currentStep >= depthLimit) {
+            finishSearch();
+            return;
+        }
+
+        currentStep++;
+        totalExpanded += 4;
+
+        renderStage();
+
+        expandedCount.textContent = totalExpanded;
+
+        if (currentStep >= depthLimit) {
+
+            setStatus("Goal reached", "done");
+
+            message.innerHTML =
+                "The search has reached the target depth. Notice how only the best candidates remain.";
+
+            showToast("Search complete.");
+
+            finishSearch();
+        } else {
+
+            setStatus(
+                "Level " + currentStep,
+                "running"
+            );
+        }
+
+    }, 750);
+}
+
+function resetSearch(showMessage = true) {
+
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+
+    currentStep = 0;
+    totalExpanded = 0;
+    running = false;
+
+    runBtn.disabled = false;
+    stepBtn.disabled = false;
+
+    setStatus("Ready");
+
+    currentDepth.textContent = "0";
+    expandedCount.textContent = "0";
+    survivorCount.textContent = "1";
+
+    renderStage();
+
+    if (showMessage) {
+        message.textContent =
+            "Beam Search starts with the initial state and repeatedly keeps only the strongest candidates according to their score.";
+    }
+}
+
+runBtn.addEventListener("click", runSearch);
+
+stepBtn.addEventListener("click", () => {
+    if (running) {
+        return;
+    }
+
+    performStep();
+});
+
+resetBtn.addEventListener("click", () => {
+    resetSearch();
+    showToast("Search reset.");
+});
+
+beamValue.textContent = beamWidthInput.value;
+depthValue.textContent = searchDepthInput.value;
+
+resetSearch(false);
+</script>
+
+</body>
+</html>

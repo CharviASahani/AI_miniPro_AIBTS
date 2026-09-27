@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Genetic Algorithm">
+    <title>Genetic Algorithm — AI Behind The State</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .visual-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .setting {
+        margin-bottom: 18px;
+    }
+
+    .setting label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-weight: 850;
+        font-size: 0.88rem;
+    }
+
+    .setting label span {
+        color: var(--purple);
+        font-weight: 900;
+    }
+
+    .setting input[type="text"],
+    .setting input[type="number"] {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        outline: none;
+        color: var(--ink);
+        background: #fffdf9;
+        transition: 0.2s ease;
+    }
+
+    .setting input:focus {
+        border-color: rgba(139,114,216,0.55);
+        box-shadow: 0 0 0 4px rgba(139,114,216,0.09);
+    }
+
+    .setting input[type="range"] {
+        width: 100%;
+        accent-color: var(--purple);
+        cursor: pointer;
+    }
+
+    .hint {
+        color: var(--muted);
+        font-size: 0.74rem;
+        line-height: 1.5;
+        margin-top: 5px;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .progress-wrap {
+        margin-top: 22px;
+        padding: 17px;
+        border-radius: 20px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+    }
+
+    .progress-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 9px;
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+
+    .progress-top span:last-child {
+        color: var(--purple);
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 999px;
+        background: #ece8f6;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #8b72d8, #d66d98, #6099d8);
+        transition: width 0.3s ease;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 14px;
+    }
+
+    .stat {
+        padding: 13px 9px;
+        border-radius: 15px;
+        text-align: center;
+        background: white;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 5px;
+        font-size: 0.7rem;
+    }
+
+    .stat strong {
+        font-size: 1.12rem;
+    }
+
+    .population {
+        min-height: 330px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .population-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 3px;
+    }
+
+    .individual {
+        padding: 13px;
+        border-radius: 17px;
+        background: white;
+        border: 1px solid var(--border);
+        transition: 0.25s ease;
+    }
+
+    .individual:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(70,60,100,0.08);
+    }
+
+    .individual.best {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.35);
+    }
+
+    .individual.good {
+        background: #f4f0ff;
+    }
+
+    .individual-code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.76rem;
+        word-break: break-all;
+        min-height: 38px;
+        line-height: 1.45;
+        margin-bottom: 7px;
+    }
+
+    .fitness {
+        font-size: 0.76rem;
+        color: var(--muted);
+    }
+
+    .fitness strong {
+        color: var(--ink);
+    }
+
+    .empty-state {
+        min-height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.7rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .best-result {
+        margin-top: 16px;
+        padding: 18px;
+        border-radius: 19px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.6;
+        font-size: 0.88rem;
+    }
+
+    .best-result strong {
+        color: #315e8d;
+    }
+
+    .section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .generation-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .generation-card {
+        border-radius: 32px;
+        padding: 35px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .generation-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 25px;
+        align-items: flex-end;
+        margin-bottom: 25px;
+    }
+
+    .generation-header h2 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        letter-spacing: -0.06em;
+    }
+
+    .generation-header p {
+        max-width: 620px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .generation-number {
+        padding: 12px 16px;
+        border-radius: 16px;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 950;
+        white-space: nowrap;
+    }
+
+    .evolution-track {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 12px 4px 18px;
+    }
+
+    .generation-box {
+        min-width: 180px;
+        padding: 18px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.85);
+        text-align: center;
+    }
+
+    .generation-box.highlight {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.3);
+    }
+
+    .generation-box .g-icon {
+        font-size: 1.8rem;
+        margin-bottom: 7px;
+    }
+
+    .generation-box strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .generation-box small {
+        color: var(--muted);
+        line-height: 1.45;
+    }
+
+    .arrow {
+        color: var(--purple);
+        font-size: 1.4rem;
+        font-weight: 900;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.25rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+        text-align: center;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @keyframes pop {
+        0% {
+            transform: scale(0.94);
+            opacity: 0.5;
+        }
+
+        70% {
+            transform: scale(1.03);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .individual.newborn {
+        animation: pop 0.4s ease;
+    }
+
+    @media (max-width: 850px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .generation-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .generation-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .generation-card {
+            padding: 24px 18px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Optimization · Evolution · Genetic Algorithm</div>
+
+    <h1>
+        Watch AI<br>
+        <span class="gradient">Evolve.</span>
+    </h1>
+
+    <p>
+        Give the algorithm a target phrase and watch a population of
+        tiny candidate solutions evolve generation by generation through
+        selection, crossover and mutation.
+    </p>
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Generate</strong>
+        <span>Create a random population.</span>
+    </div>
+
+    <div class="path-card">
+        <span class="path-number">02</span>
+        <strong>Evolve</strong>
+        <span>Select, combine and mutate.</span>
+    </div>
+
+    <div class="path-card">
+        <span class="path-number">03</span>
+        <strong>Discover</strong>
+        <span>See how fitness improves.</span>
+    </div>
+</section>
+
+<main>
+
+<section class="main-section">
+
+    <div class="layout">
+
+        <div class="panel control-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🧬 Evolution Lab</h2>
+                    <p>Build a population and let evolution search for the target.</p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="setting">
+                <label for="targetInput">
+                    Target phrase
+                    <span id="targetLength">12 chars</span>
+                </label>
+
+                <input
+                    id="targetInput"
+                    type="text"
+                    value="AI BEHIND"
+                    maxlength="24"
+                    autocomplete="off"
+                >
+
+                <div class="hint">
+                    Short targets evolve faster. Spaces and punctuation are allowed.
+                </div>
+            </div>
+
+            <div class="setting">
+                <label for="populationInput">
+                    Population size
+                    <span id="populationValue">24</span>
+                </label>
+
+                <input
+                    id="populationInput"
+                    type="range"
+                    min="8"
+                    max="50"
+                    value="24"
+                >
+            </div>
+
+            <div class="setting">
+                <label for="mutationInput">
+                    Mutation rate
+                    <span id="mutationValue">8%</span>
+                </label>
+
+                <input
+                    id="mutationInput"
+                    type="range"
+                    min="1"
+                    max="30"
+                    value="8"
+                >
+            </div>
+
+            <div class="setting">
+                <label for="speedInput">
+                    Evolution speed
+                    <span id="speedValue">Medium</span>
+                </label>
+
+                <input
+                    id="speedInput"
+                    type="range"
+                    min="1"
+                    max="3"
+                    value="2"
+                >
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">
+                    🧬 Start Evolution
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    → Next Generation
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ Reset
+                </button>
+            </div>
+
+            <div class="progress-wrap">
+
+                <div class="progress-top">
+                    <span>Evolution progress</span>
+                    <span id="progressText">0%</span>
+                </div>
+
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <small>Generation</small>
+                        <strong id="generationStat">0</strong>
+                    </div>
+
+                    <div class="stat">
+                        <small>Best Fitness</small>
+                        <strong id="fitnessStat">0%</strong>
+                    </div>
+
+                    <div class="stat">
+                        <small>Mutations</small>
+                        <strong id="mutationStat">0</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="panel visual-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🔬 Living Population</h2>
+                    <p>
+                        Each card is one candidate solution.
+                        Green means it currently has the highest fitness.
+                    </p>
+                </div>
+            </div>
+
+            <div id="population" class="population">
+
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">🧬</span>
+                        <strong>Your population is waiting.</strong>
+                        <p>
+                            Start evolution to generate the first
+                            generation of candidates.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="bestResult" class="best-result">
+                <strong>Current best:</strong>
+                No candidate has been generated yet.
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="generation-section">
+
+    <div class="generation-card">
+
+        <div class="generation-header">
+
+            <div>
+                <div class="eyebrow">Evolution Process</div>
+                <h2>From randomness to a solution.</h2>
+
+                <p>
+                    A genetic algorithm does not need a giant training
+                    dataset for this demonstration. It repeatedly improves
+                    candidate solutions using a measurable fitness function.
+                </p>
+            </div>
+
+            <div id="generationNumber" class="generation-number">
+                Generation 0
+            </div>
+
+        </div>
+
+        <div class="evolution-track">
+
+            <div class="generation-box">
+                <div class="g-icon">🎲</div>
+                <strong>Random</strong>
+                <small>
+                    Create different candidate strings.
+                </small>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="generation-box">
+                <div class="g-icon">📊</div>
+                <strong>Fitness</strong>
+                <small>
+                    Measure how closely each candidate matches.
+                </small>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="generation-box">
+                <div class="g-icon">🏆</div>
+                <strong>Selection</strong>
+                <small>
+                    Prefer candidates with stronger fitness.
+                </small>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="generation-box">
+                <div class="g-icon">🔀</div>
+                <strong>Crossover</strong>
+                <small>
+                    Combine useful parts of parent candidates.
+                </small>
+            </div>
+
+            <div class="arrow">→</div>
+
+            <div class="generation-box highlight">
+                <div class="g-icon">✨</div>
+                <strong>Mutation</strong>
+                <small>
+                    Introduce small random changes.
+                </small>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="section">
+
+    <div class="section-heading">
+        <div class="mini">Understand the algorithm</div>
+
+        <h2>How does evolution become computation?</h2>
+
+        <p>
+            Genetic algorithms are optimization techniques inspired by
+            natural selection. Instead of directly solving a problem,
+            they repeatedly improve a population of candidate solutions.
+        </p>
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">📊</div>
+            <h3>Fitness</h3>
+            <p>
+                Every candidate receives a fitness score based on how
+                closely it matches the target. Better candidates receive
+                higher scores.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🏆</div>
+            <h3>Selection</h3>
+            <p>
+                Candidates with stronger fitness are more likely to
+                become parents for the next generation.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🔀</div>
+            <h3>Crossover</h3>
+            <p>
+                Two parent candidates are combined to produce a new
+                candidate containing information from both.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">✨</div>
+            <h3>Mutation</h3>
+            <p>
+                Random character changes maintain diversity and allow
+                the population to explore new possibilities.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+        <div class="mini">Implementation</div>
+
+        <h2>See the evolutionary loop.</h2>
+
+        <p>
+            The interactive experiment uses the same core ideas shown
+            in this simplified implementation.
+        </p>
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">genetic-algorithm.js</span>
+
+            <span></span>
+
+        </div>
+
+<pre><code><span class="kw">function</span> <span class="fn">evolve</span>(population, target) {
+
+    <span class="kw">const</span> scored =
+        population.<span class="fn">map</span>(candidate =&gt; ({
+            candidate,
+            fitness: <span class="fn">fitness</span>(candidate, target)
+        }));
+
+    scored.<span class="fn">sort</span>((a, b) =&gt;
+        b.fitness - a.fitness
+    );
+
+    <span class="kw">const</span> parents =
+        scored.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">4</span>);
+
+    <span class="kw">const</span> nextGeneration = [];
+
+    <span class="kw">while</span> (
+        nextGeneration.length &lt;
+        population.length
+    ) {
+        <span class="kw">const</span> parentA =
+            <span class="fn">chooseParent</span>(parents);
+
+        <span class="kw">const</span> parentB =
+            <span class="fn">chooseParent</span>(parents);
+
+        <span class="kw">let</span> child =
+            <span class="fn">crossover</span>(parentA, parentB);
+
+        child =
+            <span class="fn">mutate</span>(child);
+
+        nextGeneration.<span class="fn">push</span>(child);
+    }
+
+    <span class="kw">return</span> nextGeneration;
+}</code></pre>
+
+    </div>
+
+</section>
+
+<section class="complexity">
+
+    <div class="complexity-card">
+        <span>Population</span>
+        <strong>n candidates</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Fitness Evaluation</span>
+        <strong>O(n × L)</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Per Generation</span>
+        <strong>O(n × L)</strong>
+    </div>
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const targetInput = document.getElementById("targetInput");
+const populationInput = document.getElementById("populationInput");
+const mutationInput = document.getElementById("mutationInput");
+const speedInput = document.getElementById("speedInput");
+
+const targetLength = document.getElementById("targetLength");
+const populationValue = document.getElementById("populationValue");
+const mutationValue = document.getElementById("mutationValue");
+const speedValue = document.getElementById("speedValue");
+
+const startBtn = document.getElementById("startBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const statusBadge = document.getElementById("statusBadge");
+const populationElement = document.getElementById("population");
+const bestResult = document.getElementById("bestResult");
+
+const generationStat = document.getElementById("generationStat");
+const fitnessStat = document.getElementById("fitnessStat");
+const mutationStat = document.getElementById("mutationStat");
+
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+const generationNumber = document.getElementById("generationNumber");
+
+const toast = document.getElementById("toast");
+
+const CHARACTER_SET =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?-_";
+
+let population = [];
+let generation = 0;
+let totalMutations = 0;
+let running = false;
+let timer = null;
+
+function getTarget() {
+    return targetInput.value;
+}
+
+function randomCharacter() {
+    return CHARACTER_SET[
+        Math.floor(Math.random() * CHARACTER_SET.length)
+    ];
+}
+
+function createRandomCandidate(length) {
+    let candidate = "";
+
+    for (let i = 0; i < length; i++) {
+        candidate += randomCharacter();
+    }
+
+    return candidate;
+}
+
+function createPopulation() {
+    const target = getTarget();
+    const size = Number(populationInput.value);
+
+    population = [];
+
+    for (let i = 0; i < size; i++) {
+        population.push(
+            createRandomCandidate(target.length)
+        );
+    }
+}
+
+function calculateFitness(candidate, target) {
+    if (target.length === 0) {
+        return 100;
+    }
+
+    let matches = 0;
+
+    for (let i = 0; i < target.length; i++) {
+        if (candidate[i] === target[i]) {
+            matches++;
+        }
+    }
+
+    return Math.round(
+        (matches / target.length) * 100
+    );
+}
+
+function scorePopulation() {
+    const target = getTarget();
+
+    return population
+        .map(candidate => ({
+            candidate,
+            fitness: calculateFitness(candidate, target)
+        }))
+        .sort((a, b) => b.fitness - a.fitness);
+}
+
+function chooseParent(scored) {
+    const poolSize = Math.max(
+        2,
+        Math.ceil(scored.length * 0.35)
+    );
+
+    const index = Math.floor(
+        Math.random() * poolSize
+    );
+
+    return scored[index].candidate;
+}
+
+function crossover(parentA, parentB) {
+    if (parentA.length <= 1) {
+        return parentA;
+    }
+
+    const split = Math.floor(
+        Math.random() * (parentA.length + 1)
+    );
+
+    return (
+        parentA.slice(0, split) +
+        parentB.slice(split)
+    );
+}
+
+function mutate(candidate) {
+    const mutationRate =
+        Number(mutationInput.value) / 100;
+
+    let result = "";
+    let mutations = 0;
+
+    for (let i = 0; i < candidate.length; i++) {
+        if (Math.random() < mutationRate) {
+            result += randomCharacter();
+            mutations++;
+        } else {
+            result += candidate[i];
+        }
+    }
+
+    totalMutations += mutations;
+
+    return result;
+}
+
+function createNextGeneration() {
+    const scored = scorePopulation();
+
+    const eliteCount = Math.max(
+        1,
+        Math.floor(scored.length * 0.08)
+    );
+
+    const nextGeneration = [];
+
+    for (let i = 0; i < eliteCount; i++) {
+        nextGeneration.push(scored[i].candidate);
+    }
+
+    while (nextGeneration.length < population.length) {
+        const parentA = chooseParent(scored);
+        const parentB = chooseParent(scored);
+
+        const child = mutate(
+            crossover(parentA, parentB)
+        );
+
+        nextGeneration.push(child);
+    }
+
+    population = nextGeneration;
+    generation++;
+}
+
+function renderPopulation() {
+    const scored = scorePopulation();
+
+    if (scored.length === 0) {
+        populationElement.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧬</span>
+                    <strong>No population yet.</strong>
+                    <p>Start the evolution experiment.</p>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+    const bestFitness = scored[0].fitness;
+
+    const cards = scored.map((item, index) => {
+
+        let className = "individual";
+
+        if (index === 0) {
+            className += " best";
+        } else if (item.fitness >= bestFitness - 20) {
+            className += " good";
+        }
+
+        return `
+            <div class="${className}">
+                <div class="individual-code">
+                    ${escapeHTML(item.candidate)}
+                </div>
+
+                <div class="fitness">
+                    Fitness:
+                    <strong>${item.fitness}%</strong>
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    populationElement.innerHTML = `
+        <div class="population-grid">
+            ${cards}
+        </div>
+    `;
+
+    const best = scored[0];
+
+    bestResult.innerHTML = `
+        <strong>Current best:</strong>
+        "${escapeHTML(best.candidate)}"
+        has a fitness of
+        <strong>${best.fitness}%</strong>.
+        ${
+            best.fitness === 100
+                ? " The target has been reached."
+                : " Keep evolving to improve the population."
+        }
+    `;
+
+    generationStat.textContent = generation;
+    fitnessStat.textContent = best.fitness + "%";
+    mutationStat.textContent = totalMutations;
+
+    progressBar.style.width = best.fitness + "%";
+    progressText.textContent = best.fitness + "%";
+
+    generationNumber.textContent =
+        "Generation " + generation;
+}
+
+function escapeHTML(value) {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function setStatus(text, type = "") {
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2300);
+}
+
+function updateSettings() {
+    const target = getTarget();
+
+    targetLength.textContent =
+        target.length + (target.length === 1 ? " char" : " chars");
+
+    populationValue.textContent =
+        populationInput.value;
+
+    mutationValue.textContent =
+        mutationInput.value + "%";
+
+    const speed = Number(speedInput.value);
+
+    if (speed === 1) {
+        speedValue.textContent = "Slow";
+    } else if (speed === 2) {
+        speedValue.textContent = "Medium";
+    } else {
+        speedValue.textContent = "Fast";
+    }
+}
+
+function getSpeedDelay() {
+    const speed = Number(speedInput.value);
+
+    if (speed === 1) {
+        return 650;
+    }
+
+    if (speed === 2) {
+        return 280;
+    }
+
+    return 90;
+}
+
+function initialiseExperiment() {
+    stopEvolution();
+
+    const target = getTarget();
+
+    if (target.length === 0) {
+        showToast("Enter a target phrase first.");
+        targetInput.focus();
+        return false;
+    }
+
+    generation = 0;
+    totalMutations = 0;
+
+    createPopulation();
+    renderPopulation();
+
+    setStatus("Ready");
+
+    return true;
+}
+
+function startEvolution() {
+    if (running) {
+        stopEvolution();
+        return;
+    }
+
+    if (population.length === 0) {
+        if (!initialiseExperiment()) {
+            return;
+        }
+    }
+
+    running = true;
+
+    startBtn.textContent = "Ⅱ Pause Evolution";
+    setStatus("Evolving...", "running");
+
+    runGeneration();
+}
+
+function runGeneration() {
+    if (!running) {
+        return;
+    }
+
+    const scored = scorePopulation();
+
+    if (scored[0] && scored[0].fitness === 100) {
+        running = false;
+        startBtn.textContent = "🧬 Start Evolution";
+        setStatus("Target Found", "done");
+        renderPopulation();
+        showToast("The population found the target.");
+        return;
+    }
+
+    createNextGeneration();
+    renderPopulation();
+
+    const updated = scorePopulation();
+
+    if (updated[0] && updated[0].fitness === 100) {
+        running = false;
+        startBtn.textContent = "🧬 Start Evolution";
+        setStatus("Target Found", "done");
+        showToast("Evolution reached 100% fitness.");
+        return;
+    }
+
+    timer = setTimeout(
+        runGeneration,
+        getSpeedDelay()
+    );
+}
+
+function stopEvolution() {
+    running = false;
+
+    clearTimeout(timer);
+    timer = null;
+
+    startBtn.textContent = "🧬 Start Evolution";
+
+    if (population.length > 0) {
+        const scored = scorePopulation();
+
+        if (
+            scored.length > 0 &&
+            scored[0].fitness === 100
+        ) {
+            setStatus("Target Found", "done");
+        } else {
+            setStatus("Paused");
+        }
+    } else {
+        setStatus("Ready");
+    }
+}
+
+function nextGeneration() {
+    if (running) {
+        showToast("Pause evolution before using step mode.");
+        return;
+    }
+
+    if (population.length === 0) {
+        if (!initialiseExperiment()) {
+            return;
+        }
+
+        showToast("Generation 0 created.");
+        return;
+    }
+
+    const scored = scorePopulation();
+
+    if (scored[0].fitness === 100) {
+        setStatus("Target Found", "done");
+        showToast("The target is already complete.");
+        return;
+    }
+
+    createNextGeneration();
+    renderPopulation();
+
+    const updated = scorePopulation();
+
+    if (updated[0].fitness === 100) {
+        setStatus("Target Found", "done");
+        showToast("Target reached.");
+    } else {
+        setStatus("Paused");
+        showToast("Generation " + generation + " created.");
+    }
+}
+
+function resetExperiment() {
+    stopEvolution();
+
+    population = [];
+    generation = 0;
+    totalMutations = 0;
+
+    populationElement.innerHTML = `
+        <div class="empty-state">
+            <div>
+                <span class="emoji">🧬</span>
+                <strong>Your population is waiting.</strong>
+                <p>
+                    Start evolution to generate the first
+                    generation of candidates.
+                </p>
+            </div>
+        </div>
+    `;
+
+    bestResult.innerHTML = `
+        <strong>Current best:</strong>
+        No candidate has been generated yet.
+    `;
+
+    generationStat.textContent = "0";
+    fitnessStat.textContent = "0%";
+    mutationStat.textContent = "0";
+
+    progressBar.style.width = "0%";
+    progressText.textContent = "0%";
+    generationNumber.textContent = "Generation 0";
+
+    setStatus("Ready");
+
+    showToast("Evolution lab reset.");
+}
+
+targetInput.addEventListener("input", () => {
+    updateSettings();
+
+    if (!running) {
+        population = [];
+        generation = 0;
+        totalMutations = 0;
+
+        populationElement.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧬</span>
+                    <strong>New target detected.</strong>
+                    <p>
+                        Start evolution to create a fresh population.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        bestResult.innerHTML = `
+            <strong>Current best:</strong>
+            No candidate has been generated yet.
+        `;
+
+        generationStat.textContent = "0";
+        fitnessStat.textContent = "0%";
+        mutationStat.textContent = "0";
+
+        progressBar.style.width = "0%";
+        progressText.textContent = "0%";
+        generationNumber.textContent = "Generation 0";
+    }
+});
+
+populationInput.addEventListener("input", updateSettings);
+mutationInput.addEventListener("input", updateSettings);
+speedInput.addEventListener("input", updateSettings);
+
+startBtn.addEventListener("click", startEvolution);
+stepBtn.addEventListener("click", nextGeneration);
+resetBtn.addEventListener("click", resetExperiment);
+
+updateSettings();
+setStatus("Ready");
+</script>
+
+</body>
+</html>

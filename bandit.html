@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AI Behind The State - Interactive Multi-Armed Bandit">
+<title>Multi-Armed Bandit — AI Behind The State</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --cream: #fffaf2;
+    --pink: #ffdce8;
+    --pink-dark: #d86f96;
+    --lavender: #e9e1ff;
+    --purple: #8b72d8;
+    --purple-dark: #6855ad;
+    --blue: #dceeff;
+    --blue-dark: #6099d8;
+    --mint: #dff7eb;
+    --green: #58a67c;
+    --yellow: #fff0bf;
+    --yellow-dark: #b88e28;
+    --peach: #ffe3cf;
+    --orange: #e99461;
+    --ink: #29263a;
+    --muted: #777386;
+    --white: #ffffff;
+    --border: rgba(55, 48, 80, 0.10);
+    --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at 8% 4%, rgba(255,220,232,.72), transparent 25%),
+        radial-gradient(circle at 92% 8%, rgba(220,238,255,.78), transparent 28%),
+        radial-gradient(circle at 48% 92%, rgba(223,247,235,.72), transparent 30%),
+        var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    border: 0;
+}
+
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 6%;
+    background: rgba(255,250,242,.88);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    text-decoration: none;
+    color: var(--ink);
+    font-weight: 900;
+    letter-spacing: -.04em;
+    font-size: 1.05rem;
+}
+
+.brand span {
+    color: var(--purple);
+}
+
+.back {
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 750;
+    font-size: .9rem;
+    transition: .2s ease;
+}
+
+.back:hover {
+    color: var(--purple);
+    transform: translateX(-3px);
+}
+
+.hero {
+    width: min(1180px,92%);
+    margin: auto;
+    padding: 70px 0 45px;
+    text-align: center;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--lavender);
+    color: var(--purple-dark);
+    font-size: .76rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+
+.eyebrow::before {
+    content: "✦";
+    color: var(--purple);
+}
+
+h1 {
+    font-size: clamp(3rem,8vw,6.4rem);
+    line-height: .92;
+    letter-spacing: -.075em;
+    font-weight: 950;
+    margin-bottom: 22px;
+}
+
+.gradient {
+    background: linear-gradient(100deg,#7964c5,#d66d98,#6099d8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hero p {
+    max-width: 700px;
+    margin: auto;
+    color: var(--muted);
+    line-height: 1.75;
+    font-size: 1.07rem;
+}
+
+.learning-path {
+    width: min(1000px,92%);
+    margin: 0 auto 50px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 14px;
+}
+
+.path-card {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: rgba(255,255,255,.72);
+    box-shadow: 0 8px 30px rgba(70,60,100,.05);
+}
+
+.path-card.active {
+    border-color: rgba(139,114,216,.35);
+    background: linear-gradient(135deg,#f1edff,#fff);
+}
+
+.path-number {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--lavender);
+    color: var(--purple);
+    font-weight: 900;
+    margin-bottom: 9px;
+}
+
+.path-card strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.path-card span:last-child {
+    color: var(--muted);
+    font-size: .84rem;
+}
+
+.main-section {
+    width: min(1180px,92%);
+    margin: auto;
+    padding-bottom: 80px;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: .92fr 1.08fr;
+    gap: 24px;
+}
+
+.panel {
+    background: rgba(255,255,255,.86);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    padding: 28px;
+}
+
+.control-panel {
+    background:
+        radial-gradient(circle at 100% 0%,rgba(220,238,255,.65),transparent 34%),
+        rgba(255,255,255,.88);
+}
+
+.live-panel {
+    background:
+        radial-gradient(circle at 0% 100%,rgba(255,220,232,.62),transparent 35%),
+        rgba(255,255,255,.88);
+}
+
+.panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 23px;
+}
+
+.panel-heading h2 {
+    font-size: 1.45rem;
+    letter-spacing: -.04em;
+}
+
+.panel-heading p {
+    color: var(--muted);
+    font-size: .86rem;
+    margin-top: 5px;
+    line-height: 1.55;
+}
+
+.status {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--mint);
+    color: #39765a;
+    font-size: .74rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.status.running {
+    background: var(--yellow);
+    color: #886c1f;
+}
+
+.status.paused {
+    background: var(--pink);
+    color: #8b4862;
+}
+
+.parameter-box {
+    padding: 19px;
+    border-radius: 21px;
+    background: #fbfaff;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+}
+
+.parameter-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.parameter-top strong {
+    font-size: .92rem;
+}
+
+.value-badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--lavender);
+    color: var(--purple-dark);
+    font-weight: 900;
+    font-size: .78rem;
+}
+
+input[type="range"] {
+    width: 100%;
+    accent-color: var(--purple);
+    cursor: pointer;
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: .7rem;
+    margin-top: 5px;
+}
+
+.select-box {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: white;
+    color: var(--ink);
+    outline: none;
+}
+
+.select-box:focus {
+    border-color: rgba(139,114,216,.5);
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.btn {
+    padding: 12px 18px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 850;
+    transition: .2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: var(--purple);
+    color: white;
+    box-shadow: 0 8px 20px rgba(139,114,216,.25);
+}
+
+.btn-secondary {
+    background: var(--pink);
+    color: #8b4862;
+}
+
+.btn-blue {
+    background: var(--blue);
+    color: #4779ad;
+}
+
+.btn-green {
+    background: var(--mint);
+    color: #39765a;
+}
+
+.btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.algorithm-note {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 17px;
+    background: var(--blue);
+    color: #426e9e;
+    line-height: 1.6;
+    font-size: .83rem;
+}
+
+.arms-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 11px;
+}
+
+.arm-card {
+    position: relative;
+    overflow: hidden;
+    padding: 16px 12px;
+    border-radius: 19px;
+    background: white;
+    border: 1px solid var(--border);
+    transition: .25s ease;
+}
+
+.arm-card.selected {
+    background: var(--mint);
+    border-color: rgba(88,166,124,.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(88,166,124,.12);
+}
+
+.arm-card.exploring {
+    background: var(--yellow);
+    border-color: rgba(212,168,62,.4);
+}
+
+.arm-card.best {
+    box-shadow: inset 0 0 0 2px rgba(139,114,216,.25);
+}
+
+.arm-number {
+    color: var(--muted);
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.arm-icon {
+    font-size: 1.8rem;
+    margin: 8px 0;
+}
+
+.arm-name {
+    font-weight: 900;
+    font-size: .86rem;
+}
+
+.arm-mean {
+    font-size: 1.25rem;
+    font-weight: 950;
+    margin-top: 7px;
+}
+
+.arm-count {
+    color: var(--muted);
+    font-size: .7rem;
+    margin-top: 3px;
+}
+
+.arm-bar {
+    height: 6px;
+    margin-top: 11px;
+    border-radius: 999px;
+    background: #f0edf5;
+    overflow: hidden;
+}
+
+.arm-bar-fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg,var(--purple),var(--pink-dark));
+    transition: width .25s ease;
+}
+
+.best-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: var(--lavender);
+    color: var(--purple-dark);
+    font-size: .58rem;
+    font-weight: 900;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.metric {
+    padding: 14px;
+    border-radius: 17px;
+    background: #faf8ff;
+}
+
+.metric small {
+    display: block;
+    color: var(--muted);
+    font-size: .7rem;
+    margin-bottom: 5px;
+}
+
+.metric strong {
+    font-size: 1.25rem;
+}
+
+.chart-section {
+    width: min(1180px,92%);
+    margin: 0 auto 80px;
+}
+
+.chart-card {
+    background: rgba(255,255,255,.84);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    padding: 28px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.chart-header h2 {
+    font-size: 1.6rem;
+    letter-spacing: -.04em;
+}
+
+.chart-header p {
+    color: var(--muted);
+    font-size: .86rem;
+    margin-top: 5px;
+}
+
+.legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: .72rem;
+    color: var(--muted);
+}
+
+.legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.chart-wrap {
+    position: relative;
+    height: 330px;
+    border-radius: 22px;
+    background:
+        linear-gradient(rgba(139,114,216,.07) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(139,114,216,.05) 1px,transparent 1px),
+        #fcfbff;
+    background-size: 100% 25%, 10% 100%;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.section {
+    width: min(1000px,92%);
+    margin: 0 auto 80px;
+}
+
+.section-heading {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.section-heading .mini {
+    color: var(--purple);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-size: .75rem;
+    margin-bottom: 10px;
+}
+
+.section-heading h2 {
+    font-size: clamp(2rem,5vw,3.6rem);
+    letter-spacing: -.06em;
+}
+
+.section-heading p {
+    max-width: 680px;
+    margin: 10px auto 0;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.concept-grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 16px;
+}
+
+.concept {
+    padding: 25px;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+}
+
+.concept:nth-child(1) {
+    background: #fff1f5;
+}
+
+.concept:nth-child(2) {
+    background: #eef7ff;
+}
+
+.concept:nth-child(3) {
+    background: #f2efff;
+}
+
+.concept:nth-child(4) {
+    background: #effaf4;
+}
+
+.concept-icon {
+    width: 43px;
+    height: 43px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 13px;
+    background: rgba(255,255,255,.82);
+    margin-bottom: 15px;
+    font-size: 1.25rem;
+}
+
+.concept h3 {
+    margin-bottom: 8px;
+    letter-spacing: -.03em;
+}
+
+.concept p {
+    color: var(--muted);
+    line-height: 1.65;
+    font-size: .9rem;
+}
+
+.formula-card {
+    padding: 30px;
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at 90% 10%,rgba(233,225,255,.8),transparent 28%),
+        radial-gradient(circle at 10% 90%,rgba(255,220,232,.75),transparent 28%),
+        white;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.formula {
+    display: inline-block;
+    padding: 20px 28px;
+    border-radius: 18px;
+    background: #29263a;
+    color: #f1eef9;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",monospace;
+    font-size: clamp(.78rem,2vw,1rem);
+    line-height: 1.7;
+    margin: 15px 0;
+}
+
+.formula-explanation {
+    max-width: 700px;
+    margin: auto;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: .9rem;
+}
+
+.code-section {
+    width: min(1000px,92%);
+    margin: 0 auto 80px;
+}
+
+.code-card {
+    overflow: hidden;
+    border-radius: 27px;
+    background: #29263a;
+    box-shadow: 0 20px 50px rgba(41,38,58,.18);
+}
+
+.code-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 19px;
+    background: #343047;
+    color: #d8d4e5;
+}
+
+.dots {
+    display: flex;
+    gap: 7px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.red {
+    background: #ff9db6;
+}
+
+.dot.yellow {
+    background: #ffd98a;
+}
+
+.dot.green {
+    background: #9ee3bd;
+}
+
+.code-title {
+    font-size: .78rem;
+    opacity: .8;
+}
+
+pre {
+    overflow-x: auto;
+    padding: 25px;
+    color: #f1eef9;
+    line-height: 1.75;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",monospace;
+    font-size: .8rem;
+}
+
+.kw {
+    color: #d6b9ff;
+}
+
+.fn {
+    color: #9fd8ff;
+}
+
+.num {
+    color: #ffd899;
+}
+
+.comment {
+    color: #9993ad;
+}
+
+.str {
+    color: #a9e6c5;
+}
+
+.complexity {
+    width: min(1000px,92%);
+    margin: 0 auto 80px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 16px;
+}
+
+.complexity-card {
+    padding: 24px;
+    border-radius: 23px;
+    background: rgba(255,255,255,.8);
+    border: 1px solid var(--border);
+}
+
+.complexity-card span {
+    color: var(--muted);
+    font-size: .8rem;
+    display: block;
+    margin-bottom: 7px;
+}
+
+.complexity-card strong {
+    font-size: 1.4rem;
+}
+
+footer {
+    padding: 35px 6%;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    background: rgba(255,255,255,.55);
+}
+
+footer strong {
+    color: var(--ink);
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 25px;
+    transform: translate(-50%,120px);
+    z-index: 200;
+    padding: 13px 19px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: white;
+    font-size: .84rem;
+    font-weight: 800;
+    box-shadow: 0 12px 35px rgba(0,0,0,.18);
+    transition: transform .3s ease;
+}
+
+.toast.show {
+    transform: translate(-50%,0);
+}
+
+@media(max-width:900px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .arms-grid {
+        grid-template-columns: repeat(4,1fr);
+    }
+
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media(max-width:650px) {
+    .nav {
+        padding: 15px 5%;
+    }
+
+    .hero {
+        padding-top: 48px;
+    }
+
+    .learning-path {
+        grid-template-columns: 1fr;
+    }
+
+    .panel,
+    .chart-card,
+    .formula-card {
+        padding: 20px;
+        border-radius: 24px;
+    }
+
+    .arms-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .metric-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .concept-grid,
+    .complexity {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-heading {
+        flex-direction: column;
+    }
+}
+
+@media(prefers-reduced-motion:reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration:.01ms !important;
+        transition-duration:.01ms !important;
+        scroll-behavior:auto !important;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Reinforcement Learning · Exploration · Bandits</div>
+
+
+<h1>
+    Which arm<br>
+    <span class="gradient">should AI pull?</span>
+</h1>
+
+<p>
+    Experiment with a real multi-armed bandit learner.
+    Watch the AI balance exploration and exploitation while
+    estimating which action gives the highest expected reward.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Experiment</strong>
+    <span>Pull the arms and collect rewards.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Observe</strong>
+    <span>Watch the estimates evolve.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>See exploration vs exploitation.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+<div class="dashboard">
+
+<div class="panel control-panel">
+
+
+<div class="panel-heading">
+    <div>
+        <h2>🎰 Bandit Lab</h2>
+        <p>
+            Configure the learner, then let the algorithm
+            make repeated decisions.
+        </p>
+    </div>
+
+    <div id="statusBadge" class="status">
+        ● Ready
+    </div>
+</div>
+
+<div class="parameter-box">
+
+    <div class="parameter-top">
+        <strong>Exploration rate ε</strong>
+        <span id="epsilonValue" class="value-badge">0.10</span>
+    </div>
+
+    <input
+        id="epsilonSlider"
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value="0.10"
+    >
+
+    <div class="range-labels">
+        <span>0 — Exploit</span>
+        <span>1 — Explore</span>
+    </div>
+
+</div>
+
+<div class="parameter-box">
+
+    <div class="parameter-top">
+        <strong>Simulation speed</strong>
+        <span id="speedValue" class="value-badge">Medium</span>
+    </div>
+
+    <select id="speedSelect" class="select-box">
+        <option value="500">Slow</option>
+        <option value="180" selected>Medium</option>
+        <option value="60">Fast</option>
+        <option value="15">Turbo</option>
+    </select>
+
+</div>
+
+<div class="parameter-box">
+
+    <div class="parameter-top">
+        <strong>Learning environment</strong>
+    </div>
+
+    <select id="environmentSelect" class="select-box">
+        <option value="classic" selected>Classic — Fixed Rewards</option>
+        <option value="close">Close Competition</option>
+        <option value="risky">Risky Rewards</option>
+    </select>
+
+</div>
+
+<div class="button-row">
+
+    <button id="stepBtn" class="btn btn-blue">
+        ▶ One Decision
+    </button>
+
+    <button id="runBtn" class="btn btn-primary">
+        ▶ Run Simulation
+    </button>
+
+    <button id="pauseBtn" class="btn btn-green" disabled>
+        ❚❚ Pause
+    </button>
+
+    <button id="resetBtn" class="btn btn-secondary">
+        ↻ Reset
+    </button>
+
+</div>
+
+<div class="algorithm-note">
+    <strong>ε-greedy strategy:</strong><br>
+    With probability ε, the AI explores a randomly chosen arm.
+    Otherwise, it exploits the arm with the highest current
+    estimated mean reward.
+</div>
+
+
+</div>
+
+<div class="panel live-panel">
+
+
+<div class="panel-heading">
+    <div>
+        <h2>✦ Live Arm Estimates</h2>
+        <p>
+            Each arm maintains an incremental estimate of its
+            expected reward.
+        </p>
+    </div>
+</div>
+
+<div id="armsGrid" class="arms-grid"></div>
+
+<div class="metric-grid">
+
+    <div class="metric">
+        <small>Decisions</small>
+        <strong id="decisionCount">0</strong>
+    </div>
+
+    <div class="metric">
+        <small>Total Reward</small>
+        <strong id="totalReward">0</strong>
+    </div>
+
+    <div class="metric">
+        <small>Exploration</small>
+        <strong id="explorationCount">0</strong>
+    </div>
+
+    <div class="metric">
+        <small>Exploitation</small>
+        <strong id="exploitationCount">0</strong>
+    </div>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+<section class="chart-section">
+
+<div class="chart-card">
+
+
+<div class="chart-header">
+
+    <div>
+        <h2>Reward Learning Curve</h2>
+        <p>
+            The moving average shows how the learner's observed
+            reward changes as it gathers experience.
+        </p>
+    </div>
+
+    <div class="legend">
+        <span>
+            <i style="background:#8b72d8"></i>
+            Average Reward
+        </span>
+
+        <span>
+            <i style="background:#d86f96"></i>
+            Best True Arm
+        </span>
+    </div>
+
+</div>
+
+<div class="chart-wrap">
+    <canvas id="rewardChart"></canvas>
+</div>
+
+
+</div>
+
+</section>
+
+<section class="section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand the algorithm</div>
+    <h2>What is a Multi-Armed Bandit?</h2>
+    <p>
+        A multi-armed bandit models repeated decisions where an
+        agent must choose between several actions whose reward
+        distributions are initially uncertain.
+    </p>
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+        <div class="concept-icon">🔎</div>
+        <h3>Exploration</h3>
+        <p>
+            The learner deliberately tries actions whose value is
+            uncertain so it can gather more information.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🎯</div>
+        <h3>Exploitation</h3>
+        <p>
+            The learner chooses the action with the highest current
+            estimated reward to make use of what it has learned.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">📊</div>
+        <h3>Value estimation</h3>
+        <p>
+            After every pull, the estimated value of the selected
+            arm is updated using an incremental sample-average rule.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">⚖️</div>
+        <h3>The trade-off</h3>
+        <p>
+            Too much exploration wastes opportunities, while too
+            little exploration can cause the learner to miss better
+            actions.
+        </p>
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="section">
+
+
+<div class="section-heading">
+    <div class="mini">Mathematical idea</div>
+    <h2>How does the estimate change?</h2>
+    <p>
+        The implementation uses an incremental sample-average
+        estimator, so the complete reward history does not need
+        to be stored.
+    </p>
+</div>
+
+<div class="formula-card">
+
+    <div class="formula">
+        Qₙ₊₁ = Qₙ + 1/(Nₙ + 1) × (Rₙ₊₁ − Qₙ)
+    </div>
+
+    <div class="formula-explanation">
+        Q is the estimated value of an arm, N is the number of
+        times that arm has been selected, and R is the newly
+        observed reward. Each new observation moves the estimate
+        toward the observed reward.
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+    <h2>See the decision rule.</h2>
+    <p>
+        This is the core ε-greedy decision and incremental
+        value-update logic used by the simulation above.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">bandit.js</span>
+
+        <span></span>
+
+    </div>
+
+
+<pre><code><span class="kw">function</span> <span class="fn">selectArm</span>() {
+    <span class="kw">if</span> (Math.random() &lt; epsilon) {
+        <span class="kw">return</span> <span class="fn">randomArm</span>();
+    }
+
+    <span class="kw">return</span> <span class="fn">bestEstimatedArm</span>();
+}
+
+<span class="kw">function</span> <span class="fn">updateEstimate</span>(arm, reward) {
+    arm.count += <span class="num">1</span>;
+
+    arm.value +=
+        (reward - arm.value) / arm.count;
+}
+
+<span class="kw">function</span> <span class="fn">step</span>() {
+    <span class="kw">const</span> arm = <span class="fn">selectArm</span>();
+    <span class="kw">const</span> reward = <span class="fn">sampleReward</span>(arm);
+
+    <span class="fn">updateEstimate</span>(arm, reward);
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Decision Time</span>
+    <strong>O(k)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Memory</span>
+    <strong>O(k)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Learning Style</span>
+    <strong>Online</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const armsGrid = document.getElementById("armsGrid");
+const epsilonSlider = document.getElementById("epsilonSlider");
+const epsilonValue = document.getElementById("epsilonValue");
+const speedSelect = document.getElementById("speedSelect");
+const speedValue = document.getElementById("speedValue");
+const environmentSelect = document.getElementById("environmentSelect");
+
+const stepBtn = document.getElementById("stepBtn");
+const runBtn = document.getElementById("runBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const statusBadge = document.getElementById("statusBadge");
+
+const decisionCount = document.getElementById("decisionCount");
+const totalReward = document.getElementById("totalReward");
+const explorationCount = document.getElementById("explorationCount");
+const exploitationCount = document.getElementById("exploitationCount");
+
+const toast = document.getElementById("toast");
+const canvas = document.getElementById("rewardChart");
+const ctx = canvas.getContext("2d");
+
+const ARM_ICONS = ["🪄", "🎲", "🚀", "🔮"];
+
+let arms = [];
+let epsilon = 0.10;
+let running = false;
+let timer = null;
+
+let decisions = 0;
+let rewardTotal = 0;
+let explorationTotal = 0;
+let exploitationTotal = 0;
+
+let rewardHistory = [];
+let lastSelectedArm = null;
+let lastMode = null;
+
+let trueProbabilities = [];
+
+const ENVIRONMENTS = {
+    classic: [0.20, 0.40, 0.60, 0.80],
+    close: [0.48, 0.52, 0.56, 0.60],
+    risky: [0.12, 0.25, 0.72, 0.86]
+};
+
+function getEnvironmentProbabilities() {
+    return ENVIRONMENTS[environmentSelect.value].slice();
+}
+
+function createArms() {
+    arms = trueProbabilities.map((probability, index) => ({
+        id: index,
+        value: 0,
+        count: 0,
+        trueProbability: probability
+    }));
+}
+
+function resetSimulation() {
+    stopSimulation();
+
+    trueProbabilities = getEnvironmentProbabilities();
+
+    createArms();
+
+    decisions = 0;
+    rewardTotal = 0;
+    explorationTotal = 0;
+    exploitationTotal = 0;
+
+    rewardHistory = [];
+    lastSelectedArm = null;
+    lastMode = null;
+
+    statusBadge.textContent = "● Ready";
+    statusBadge.className = "status";
+
+    updateUI();
+    drawChart();
+
+    showToast("Bandit environment reset.");
+}
+
+function randomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+function chooseRandomArm() {
+    return randomInt(arms.length);
+}
+
+function getBestEstimatedArm() {
+    let bestValue = -Infinity;
+    let candidates = [];
+
+    arms.forEach(arm => {
+        if (arm.count === 0) {
+            candidates.push(arm.id);
+        }
+    });
+
+    if (candidates.length > 0) {
+        return candidates[randomInt(candidates.length)];
+    }
+
+    arms.forEach(arm => {
+        if (arm.value > bestValue) {
+            bestValue = arm.value;
+        }
+    });
+
+    const tolerance = 1e-12;
+
+    arms.forEach(arm => {
+        if (Math.abs(arm.value - bestValue) <= tolerance) {
+            candidates.push(arm.id);
+        }
+    });
+
+    return candidates[randomInt(candidates.length)];
+}
+
+function selectArm() {
+    const explore = Math.random() < epsilon;
+
+    if (explore) {
+        return {
+            arm: chooseRandomArm(),
+            mode: "exploration"
+        };
+    }
+
+    return {
+        arm: getBestEstimatedArm(),
+        mode: "exploitation"
+    };
+}
+
+function sampleReward(arm) {
+    return Math.random() < arm.trueProbability ? 1 : 0;
+}
+
+function updateEstimate(arm, reward) {
+    arm.count += 1;
+
+    arm.value +=
+        (reward - arm.value) / arm.count;
+}
+
+function performStep() {
+    const selection = selectArm();
+    const arm = arms[selection.arm];
+
+    const reward = sampleReward(arm);
+
+    updateEstimate(arm, reward);
+
+    decisions += 1;
+    rewardTotal += reward;
+
+    if (selection.mode === "exploration") {
+        explorationTotal += 1;
+    } else {
+        exploitationTotal += 1;
+    }
+
+    lastSelectedArm = selection.arm;
+    lastMode = selection.mode;
+
+    const averageReward =
+        rewardTotal / decisions;
+
+    rewardHistory.push({
+        step: decisions,
+        average: averageReward
+    });
+
+    if (rewardHistory.length > 500) {
+        rewardHistory.shift();
+    }
+
+    updateUI();
+    drawChart();
+
+    return reward;
+}
+
+function renderArms() {
+    armsGrid.innerHTML = "";
+
+    const bestTrueProbability =
+        Math.max(...trueProbabilities);
+
+    arms.forEach(arm => {
+
+        const card = document.createElement("div");
+
+        const isSelected =
+            arm.id === lastSelectedArm;
+
+        const isBestTrue =
+            Math.abs(
+                arm.trueProbability -
+                bestTrueProbability
+            ) < 1e-12;
+
+        card.className =
+            "arm-card" +
+            (isSelected ? " selected" : "") +
+            (isBestTrue ? " best" : "");
+
+        const estimatePercentage =
+            Math.min(100, Math.max(0, arm.value * 100));
+
+        card.innerHTML = `
+            ${isBestTrue ? '<div class="best-tag">TRUE BEST</div>' : ""}
+
+            <div class="arm-number">
+                ARM ${arm.id + 1}
+            </div>
+
+            <div class="arm-icon">
+                ${ARM_ICONS[arm.id]}
+            </div>
+
+            <div class="arm-name">
+                Action ${String.fromCharCode(65 + arm.id)}
+            </div>
+
+            <div class="arm-mean">
+                ${arm.value.toFixed(3)}
+            </div>
+
+            <div class="arm-count">
+                ${arm.count} pull${arm.count === 1 ? "" : "s"}
+            </div>
+
+            <div class="arm-bar">
+                <div
+                    class="arm-bar-fill"
+                    style="width:${estimatePercentage}%"
+                ></div>
+            </div>
+        `;
+
+        armsGrid.appendChild(card);
+    });
+}
+
+function updateUI() {
+    epsilonValue.textContent =
+        Number(epsilon).toFixed(2);
+
+    decisionCount.textContent =
+        decisions;
+
+    totalReward.textContent =
+        rewardTotal;
+
+    explorationCount.textContent =
+        explorationTotal;
+
+    exploitationCount.textContent =
+        exploitationTotal;
+
+    renderArms();
+}
+
+function updateSpeedLabel() {
+    const value = Number(speedSelect.value);
+
+    if (value === 500) {
+        speedValue.textContent = "Slow";
+    } else if (value === 180) {
+        speedValue.textContent = "Medium";
+    } else if (value === 60) {
+        speedValue.textContent = "Fast";
+    } else {
+        speedValue.textContent = "Turbo";
+    }
+}
+
+function startSimulation() {
+    if (running) {
+        return;
+    }
+
+    running = true;
+
+    runBtn.disabled = true;
+    stepBtn.disabled = true;
+    pauseBtn.disabled = false;
+
+    statusBadge.textContent = "● Running";
+    statusBadge.className = "status running";
+
+    scheduleNextStep();
+}
+
+function scheduleNextStep() {
+    if (!running) {
+        return;
+    }
+
+    performStep();
+
+    timer = window.setTimeout(
+        scheduleNextStep,
+        Number(speedSelect.value)
+    );
+}
+
+function stopSimulation() {
+    running = false;
+
+    if (timer !== null) {
+        window.clearTimeout(timer);
+        timer = null;
+    }
+
+    runBtn.disabled = false;
+    stepBtn.disabled = false;
+    pauseBtn.disabled = true;
+}
+
+function pauseSimulation() {
+    if (!running) {
+        return;
+    }
+
+    stopSimulation();
+
+    statusBadge.textContent = "● Paused";
+    statusBadge.className = "status paused";
+
+    showToast("Simulation paused.");
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    window.clearTimeout(showToast.timer);
+
+    showToast.timer =
+        window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2200);
+}
+
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+
+    const dpr =
+        window.devicePixelRatio || 1;
+
+    canvas.width =
+        Math.max(1, Math.round(rect.width * dpr));
+
+    canvas.height =
+        Math.max(1, Math.round(rect.height * dpr));
+
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+
+    drawChart();
+}
+
+function drawChart() {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    if (!width || !height) {
+        return;
+    }
+
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = {
+        left: 45,
+        right: 20,
+        top: 22,
+        bottom: 35
+    };
+
+    const chartWidth =
+        width - padding.left - padding.right;
+
+    const chartHeight =
+        height - padding.top - padding.bottom;
+
+    ctx.strokeStyle =
+        "rgba(119,115,134,.15)";
+
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 4; i++) {
+
+        const y =
+            padding.top +
+            chartHeight -
+            (chartHeight * i / 4);
+
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "#777386";
+        ctx.font = "11px Inter, system-ui, sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(
+            (i / 4).toFixed(2),
+            padding.left - 8,
+            y
+        );
+    }
+
+    if (rewardHistory.length === 0) {
+
+        ctx.fillStyle = "#777386";
+        ctx.font = "600 14px Inter, system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(
+            "Run the simulation to reveal the learning curve.",
+            width / 2,
+            height / 2
+        );
+
+        return;
+    }
+
+    const maxStep =
+        Math.max(20, rewardHistory[rewardHistory.length - 1].step);
+
+    const points =
+        rewardHistory.map(point => {
+
+            const x =
+                padding.left +
+                ((point.step - 1) / (maxStep - 1 || 1)) *
+                chartWidth;
+
+            const y =
+                padding.top +
+                chartHeight -
+                point.average * chartHeight;
+
+            return { x, y };
+        });
+
+    ctx.beginPath();
+
+    points.forEach((point, index) => {
+        if (index === 0) {
+            ctx.moveTo(point.x, point.y);
+        } else {
+            ctx.lineTo(point.x, point.y);
+        }
+    });
+
+    ctx.strokeStyle = "#8b72d8";
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    const bestTrue =
+        Math.max(...trueProbabilities);
+
+    const bestY =
+        padding.top +
+        chartHeight -
+        bestTrue * chartHeight;
+
+    ctx.beginPath();
+    ctx.setLineDash([6,6]);
+    ctx.moveTo(padding.left, bestY);
+    ctx.lineTo(width - padding.right, bestY);
+    ctx.strokeStyle = "#d86f96";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const lastPoint =
+        points[points.length - 1];
+
+    ctx.beginPath();
+    ctx.arc(
+        lastPoint.x,
+        lastPoint.y,
+        5,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle = "#8b72d8";
+    ctx.fill();
+
+    ctx.fillStyle = "#777386";
+    ctx.font = "11px Inter, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    ctx.fillText(
+        "Decisions",
+        padding.left + chartWidth / 2,
+        height - 22
+    );
+}
+
+epsilonSlider.addEventListener("input", () => {
+    epsilon =
+        Number(epsilonSlider.value);
+
+    epsilonValue.textContent =
+        epsilon.toFixed(2);
+});
+
+speedSelect.addEventListener("change", () => {
+    updateSpeedLabel();
+
+    if (running) {
+        if (timer !== null) {
+            window.clearTimeout(timer);
+        }
+
+        timer = window.setTimeout(
+            scheduleNextStep,
+            Number(speedSelect.value)
+        );
+    }
+});
+
+environmentSelect.addEventListener("change", () => {
+    resetSimulation();
+});
+
+stepBtn.addEventListener("click", () => {
+    if (running) {
+        return;
+    }
+
+    performStep();
+
+    statusBadge.textContent = "● Ready";
+    statusBadge.className = "status";
+
+    if (lastMode === "exploration") {
+        showToast(
+            "Exploration: AI tried an action to gather information."
+        );
+    } else {
+        showToast(
+            "Exploitation: AI selected its best current estimate."
+        );
+    }
+});
+
+runBtn.addEventListener("click", () => {
+    startSimulation();
+});
+
+pauseBtn.addEventListener("click", () => {
+    pauseSimulation();
+});
+
+resetBtn.addEventListener("click", () => {
+    resetSimulation();
+});
+
+window.addEventListener("resize", resizeCanvas);
+
+updateSpeedLabel();
+resetSimulation();
+resizeCanvas();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Breadth-First Search">
+    <title>BFS — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span:last-child {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .search-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .search-layout {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.82);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .graph-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .queue-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .graph {
+        position: relative;
+        width: 100%;
+        min-height: 410px;
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(233,225,255,0.55), transparent 25%),
+            radial-gradient(circle at 80% 75%, rgba(223,247,235,0.65), transparent 28%),
+            #fbfaff;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .graph-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .graph-line {
+        stroke: #cfc7df;
+        stroke-width: 2;
+        stroke-linecap: round;
+        transition: stroke 0.25s ease, stroke-width 0.25s ease;
+    }
+
+    .graph-line.active {
+        stroke: #8b72d8;
+        stroke-width: 4;
+    }
+
+    .node {
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        border: 3px solid #ded8f5;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 950;
+        font-size: 1.1rem;
+        box-shadow: 0 9px 22px rgba(80,70,110,0.10);
+        transition: transform 0.25s ease, background 0.25s ease,
+            border-color 0.25s ease, box-shadow 0.25s ease;
+        z-index: 3;
+    }
+
+    .node:hover {
+        transform: scale(1.08) rotate(-2deg);
+    }
+
+    .node.start {
+        background: var(--lavender);
+        border-color: #bbaee8;
+    }
+
+    .node.frontier {
+        background: var(--yellow);
+        border-color: #e6cf86;
+        animation: pulse 0.8s ease;
+    }
+
+    .node.visited {
+        background: var(--mint);
+        border-color: #9bceb2;
+    }
+
+    .node.target {
+        background: var(--pink);
+        border-color: #e9a1ba;
+    }
+
+    .node.current {
+        transform: scale(1.12);
+        box-shadow: 0 0 0 8px rgba(139,114,216,0.13),
+            0 12px 25px rgba(80,70,110,0.14);
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.85); }
+        60% { transform: scale(1.12); }
+        100% { transform: scale(1); }
+    }
+
+    .node-a { left: 9%; top: 42%; }
+    .node-b { left: 28%; top: 20%; }
+    .node-c { left: 28%; top: 65%; }
+    .node-d { left: 51%; top: 13%; }
+    .node-e { left: 51%; top: 40%; }
+    .node-f { left: 51%; top: 73%; }
+    .node-g { left: 77%; top: 29%; }
+    .node-h { left: 77%; top: 62%; }
+
+    .graph-legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 9px;
+        margin-top: 15px;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: white;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 750;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .legend-start { background: #bbaee8; }
+    .legend-frontier { background: #e6cf86; }
+    .legend-visited { background: #9bceb2; }
+    .legend-target { background: #e9a1ba; }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .message {
+        text-align: center;
+        min-height: 28px;
+        color: var(--muted);
+        font-weight: 750;
+        margin-bottom: 5px;
+    }
+
+    .queue-box {
+        min-height: 410px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .queue-label {
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+    }
+
+    .queue {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        min-height: 48px;
+        padding: 12px;
+        border-radius: 16px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .queue-item {
+        min-width: 43px;
+        height: 43px;
+        padding: 0 12px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--blue);
+        color: #4779ad;
+        font-weight: 950;
+        animation: queueIn 0.3s ease;
+    }
+
+    @keyframes queueIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .queue-empty {
+        color: #aaa5b5;
+        font-size: 0.85rem;
+        padding: 10px;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 18px;
+    }
+
+    .stat {
+        padding: 14px 10px;
+        border-radius: 16px;
+        text-align: center;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        margin-bottom: 5px;
+    }
+
+    .stat strong {
+        font-size: 1.35rem;
+    }
+
+    .log {
+        margin-top: 16px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        min-height: 120px;
+        max-height: 180px;
+        overflow-y: auto;
+        line-height: 1.6;
+        font-size: 0.84rem;
+    }
+
+    .log-entry {
+        padding: 5px 0;
+        border-bottom: 1px dashed rgba(66,110,158,0.16);
+    }
+
+    .log-entry:last-child {
+        border-bottom: 0;
+    }
+
+    .log-entry strong {
+        color: #315e8c;
+    }
+
+    .reveal-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .reveal-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .reveal-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        align-items: flex-end;
+        margin-bottom: 28px;
+    }
+
+    .reveal-top h2 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.06em;
+    }
+
+    .reveal-top p {
+        color: var(--muted);
+        max-width: 650px;
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .step {
+        padding: 20px;
+        border-radius: 21px;
+        border: 1px solid var(--border);
+        background: #fffdf9;
+        transition: 0.2s ease;
+    }
+
+    .step:hover {
+        transform: translateY(-4px);
+    }
+
+    .step:nth-child(1) { background: #f2efff; }
+    .step:nth-child(2) { background: #eef7ff; }
+    .step:nth-child(3) { background: #effaf4; }
+    .step:nth-child(4) { background: #fff1f5; }
+
+    .step-number {
+        display: inline-flex;
+        width: 35px;
+        height: 35px;
+        border-radius: 12px;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        color: var(--purple);
+        font-weight: 950;
+        margin-bottom: 12px;
+    }
+
+    .step h3 {
+        margin-bottom: 7px;
+        letter-spacing: -0.03em;
+    }
+
+    .step p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.86rem;
+    }
+
+    .algorithm-section,
+    .code-section,
+    .complexity-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) { background: #fff1f5; }
+    .concept:nth-child(2) { background: #eef7ff; }
+    .concept:nth-child(3) { background: #f2efff; }
+    .concept:nth-child(4) { background: #effaf4; }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red { background: #ff9db6; }
+    .dot.yellow { background: #ffd98a; }
+    .dot.green { background: #9ee3bd; }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas,
+            "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw { color: #d6b9ff; }
+    .fn { color: #9fd8ff; }
+    .num { color: #ffd899; }
+    .comment { color: #9993ad; }
+    .str { color: #a9e6c5; }
+
+    .complexity {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .complexity-card:nth-child(1) {
+        background: #f2efff;
+    }
+
+    .complexity-card:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .complexity-card:nth-child(3) {
+        background: #effaf4;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .search-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .steps {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .reveal-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .reveal-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .concept-grid,
+        .steps {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .graph {
+            min-height: 350px;
+        }
+
+        .node {
+            width: 48px;
+            height: 48px;
+            font-size: 0.95rem;
+        }
+
+        .reveal-card {
+            padding: 24px 18px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Graphs · BFS</div>
+
+
+<h1>
+    Explore the<br>
+    <span class="gradient">closest frontier.</span>
+</h1>
+
+<p>
+    Watch Breadth-First Search explore a graph level by level.
+    See the queue change in real time and discover how BFS can
+    find the shortest path in an unweighted graph.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Choose</strong>
+        <span>Start the graph exploration.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Watch</strong>
+    <span>Follow the live queue.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>See why BFS works.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="search-section">
+
+    <div class="search-layout">
+
+        <div class="panel graph-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🧭 Graph Explorer</h2>
+                    <p>
+                        Start at A and search for the target H.
+                        BFS explores one layer before moving deeper.
+                    </p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div id="message" class="message">
+                Press Start Search to begin.
+            </div>
+
+            <div class="graph">
+
+                <svg class="graph-lines"
+                     viewBox="0 0 100 100"
+                     preserveAspectRatio="none"
+                     aria-hidden="true">
+
+                    <line id="lineAB"
+                          class="graph-line"
+                          x1="12" y1="49"
+                          x2="31" y2="27"></line>
+
+                    <line id="lineAC"
+                          class="graph-line"
+                          x1="12" y1="49"
+                          x2="31" y2="72"></line>
+
+                    <line id="lineBD"
+                          class="graph-line"
+                          x1="31" y1="27"
+                          x2="54" y2="20"></line>
+
+                    <line id="lineBE"
+                          class="graph-line"
+                          x1="31" y1="27"
+                          x2="54" y2="47"></line>
+
+                    <line id="lineCE"
+                          class="graph-line"
+                          x1="31" y1="72"
+                          x2="54" y2="47"></line>
+
+                    <line id="lineCF"
+                          class="graph-line"
+                          x1="31" y1="72"
+                          x2="54" y2="80"></line>
+
+                    <line id="lineDG"
+                          class="graph-line"
+                          x1="54" y1="20"
+                          x2="80" y2="36"></line>
+
+                    <line id="lineEG"
+                          class="graph-line"
+                          x1="54" y1="47"
+                          x2="80" y2="36"></line>
+
+                    <line id="lineEH"
+                          class="graph-line"
+                          x1="54" y1="47"
+                          x2="80" y2="69"></line>
+
+                    <line id="lineFH"
+                          class="graph-line"
+                          x1="54" y1="80"
+                          x2="80" y2="69"></line>
+
+                </svg>
+
+                <div id="nodeA" class="node node-a start">A</div>
+                <div id="nodeB" class="node node-b">B</div>
+                <div id="nodeC" class="node node-c">C</div>
+                <div id="nodeD" class="node node-d">D</div>
+                <div id="nodeE" class="node node-e">E</div>
+                <div id="nodeF" class="node node-f">F</div>
+                <div id="nodeG" class="node node-g">G</div>
+                <div id="nodeH" class="node node-h target">H</div>
+
+            </div>
+
+            <div class="graph-legend">
+                <div class="legend-item">
+                    <span class="legend-dot legend-start"></span>
+                    Start
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-frontier"></span>
+                    Frontier
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-visited"></span>
+                    Visited
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-target"></span>
+                    Target
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">
+                    ▶ Start Search
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    → Next Step
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ Reset
+                </button>
+            </div>
+
+        </div>
+
+        <div class="panel queue-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>📋 The BFS Queue</h2>
+                    <p>
+                        BFS uses a First-In, First-Out queue.
+                        The next node to leave the queue is processed.
+                    </p>
+                </div>
+            </div>
+
+            <div class="queue-box">
+
+                <div class="queue-label">
+                    Current Queue
+                </div>
+
+                <div id="queue" class="queue">
+                    <div class="queue-empty">
+                        Queue is waiting for the search to begin.
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <small>Visited</small>
+                        <strong id="visitedCount">0</strong>
+                    </div>
+
+                    <div class="stat">
+                        <small>Queue</small>
+                        <strong id="queueCount">0</strong>
+                    </div>
+
+                    <div class="stat">
+                        <small>Steps</small>
+                        <strong id="stepCount">0</strong>
+                    </div>
+                </div>
+
+                <div id="log" class="log">
+                    <div class="log-entry">
+                        <strong>Ready:</strong>
+                        BFS has not started yet.
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="reveal-section">
+
+    <div class="reveal-card">
+
+        <div class="reveal-top">
+
+            <div>
+                <div class="eyebrow">Behind The Search</div>
+
+                <h2>
+                    BFS thinks in layers.
+                </h2>
+
+                <p>
+                    Starting from A, BFS first discovers its immediate
+                    neighbors. Only after those nodes are processed does
+                    it continue to the next level. This is why BFS can
+                    find a shortest path in an unweighted graph.
+                </p>
+            </div>
+
+            <button id="autoBtn" class="btn btn-green">
+                ✦ Run Automatically
+            </button>
+
+        </div>
+
+        <div class="steps">
+
+            <article class="step">
+                <span class="step-number">01</span>
+                <h3>Enqueue</h3>
+                <p>
+                    Put the starting node into the queue and mark it
+                    as discovered.
+                </p>
+            </article>
+
+            <article class="step">
+                <span class="step-number">02</span>
+                <h3>Dequeue</h3>
+                <p>
+                    Remove the oldest node from the front of the queue.
+                </p>
+            </article>
+
+            <article class="step">
+                <span class="step-number">03</span>
+                <h3>Discover</h3>
+                <p>
+                    Add unvisited neighbors to the back of the queue.
+                </p>
+            </article>
+
+            <article class="step">
+                <span class="step-number">04</span>
+                <h3>Repeat</h3>
+                <p>
+                    Continue level by level until the target is found
+                    or the queue becomes empty.
+                </p>
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="algorithm-section">
+
+    <div class="section-heading">
+        <div class="mini">Understand the algorithm</div>
+
+        <h2>
+            What makes BFS different?
+        </h2>
+
+        <p>
+            Breadth-First Search explores nodes according to their
+            distance from the starting point. Its queue controls the
+            order in which discovered nodes are processed.
+        </p>
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">📚</div>
+            <h3>First In, First Out</h3>
+            <p>
+                The queue ensures that nodes discovered earlier are
+                processed before nodes discovered later.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🌊</div>
+            <h3>Layer by layer</h3>
+            <p>
+                BFS expands outward from the starting node like a
+                wave, visiting nodes at increasing distances.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🎯</div>
+            <h3>Shortest path</h3>
+            <p>
+                In an unweighted graph, the first time BFS reaches a
+                node, it has found a path with the minimum number of
+                edges from the start.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🧩</div>
+            <h3>Visited set</h3>
+            <p>
+                Nodes are marked when discovered so the search does
+                not repeatedly add the same node to the queue.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+        <div class="mini">Implementation</div>
+
+        <h2>
+            See the code behind BFS.
+        </h2>
+
+        <p>
+            This is the core idea used by the interactive search above.
+            The queue drives the order of exploration.
+        </p>
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">bfs.js</span>
+
+            <span></span>
+
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">bfs</span>(graph, start, target) {
+<span class="kw">const</span> queue = [start];
+<span class="kw">const</span> visited = <span class="kw">new</span> Set([start]);
+
+<span class="kw">while</span> (queue.length &gt; <span class="num">0</span>) {
+    <span class="kw">const</span> current = queue.shift();
+
+    <span class="kw">if</span> (current === target) {
+        <span class="kw">return</span> current;
+    }
+
+    <span class="kw">for</span> (<span class="kw">const</span> neighbor <span class="kw">of</span> graph[current]) {
+        <span class="kw">if</span> (!visited.has(neighbor)) {
+            visited.add(neighbor);
+            queue.push(neighbor);
+        }
+    }
+}
+
+<span class="kw">return</span> <span class="kw">null</span>;
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+<section class="complexity-section">
+
+    <div class="section-heading">
+        <div class="mini">Efficiency</div>
+
+        <h2>
+            BFS at a glance.
+        </h2>
+    </div>
+
+    <div class="complexity">
+
+        <div class="complexity-card">
+            <span>Time Complexity</span>
+            <strong>O(V + E)</strong>
+        </div>
+
+        <div class="complexity-card">
+            <span>Space Complexity</span>
+            <strong>O(V)</strong>
+        </div>
+
+        <div class="complexity-card">
+            <span>Shortest Path</span>
+            <strong>Unweighted</strong>
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    const graph = {
+        A: ["B", "C"],
+        B: ["A", "D", "E"],
+        C: ["A", "E", "F"],
+        D: ["B", "G"],
+        E: ["B", "C", "G", "H"],
+        F: ["C", "H"],
+        G: ["D", "E"],
+        H: ["E", "F"]
+    };
+
+    const startNode = "A";
+    const targetNode = "H";
+
+    const statusBadge = document.getElementById("statusBadge");
+    const message = document.getElementById("message");
+    const queueElement = document.getElementById("queue");
+    const visitedCountElement = document.getElementById("visitedCount");
+    const queueCountElement = document.getElementById("queueCount");
+    const stepCountElement = document.getElementById("stepCount");
+    const logElement = document.getElementById("log");
+
+    const startBtn = document.getElementById("startBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const autoBtn = document.getElementById("autoBtn");
+
+    const nodeElements = {};
+
+    ["A", "B", "C", "D", "E", "F", "G", "H"].forEach(node => {
+        nodeElements[node] = document.getElementById("node" + node);
+    });
+
+    const lineElements = {
+        AB: document.getElementById("lineAB"),
+        AC: document.getElementById("lineAC"),
+        BD: document.getElementById("lineBD"),
+        BE: document.getElementById("lineBE"),
+        CE: document.getElementById("lineCE"),
+        CF: document.getElementById("lineCF"),
+        DG: document.getElementById("lineDG"),
+        EG: document.getElementById("lineEG"),
+        EH: document.getElementById("lineEH"),
+        FH: document.getElementById("lineFH")
+    };
+
+    let queue = [];
+    let visited = new Set();
+    let parent = {};
+    let currentNode = null;
+    let steps = 0;
+    let running = false;
+    let finished = false;
+    let autoTimer = null;
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function showToast(text) {
+        const toast = document.getElementById("toast");
+
+        toast.textContent = text;
+        toast.classList.add("show");
+
+        clearTimeout(showToast.timer);
+
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+    }
+
+    function resetVisuals() {
+        Object.values(nodeElements).forEach(node => {
+            node.classList.remove("frontier", "visited", "current");
+        });
+
+        nodeElements.A.classList.add("start");
+        nodeElements.H.classList.add("target");
+
+        Object.values(lineElements).forEach(line => {
+            line.classList.remove("active");
+        });
+    }
+
+    function renderQueue() {
+        if (queue.length === 0) {
+            queueElement.innerHTML = `
+                <div class="queue-empty">
+                    Queue is empty.
+                </div>
+            `;
+        } else {
+            queueElement.innerHTML = queue.map(node => `
+                <div class="queue-item">${node}</div>
+            `).join("");
+        }
+
+        queueCountElement.textContent = queue.length;
+    }
+
+    function renderStats() {
+        visitedCountElement.textContent = visited.size;
+        stepCountElement.textContent = steps;
+    }
+
+    function addLog(title, text) {
+        const entry = document.createElement("div");
+
+        entry.className = "log-entry";
+        entry.innerHTML = `
+            <strong>${title}</strong> ${text}
+        `;
+
+        logElement.appendChild(entry);
+        logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    function clearLog() {
+        logElement.innerHTML = `
+            <div class="log-entry">
+                <strong>Ready:</strong>
+                BFS has not started yet.
+            </div>
+        `;
+    }
+
+    function activateEdge(from, to) {
+        const key = [from, to].sort().join("");
+
+        if (lineElements[key]) {
+            lineElements[key].classList.add("active");
+        }
+    }
+
+    function markQueueNodes() {
+        Object.values(nodeElements).forEach(node => {
+            node.classList.remove("frontier");
+        });
+
+        queue.forEach(node => {
+            if (
+                node !== currentNode &&
+                node !== targetNode &&
+                !nodeElements[node].classList.contains("visited")
+            ) {
+                nodeElements[node].classList.add("frontier");
+            }
+        });
+    }
+
+    function initialiseSearch() {
+        stopAuto();
+
+        queue = [startNode];
+        visited = new Set([startNode]);
+        parent = {};
+        currentNode = null;
+        steps = 0;
+        running = true;
+        finished = false;
+
+        resetVisuals();
+
+        nodeElements.A.classList.add("visited");
+
+        setStatus("Searching...", "running");
+
+        message.textContent =
+            "BFS has started. The first node is in the queue.";
+
+        clearLog();
+
+        addLog(
+            "Step 0:",
+            "Added <strong>A</strong> to the queue and marked it visited."
+        );
+
+        renderQueue();
+        renderStats();
+        markQueueNodes();
+
+        startBtn.disabled = true;
+
+        showToast("BFS search started.");
+    }
+
+    function finishSearch(found) {
+        running = false;
+        finished = true;
+
+        stopAuto();
+
+        if (found) {
+            setStatus("Target found", "done");
+
+            message.textContent =
+                "Target H was found. BFS has completed the search.";
+
+            nodeElements.H.classList.add("visited");
+            nodeElements.H.classList.add("current");
+
+            showToast("Target H found!");
+
+            addLog(
+                "Complete:",
+                "BFS reached <strong>H</strong>."
+            );
+
+            buildPath();
+        } else {
+            setStatus("Search complete", "done");
+
+            message.textContent =
+                "The queue is empty. The target was not found.";
+
+            addLog(
+                "Complete:",
+                "There are no more nodes to explore."
+            );
+        }
+
+        startBtn.disabled = false;
+        renderQueue();
+        renderStats();
+        markQueueNodes();
+    }
+
+    function buildPath() {
+        const path = [];
+        let current = targetNode;
+
+        while (current) {
+            path.unshift(current);
+
+            if (current === startNode) {
+                break;
+            }
+
+            current = parent[current];
+        }
+
+        for (let i = 0; i < path.length - 1; i++) {
+            activateEdge(path[i], path[i + 1]);
+        }
+
+        addLog(
+            "Shortest path:",
+            `<strong>${path.join(" → ")}</strong>`
+        );
+    }
+
+    function nextStep() {
+        if (!running) {
+            if (finished) {
+                showToast("Search is already complete.");
+            } else {
+                initialiseSearch();
+            }
+
+            return;
+        }
+
+        if (queue.length === 0) {
+            finishSearch(false);
+            return;
+        }
+
+        currentNode = queue.shift();
+        steps++;
+
+        Object.values(nodeElements).forEach(node => {
+            node.classList.remove("current");
+        });
+
+        nodeElements[currentNode].classList.add("current");
+        nodeElements[currentNode].classList.add("visited");
+
+        addLog(
+            `Step ${steps}:`,
+            `Dequeued <strong>${currentNode}</strong>.`
+        );
+
+        if (currentNode === targetNode) {
+            renderQueue();
+            renderStats();
+            finishSearch(true);
+            return;
+        }
+
+        const neighbors = graph[currentNode];
+
+        for (const neighbor of neighbors) {
+            if (!visited.has(neighbor)) {
+                visited.add(neighbor);
+                parent[neighbor] = currentNode;
+                queue.push(neighbor);
+
+                activateEdge(currentNode, neighbor);
+
+                addLog(
+                    "Discovered:",
+                    `<strong>${neighbor}</strong> was added to the queue.`
+                );
+            }
+        }
+
+        message.textContent =
+            `BFS processed ${currentNode} and discovered its unvisited neighbours.`;
+
+        renderQueue();
+        renderStats();
+        markQueueNodes();
+
+        if (queue.length === 0) {
+            finishSearch(false);
+        }
+    }
+
+    function startSearch() {
+        initialiseSearch();
+    }
+
+    function runAutomatically() {
+        if (running) {
+            stopAuto();
+
+            autoBtn.textContent = "✦ Run Automatically";
+
+            showToast("Automatic search paused.");
+            return;
+        }
+
+        if (finished) {
+            initialiseSearch();
+        } else {
+            initialiseSearch();
+        }
+
+        autoBtn.textContent = "Ⅱ Pause Search";
+
+        autoTimer = setInterval(() => {
+            if (!running) {
+                stopAuto();
+                return;
+            }
+
+            nextStep();
+        }, 850);
+    }
+
+    function stopAuto() {
+        if (autoTimer !== null) {
+            clearInterval(autoTimer);
+            autoTimer = null;
+        }
+
+        autoBtn.textContent = "✦ Run Automatically";
+    }
+
+    function resetSearch() {
+        stopAuto();
+
+        queue = [];
+        visited = new Set();
+        parent = {};
+        currentNode = null;
+        steps = 0;
+        running = false;
+        finished = false;
+
+        resetVisuals();
+        clearLog();
+
+        setStatus("Ready");
+
+        message.textContent =
+            "Press Start Search to begin.";
+
+        renderQueue();
+        renderStats();
+
+        startBtn.disabled = false;
+
+        showToast("Graph reset.");
+    }
+
+    startBtn.addEventListener("click", startSearch);
+
+    stepBtn.addEventListener("click", () => {
+        if (!running && !finished) {
+            initialiseSearch();
+            return;
+        }
+
+        nextStep();
+    });
+
+    resetBtn.addEventListener("click", resetSearch);
+
+    autoBtn.addEventListener("click", runAutomatically);
+
+    resetSearch();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Hill Climbing Algorithm">
+    <title>Hill Climbing — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    select {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span:last-child {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .game-layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .game-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.70), transparent 34%),
+            rgba(255,255,255,0.88);
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 36%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.thinking {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.stuck {
+        background: var(--peach);
+        color: #9a5b36;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .landscape-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto 20px;
+    }
+
+    .landscape {
+        position: relative;
+        width: 100%;
+        height: 350px;
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background:
+            linear-gradient(180deg, #eef5ff 0%, #f8f1ff 48%, #effaf4 100%);
+        box-shadow: inset 0 0 40px rgba(100, 90, 150, 0.05);
+    }
+
+    .landscape::before {
+        content: "";
+        position: absolute;
+        left: -10%;
+        right: -10%;
+        bottom: -85px;
+        height: 260px;
+        border-radius: 50% 50% 0 0;
+        background: linear-gradient(135deg, #dff7eb, #e9e1ff);
+        transform: rotate(-4deg);
+    }
+
+    .mountain {
+        position: absolute;
+        bottom: 72px;
+        width: 180px;
+        height: 180px;
+        background: linear-gradient(145deg, #ffdce8, #e9e1ff);
+        transform: rotate(45deg);
+        border-radius: 28px;
+        opacity: 0.72;
+    }
+
+    .mountain.one {
+        left: 25px;
+    }
+
+    .mountain.two {
+        right: 40px;
+        bottom: 84px;
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(145deg, #dceeff, #dff7eb);
+    }
+
+    .sun {
+        position: absolute;
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        top: 28px;
+        right: 32px;
+        background: #fff0bf;
+        box-shadow: 0 0 35px rgba(255, 220, 120, 0.45);
+    }
+
+    .hill-point {
+        position: absolute;
+        z-index: 5;
+        width: 23px;
+        height: 23px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 5px solid var(--purple);
+        box-shadow: 0 7px 18px rgba(90, 70, 140, 0.22);
+        transform: translate(-50%, -50%);
+        transition: left 0.35s ease, top 0.35s ease, transform 0.2s ease;
+    }
+
+    .hill-point.active {
+        animation: pulse 1.2s infinite;
+    }
+
+    .hill-point.best {
+        width: 29px;
+        height: 29px;
+        border-color: var(--green);
+        box-shadow: 0 0 0 8px rgba(88,166,124,0.15), 0 8px 20px rgba(60,130,90,0.20);
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 7px 18px rgba(90, 70, 140, 0.22);
+        }
+        50% {
+            box-shadow: 0 0 0 9px rgba(139,114,216,0.15), 0 7px 18px rgba(90, 70, 140, 0.22);
+        }
+    }
+
+    .point-label {
+        position: absolute;
+        z-index: 6;
+        transform: translate(-50%, -50%);
+        margin-top: -27px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid var(--border);
+        font-size: 0.68rem;
+        font-weight: 900;
+        color: var(--ink);
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .target-flag {
+        position: absolute;
+        z-index: 4;
+        transform: translate(-50%, -100%);
+        font-size: 2rem;
+        filter: drop-shadow(0 5px 8px rgba(50,40,70,0.15));
+    }
+
+    .route-line {
+        position: absolute;
+        z-index: 3;
+        height: 4px;
+        background: linear-gradient(90deg, var(--purple), var(--pink-dark));
+        transform-origin: left center;
+        border-radius: 99px;
+        opacity: 0.75;
+        pointer-events: none;
+    }
+
+    .game-message {
+        min-height: 28px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 750;
+        margin-bottom: 13px;
+        line-height: 1.5;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .scoreboard {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .score {
+        padding: 13px 10px;
+        text-align: center;
+        border-radius: 15px;
+        background: #faf8ff;
+    }
+
+    .score small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .score strong {
+        font-size: 1.2rem;
+    }
+
+    .state-header {
+        margin-bottom: 20px;
+    }
+
+    .state-header h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .state-header p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+        margin-top: 6px;
+    }
+
+    .state-box {
+        min-height: 350px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .empty-state {
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        display: block;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .stat-card {
+        padding: 15px;
+        border-radius: 17px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .stat-card small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 5px;
+    }
+
+    .stat-card strong {
+        font-size: 1.35rem;
+    }
+
+    .decision-list {
+        display: grid;
+        gap: 9px;
+    }
+
+    .decision {
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: 11px;
+        align-items: center;
+        padding: 12px;
+        border-radius: 15px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .decision-number {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+    }
+
+    .decision.current {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.35);
+    }
+
+    .decision.current .decision-number {
+        background: #bfe8d0;
+        color: #39765a;
+    }
+
+    .decision-info strong {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .decision-info span {
+        color: var(--muted);
+        font-size: 0.78rem;
+    }
+
+    .decision-value {
+        font-weight: 950;
+        color: var(--purple);
+    }
+
+    .summary {
+        margin-top: 14px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.6;
+        font-size: 0.86rem;
+    }
+
+    .challenge-section,
+    .algorithm-section,
+    .code-section,
+    .complexity-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .challenge-card {
+        padding: 28px;
+        border-radius: 27px;
+        background:
+            radial-gradient(circle at 100% 0%, rgba(255,240,191,0.65), transparent 30%),
+            radial-gradient(circle at 0% 100%, rgba(223,247,235,0.70), transparent 30%),
+            white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .challenge-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 22px;
+    }
+
+    .select-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 13px;
+        border-radius: 14px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-weight: 800;
+    }
+
+    select {
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        font-weight: 800;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .challenge-result {
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        border-radius: 19px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        line-height: 1.6;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.4rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+        max-width: calc(100% - 30px);
+        text-align: center;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .game-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .challenge-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .landscape {
+            height: 290px;
+        }
+
+        .decision {
+            grid-template-columns: 38px 1fr;
+        }
+
+        .decision-value {
+            grid-column: 2;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Optimization · Hill Climbing</div>
+
+
+<h1>
+    Climb Toward<br>
+    <span class="gradient">the Peak.</span>
+</h1>
+
+<p>
+    Watch an AI search a landscape one step at a time.
+    Hill Climbing repeatedly chooses a better neighbouring state
+    until no nearby move improves the current solution.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Start</strong>
+        <span>Place the AI somewhere on the landscape.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Climb</strong>
+    <span>Compare neighbouring states.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Discover</strong>
+    <span>See why the algorithm stops.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="main-section">
+    <div class="game-layout">
+
+        <div class="panel game-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>⛰️ Climbing Landscape</h2>
+                    <p>
+                        The AI wants to maximize the landscape's
+                        score.
+                    </p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="landscape-wrap">
+                <div id="landscape" class="landscape">
+
+                    <div class="sun"></div>
+                    <div class="mountain one"></div>
+                    <div class="mountain two"></div>
+
+                    <div id="routeLine" class="route-line"></div>
+
+                    <div id="targetFlag" class="target-flag"
+                         style="left: 76%; top: 24%;">
+                        ⚑
+                    </div>
+
+                    <div id="hillPoint" class="hill-point active"
+                         style="left: 18%; top: 72%;">
+                    </div>
+
+                    <div id="pointLabel" class="point-label"
+                         style="left: 18%; top: 72%;">
+                        Start
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="gameMessage" class="game-message">
+                Press "Start Climbing" to let the AI search for a better state.
+            </div>
+
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">
+                    ✦ Start Climbing
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    → Next Step
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ New Landscape
+                </button>
+            </div>
+
+            <div class="scoreboard">
+                <div class="score">
+                    <small>Current Score</small>
+                    <strong id="currentScore">18</strong>
+                </div>
+
+                <div class="score">
+                    <small>Steps</small>
+                    <strong id="stepCount">0</strong>
+                </div>
+
+                <div class="score">
+                    <small>Peak Score</small>
+                    <strong id="peakScore">96</strong>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="panel state-panel">
+
+            <div class="state-header">
+                <h2>✦ Behind The State</h2>
+                <p>
+                    Every step shows the neighbouring states considered
+                    by the Hill Climbing algorithm.
+                </p>
+            </div>
+
+            <div id="stateBox" class="state-box">
+
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">🧭</span>
+                        <strong>The AI is waiting at the starting point.</strong>
+                        <p>
+                            Start the climb to see which neighbouring
+                            states are better.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<section class="challenge-section">
+
+    <div class="section-heading">
+        <div class="mini">Interactive experiment</div>
+        <h2>Can you predict the next move?</h2>
+        <p>
+            Before running the algorithm, choose how you think
+            Hill Climbing should behave when it encounters a difficult
+            landscape.
+        </p>
+    </div>
+
+    <div class="challenge-card">
+
+        <div class="challenge-controls">
+
+            <div class="select-wrap">
+                <span>Scenario</span>
+
+                <select id="scenarioSelect">
+                    <option value="normal">Smooth Peak</option>
+                    <option value="local">Local Maximum</option>
+                    <option value="plateau">Plateau</option>
+                    <option value="ridge">Ridge</option>
+                </select>
+            </div>
+
+            <button id="challengeBtn" class="btn btn-green">
+                Test Scenario
+            </button>
+
+        </div>
+
+        <div id="challengeResult" class="challenge-result">
+            Choose a scenario and test how a simple Hill Climbing
+            strategy can behave.
+        </div>
+
+    </div>
+
+</section>
+
+<section class="algorithm-section">
+
+    <div class="section-heading">
+        <div class="mini">Understand the algorithm</div>
+        <h2>How does Hill Climbing work?</h2>
+        <p>
+            Hill Climbing is a local search strategy. Instead of
+            exploring an entire search tree, it focuses on the current
+            state and nearby alternatives.
+        </p>
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">📍</div>
+            <h3>Choose a state</h3>
+            <p>
+                The algorithm begins with an initial solution or state.
+                It evaluates how good that state currently is.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🔎</div>
+            <h3>Inspect neighbours</h3>
+            <p>
+                Nearby states are examined to find possible improvements
+                over the current position.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">⬆️</div>
+            <h3>Move uphill</h3>
+            <p>
+                If a neighbouring state has a higher value, the algorithm
+                moves there and repeats the process.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🛑</div>
+            <h3>Stop when stuck</h3>
+            <p>
+                If no neighbouring state is better, the algorithm stops.
+                This can produce a local maximum instead of the global one.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+        <div class="mini">Implementation</div>
+        <h2>See the core decision loop.</h2>
+        <p>
+            The essential idea is simple: inspect neighbouring states,
+            choose an improvement, and repeat until no improvement exists.
+        </p>
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">hill-climbing.js</span>
+
+            <span></span>
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">hillClimb</span>(currentState) {
+
+<span class="kw">while</span> (<span class="kw">true</span>) {
+
+    <span class="kw">const</span> neighbours =
+        <span class="fn">getNeighbours</span>(currentState);
+
+    <span class="kw">const</span> bestNeighbour =
+        <span class="fn">getBestNeighbour</span>(neighbours);
+
+    <span class="kw">if</span> (
+        <span class="fn">evaluate</span>(bestNeighbour)
+        &lt;= <span class="fn">evaluate</span>(currentState)
+    ) {
+        <span class="kw">return</span> currentState;
+    }
+
+    currentState = bestNeighbour;
+}
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+<section class="complexity-section">
+
+    <div class="section-heading">
+        <div class="mini">Quick facts</div>
+        <h2>What should you remember?</h2>
+    </div>
+
+    <div class="complexity-grid">
+
+        <div class="complexity-card">
+            <span>Search style</span>
+            <strong>Local Search</strong>
+        </div>
+
+        <div class="complexity-card">
+            <span>Memory</span>
+            <strong>Very Low</strong>
+        </div>
+
+        <div class="complexity-card">
+            <span>Main Risk</span>
+            <strong>Local Maximum</strong>
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    /*
+     * AI – Behind The State
+     * Interactive Hill Climbing
+     *
+     * The landscape is represented by a deterministic set
+     * of states. Each state has:
+     * - x/y coordinates for visualisation
+     * - a numerical evaluation score
+     * - neighbouring state indexes
+     *
+     * The algorithm always chooses the highest-scoring
+     * neighbour. It stops when no neighbour is better.
+     */
+
+    const landscape = document.getElementById("landscape");
+    const hillPoint = document.getElementById("hillPoint");
+    const pointLabel = document.getElementById("pointLabel");
+    const routeLine = document.getElementById("routeLine");
+    const statusBadge = document.getElementById("statusBadge");
+
+    const gameMessage = document.getElementById("gameMessage");
+    const stateBox = document.getElementById("stateBox");
+
+    const startBtn = document.getElementById("startBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const currentScoreElement = document.getElementById("currentScore");
+    const stepCountElement = document.getElementById("stepCount");
+    const peakScoreElement = document.getElementById("peakScore");
+
+    const scenarioSelect = document.getElementById("scenarioSelect");
+    const challengeBtn = document.getElementById("challengeBtn");
+    const challengeResult = document.getElementById("challengeResult");
+
+    const toast = document.getElementById("toast");
+
+    /*
+     * A fixed landscape makes the demonstration reproducible.
+     * Some paths contain local maxima so that the user can
+     * observe an important limitation of simple Hill Climbing.
+     */
+    const LANDSCAPES = [
+        {
+            name: "Smooth Peak",
+            states: [
+                { x: 10, y: 78, score: 18, neighbours: [1, 2] },
+                { x: 20, y: 67, score: 31, neighbours: [0, 3, 4] },
+                { x: 15, y: 52, score: 26, neighbours: [0, 3] },
+                { x: 31, y: 54, score: 47, neighbours: [1, 2, 5] },
+                { x: 36, y: 69, score: 39, neighbours: [1, 5] },
+                { x: 48, y: 45, score: 61, neighbours: [3, 4, 6] },
+                { x: 60, y: 34, score: 76, neighbours: [5, 7, 8] },
+                { x: 72, y: 22, score: 88, neighbours: [6, 9] },
+                { x: 68, y: 47, score: 70, neighbours: [6, 9] },
+                { x: 76, y: 18, score: 96, neighbours: [7, 8] }
+            ]
+        },
+        {
+            name: "Local Maximum",
+            states: [
+                { x: 10, y: 78, score: 18, neighbours: [1, 2] },
+                { x: 22, y: 64, score: 35, neighbours: [0, 3] },
+                { x: 17, y: 53, score: 28, neighbours: [0, 4] },
+                { x: 35, y: 51, score: 58, neighbours: [1, 5] },
+                { x: 31, y: 68, score: 42, neighbours: [2, 5] },
+                { x: 46, y: 39, score: 72, neighbours: [3, 4, 6] },
+                { x: 59, y: 26, score: 84, neighbours: [5, 7] },
+                { x: 70, y: 35, score: 67, neighbours: [6, 8] },
+                { x: 80, y: 55, score: 54, neighbours: [7, 9] },
+                { x: 90, y: 63, score: 41, neighbours: [8] }
+            ]
+        },
+        {
+            name: "Plateau",
+            states: [
+                { x: 10, y: 76, score: 20, neighbours: [1, 2] },
+                { x: 22, y: 65, score: 35, neighbours: [0, 3] },
+                { x: 18, y: 51, score: 30, neighbours: [0, 4] },
+                { x: 34, y: 54, score: 55, neighbours: [1, 5] },
+                { x: 33, y: 40, score: 55, neighbours: [2, 5] },
+                { x: 49, y: 44, score: 55, neighbours: [3, 4, 6] },
+                { x: 63, y: 34, score: 72, neighbours: [5, 7] },
+                { x: 77, y: 24, score: 94, neighbours: [6] }
+            ]
+        },
+        {
+            name: "Ridge",
+            states: [
+                { x: 9, y: 80, score: 16, neighbours: [1] },
+                { x: 20, y: 69, score: 28, neighbours: [0, 2] },
+                { x: 30, y: 57, score: 43, neighbours: [1, 3] },
+                { x: 40, y: 48, score: 51, neighbours: [2, 4] },
+                { x: 50, y: 40, score: 62, neighbours: [3, 5] },
+                { x: 60, y: 31, score: 71, neighbours: [4, 6] },
+                { x: 70, y: 24, score: 82, neighbours: [5, 7] },
+                { x: 81, y: 16, score: 98, neighbours: [6] }
+            ]
+        }
+    ];
+
+    let landscapeData = LANDSCAPES[0];
+    let currentState = 0;
+    let stepCount = 0;
+    let running = false;
+    let finished = false;
+    let route = [0];
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        window.clearTimeout(showToast.timer);
+
+        showToast.timer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2400);
+    }
+
+    function getState(index) {
+        return landscapeData.states[index];
+    }
+
+    function renderPosition() {
+        const state = getState(currentState);
+
+        hillPoint.style.left = state.x + "%";
+        hillPoint.style.top = state.y + "%";
+
+        pointLabel.style.left = state.x + "%";
+        pointLabel.style.top = state.y + "%";
+
+        pointLabel.textContent = "Score " + state.score;
+
+        currentScoreElement.textContent = state.score;
+        stepCountElement.textContent = stepCount;
+
+        const highestScore = Math.max(
+            ...landscapeData.states.map(item => item.score)
+        );
+
+        peakScoreElement.textContent = highestScore;
+
+        drawRoute();
+    }
+
+    function drawRoute() {
+        routeLine.style.display = "none";
+
+        if (route.length < 2) {
+            return;
+        }
+
+        const previous = getState(route[route.length - 2]);
+        const current = getState(route[route.length - 1]);
+
+        const landscapeWidth = landscape.clientWidth;
+        const landscapeHeight = landscape.clientHeight;
+
+        const x1 = previous.x / 100 * landscapeWidth;
+        const y1 = previous.y / 100 * landscapeHeight;
+
+        const x2 = current.x / 100 * landscapeWidth;
+        const y2 = current.y / 100 * landscapeHeight;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+        routeLine.style.display = "block";
+        routeLine.style.left = x1 + "px";
+        routeLine.style.top = y1 + "px";
+        routeLine.style.width = length + "px";
+        routeLine.style.transform = "rotate(" + angle + "deg)";
+    }
+
+    function renderStatePanel(neighbourData = null) {
+        const current = getState(currentState);
+
+        const neighbours = current.neighbours.map(index => {
+            const state = getState(index);
+
+            return {
+                index,
+                score: state.score,
+                better: state.score > current.score
+            };
+        });
+
+        neighbours.sort((a, b) => b.score - a.score);
+
+        const cards = neighbours.map((item, position) => {
+            const state = getState(item.index);
+
+            return `
+                <div class="decision ${item.better ? "current" : ""}">
+                    <div class="decision-number">
+                        ${position + 1}
+                    </div>
+
+                    <div class="decision-info">
+                        <strong>
+                            Neighbour ${item.index + 1}
+                        </strong>
+
+                        <span>
+                            Position ${state.x}% / ${state.y}%
+                            · ${item.better ? "Improvement" : "Not better"}
+                        </span>
+                    </div>
+
+                    <div class="decision-value">
+                        ${state.score}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        const bestNeighbour = neighbours.length > 0
+            ? neighbours[0]
+            : null;
+
+        let decisionText = "";
+
+        if (!bestNeighbour) {
+            decisionText =
+                "There are no neighbouring states to inspect.";
+        } else if (bestNeighbour.score <= current.score) {
+            decisionText =
+                "No neighbour has a higher score than the current state. " +
+                "Simple Hill Climbing therefore stops here.";
+        } else {
+            decisionText =
+                "The best neighbouring state has a score of " +
+                bestNeighbour.score +
+                ", which is higher than the current score of " +
+                current.score +
+                ". The algorithm can climb there.";
+        }
+
+        stateBox.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <small>Current State</small>
+                    <strong>S${currentState + 1}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <small>Current Value</small>
+                    <strong>${current.score}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <small>Neighbours</small>
+                    <strong>${neighbours.length}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <small>Landscape</small>
+                    <strong>${landscapeData.name}</strong>
+                </div>
+            </div>
+
+            <div class="decision-list">
+                ${cards}
+            </div>
+
+            <div class="summary">
+                <strong>AI decision:</strong><br>
+                ${decisionText}
+            </div>
+        `;
+    }
+
+    function findBestNeighbour() {
+        const current = getState(currentState);
+
+        let bestIndex = currentState;
+        let bestScore = current.score;
+
+        for (const neighbourIndex of current.neighbours) {
+            const neighbour = getState(neighbourIndex);
+
+            if (neighbour.score > bestScore) {
+                bestScore = neighbour.score;
+                bestIndex = neighbourIndex;
+            }
+        }
+
+        return {
+            index: bestIndex,
+            score: bestScore
+        };
+    }
+
+    function performStep() {
+        if (finished) {
+            showToast("The AI has already stopped. Start a new landscape.");
+            return;
+        }
+
+        setStatus("Evaluating...", "thinking");
+        gameMessage.textContent =
+            "The AI is comparing the current state with its neighbours...";
+
+        renderStatePanel();
+
+        window.setTimeout(() => {
+
+            const decision = findBestNeighbour();
+            const current = getState(currentState);
+
+            if (decision.index === currentState) {
+                finished = true;
+                running = false;
+
+                hillPoint.classList.remove("active");
+                hillPoint.classList.add("best");
+
+                setStatus("Stopped", "stuck");
+
+                gameMessage.textContent =
+                    "No better neighbour exists. Hill Climbing has stopped.";
+
+                renderStatePanel();
+
+                showToast(
+                    "Search stopped at score " +
+                    current.score +
+                    "."
+                );
+
+                return;
+            }
+
+            currentState = decision.index;
+            stepCount++;
+            route.push(currentState);
+
+            hillPoint.classList.remove("best");
+            hillPoint.classList.add("active");
+
+            renderPosition();
+            renderStatePanel();
+
+            const newState = getState(currentState);
+
+            if (
+                newState.score ===
+                Math.max(...landscapeData.states.map(item => item.score))
+            ) {
+                finished = true;
+                running = false;
+
+                hillPoint.classList.remove("active");
+                hillPoint.classList.add("best");
+
+                setStatus("Peak found", "done");
+
+                gameMessage.textContent =
+                    "The AI reached the highest state in this landscape.";
+
+                showToast("Global peak reached.");
+            } else {
+                setStatus("Climbing", "thinking");
+
+                gameMessage.textContent =
+                    "The AI moved uphill to state " +
+                    (currentState + 1) +
+                    " with score " +
+                    newState.score +
+                    ".";
+
+                if (running) {
+                    window.setTimeout(performStep, 700);
+                }
+            }
+
+        }, 350);
+    }
+
+    function startClimbing() {
+        if (finished) {
+            showToast("Choose a new landscape first.");
+            return;
+        }
+
+        if (running) {
+            running = false;
+            setStatus("Paused");
+            gameMessage.textContent =
+                "The climb is paused. Press Start Climbing to continue.";
+            return;
+        }
+
+        running = true;
+        setStatus("Climbing", "thinking");
+        gameMessage.textContent =
+            "The AI is climbing toward a better state...";
+
+        performStep();
+    }
+
+    function resetGame() {
+        running = false;
+        finished = false;
+        currentState = 0;
+        stepCount = 0;
+        route = [0];
+
+        landscapeData =
+            LANDSCAPES[
+                Math.floor(Math.random() * LANDSCAPES.length)
+            ];
+
+        hillPoint.classList.remove("best");
+        hillPoint.classList.add("active");
+
+        setStatus("Ready");
+
+        gameMessage.textContent =
+            "Press Start Climbing to let the AI search for a better state.";
+
+        renderPosition();
+        renderStatePanel();
+
+        stateBox.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧭</span>
+                    <strong>New landscape loaded.</strong>
+                    <p>
+                        The AI is waiting at the starting point.
+                        Start the climb to reveal its decisions.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        showToast(landscapeData.name + " loaded.");
+    }
+
+    function testScenario() {
+        const scenario = scenarioSelect.value;
+
+        if (scenario === "normal") {
+            challengeResult.innerHTML = `
+                <strong>⛰️ Smooth Peak:</strong>&nbsp;
+                The nearby states gradually improve toward the highest point.
+                Simple Hill Climbing can follow the improving path.
+            `;
+        }
+
+        if (scenario === "local") {
+            challengeResult.innerHTML = `
+                <strong>⚠️ Local Maximum:</strong>&nbsp;
+                The algorithm may reach a state that is better than all of
+                its immediate neighbours while another, higher peak exists
+                elsewhere. It cannot see beyond its local neighbourhood.
+            `;
+        }
+
+        if (scenario === "plateau") {
+            challengeResult.innerHTML = `
+                <strong>▬ Plateau:</strong>&nbsp;
+                Several states can have the same evaluation. A basic
+                strict-improvement strategy may stop because there is no
+                strictly better neighbour.
+            `;
+        }
+
+        if (scenario === "ridge") {
+            challengeResult.innerHTML = `
+                <strong>🏔️ Ridge:</strong>&nbsp;
+                The best path can require carefully following a narrow
+                sequence of improving states. The neighbourhood definition
+                strongly affects what the algorithm can discover.
+            `;
+        }
+
+        showToast("Scenario explained.");
+    }
+
+    startBtn.addEventListener("click", startClimbing);
+
+    stepBtn.addEventListener("click", () => {
+        running = false;
+        performStep();
+    });
+
+    resetBtn.addEventListener("click", resetGame);
+
+    challengeBtn.addEventListener("click", testScenario);
+
+    window.addEventListener("resize", drawRoute);
+
+    renderPosition();
+
+    stateBox.innerHTML = `
+        <div class="empty-state">
+            <div>
+                <span class="emoji">🧭</span>
+                <strong>The AI is waiting at the starting point.</strong>
+                <p>
+                    Start the climb to see which neighbouring
+                    states are better.
+                </p>
+            </div>
+        </div>
+    `;
+</script>
+
+</body>
+</html>

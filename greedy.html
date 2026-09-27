@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Greedy Best-First Search">
+    <title>Greedy Best-First Search — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .search-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .search-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.82);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .visual-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .graph-wrap {
+        width: 100%;
+        overflow-x: auto;
+        padding: 8px 0 15px;
+    }
+
+    .graph {
+        position: relative;
+        width: 520px;
+        height: 430px;
+        margin: 0 auto;
+        border-radius: 24px;
+        background:
+            linear-gradient(rgba(139,114,216,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(139,114,216,0.035) 1px, transparent 1px),
+            #fcfbff;
+        background-size: 28px 28px;
+        border: 1px solid var(--border);
+    }
+
+    .edge-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .edge {
+        stroke: #cfc8e4;
+        stroke-width: 3;
+        opacity: 0.8;
+        transition: 0.3s ease;
+    }
+
+    .edge.path {
+        stroke: var(--purple);
+        stroke-width: 5;
+        opacity: 1;
+    }
+
+    .node {
+        position: absolute;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 3px solid #ded8f5;
+        box-shadow: 0 8px 20px rgba(80,70,110,0.10);
+        transform: translate(-50%, -50%);
+        transition: 0.3s ease;
+        z-index: 2;
+    }
+
+    .node strong {
+        font-size: 0.82rem;
+        font-weight: 950;
+    }
+
+    .node small {
+        color: var(--muted);
+        font-size: 0.66rem;
+        margin-top: 2px;
+    }
+
+    .node.start {
+        background: var(--pink);
+        border-color: #efadc4;
+    }
+
+    .node.goal {
+        background: var(--mint);
+        border-color: #a7d8bc;
+    }
+
+    .node.frontier {
+        background: var(--yellow);
+        border-color: #ecd78d;
+        animation: pulse 0.9s ease infinite alternate;
+    }
+
+    .node.visited {
+        background: var(--blue);
+        border-color: #a9cdea;
+    }
+
+    .node.current {
+        background: var(--lavender);
+        border-color: var(--purple);
+        box-shadow: 0 0 0 7px rgba(139,114,216,0.12), 0 10px 25px rgba(80,70,110,0.13);
+    }
+
+    .node.path {
+        background: var(--mint);
+        border-color: var(--green);
+        box-shadow: 0 0 0 6px rgba(88,166,124,0.10), 0 10px 25px rgba(80,70,110,0.12);
+    }
+
+    @keyframes pulse {
+        from {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        to {
+            transform: translate(-50%, -50%) scale(1.07);
+        }
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 9px;
+        margin: 8px 0 20px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.8);
+        color: var(--muted);
+        font-size: 0.73rem;
+        font-weight: 750;
+    }
+
+    .legend-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+    }
+
+    .legend-start { background: var(--pink-dark); }
+    .legend-goal { background: var(--green); }
+    .legend-frontier { background: var(--yellow-dark); }
+    .legend-visited { background: var(--blue-dark); }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 20px;
+    }
+
+    .metric {
+        padding: 13px 9px;
+        border-radius: 17px;
+        background: #faf8ff;
+        text-align: center;
+    }
+
+    .metric small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 5px;
+        font-size: 0.72rem;
+    }
+
+    .metric strong {
+        font-size: 1.2rem;
+    }
+
+    .state-header {
+        margin-bottom: 20px;
+    }
+
+    .state-header h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .state-header p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+        margin-top: 6px;
+    }
+
+    .priority-box {
+        min-height: 335px;
+        padding: 17px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .empty-state {
+        min-height: 290px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .queue-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .queue-item {
+        display: grid;
+        grid-template-columns: 40px 1fr auto;
+        gap: 11px;
+        align-items: center;
+        padding: 12px;
+        border-radius: 16px;
+        background: white;
+        border: 1px solid var(--border);
+        transition: 0.25s ease;
+    }
+
+    .queue-item.selected {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.32);
+        transform: translateX(4px);
+    }
+
+    .queue-number {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 950;
+    }
+
+    .queue-info strong {
+        display: block;
+        font-size: 0.9rem;
+    }
+
+    .queue-info small {
+        color: var(--muted);
+        font-size: 0.73rem;
+    }
+
+    .heuristic {
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: var(--yellow);
+        color: #80661f;
+        font-size: 0.72rem;
+        font-weight: 900;
+    }
+
+    .summary {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.55;
+        font-size: 0.86rem;
+    }
+
+    .explain-section,
+    .algorithm-section,
+    .code-section,
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .explain-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .explain-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        align-items: flex-end;
+        margin-bottom: 28px;
+    }
+
+    .explain-top h2 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.06em;
+    }
+
+    .explain-top p {
+        color: var(--muted);
+        max-width: 600px;
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .step {
+        padding: 20px;
+        border-radius: 21px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .step:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .step:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .step:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .step:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .step-number {
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: white;
+        color: var(--purple);
+        font-weight: 950;
+        margin-bottom: 13px;
+    }
+
+    .step h3 {
+        margin-bottom: 7px;
+        letter-spacing: -0.03em;
+    }
+
+    .step p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.86rem;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 650px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .search-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .steps {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 650px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .explain-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .steps,
+        .concept-grid,
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .explain-card {
+            padding: 24px 18px;
+        }
+
+        .graph {
+            width: 480px;
+            transform-origin: top left;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Heuristics · Greedy Best-First</div>
+
+
+<h1>
+    Chase the<br>
+    <span class="gradient">closest goal.</span>
+</h1>
+
+<p>
+    Explore Greedy Best-First Search through an interactive graph.
+    Watch the algorithm choose the next state using only its heuristic
+    estimate of how close that state is to the goal.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Run</strong>
+        <span>Watch the search happen.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Inspect</strong>
+    <span>See the priority queue.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Learn</strong>
+    <span>Understand the heuristic.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="search-section">
+    <div class="search-layout">
+
+        <div class="panel visual-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🧭 Search Playground</h2>
+                    <p>
+                        Start at A and find the goal G.
+                        Lower heuristic values are preferred.
+                    </p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="graph-wrap">
+                <div class="graph" id="graph">
+
+                    <svg class="edge-layer" viewBox="0 0 520 430" preserveAspectRatio="none">
+                        <line id="edge-AB" class="edge" x1="70" y1="215" x2="175" y2="110"></line>
+                        <line id="edge-AC" class="edge" x1="70" y1="215" x2="175" y2="320"></line>
+
+                        <line id="edge-BD" class="edge" x1="175" y1="110" x2="285" y2="70"></line>
+                        <line id="edge-BE" class="edge" x1="175" y1="110" x2="285" y2="215"></line>
+
+                        <line id="edge-CF" class="edge" x1="175" y1="320" x2="285" y2="350"></line>
+                        <line id="edge-CE" class="edge" x1="175" y1="320" x2="285" y2="215"></line>
+
+                        <line id="edge-DG" class="edge" x1="285" y1="70" x2="430" y2="110"></line>
+                        <line id="edge-EG" class="edge" x1="285" y1="215" x2="430" y2="110"></line>
+                        <line id="edge-FG" class="edge" x1="285" y1="350" x2="430" y2="110"></line>
+                    </svg>
+
+                    <div class="node start" data-node="A" style="left:70px; top:215px;">
+                        <strong>A</strong>
+                        <small>h=6</small>
+                    </div>
+
+                    <div class="node" data-node="B" style="left:175px; top:110px;">
+                        <strong>B</strong>
+                        <small>h=4</small>
+                    </div>
+
+                    <div class="node" data-node="C" style="left:175px; top:320px;">
+                        <strong>C</strong>
+                        <small>h=5</small>
+                    </div>
+
+                    <div class="node" data-node="D" style="left:285px; top:70px;">
+                        <strong>D</strong>
+                        <small>h=3</small>
+                    </div>
+
+                    <div class="node" data-node="E" style="left:285px; top:215px;">
+                        <strong>E</strong>
+                        <small>h=2</small>
+                    </div>
+
+                    <div class="node" data-node="F" style="left:285px; top:350px;">
+                        <strong>F</strong>
+                        <small>h=4</small>
+                    </div>
+
+                    <div class="node goal" data-node="G" style="left:430px; top:110px;">
+                        <strong>G</strong>
+                        <small>h=0</small>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-dot legend-start"></span>
+                    Start
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-goal"></span>
+                    Goal
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-frontier"></span>
+                    Frontier
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-visited"></span>
+                    Visited
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="runBtn" class="btn btn-primary">
+                    ▶ Run Search
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    Step
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ Reset
+                </button>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric">
+                    <small>Visited</small>
+                    <strong id="visitedCount">0</strong>
+                </div>
+
+                <div class="metric">
+                    <small>Queue</small>
+                    <strong id="queueCount">0</strong>
+                </div>
+
+                <div class="metric">
+                    <small>Path</small>
+                    <strong id="pathLength">—</strong>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="panel state-panel">
+
+            <div class="state-header">
+                <h2>✦ Behind The State</h2>
+                <p>
+                    Greedy Best-First Search chooses the frontier node
+                    with the smallest heuristic value h(n).
+                </p>
+            </div>
+
+            <div id="priorityBox" class="priority-box">
+
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">🧠</span>
+                        <strong>Ready to search.</strong>
+                        <p>
+                            Run the algorithm or use Step to watch
+                            each decision happen one at a time.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<section class="explain-section">
+
+    <div class="explain-card">
+
+        <div class="explain-top">
+            <div>
+                <div class="eyebrow">How it thinks</div>
+
+                <h2>
+                    One question:
+                    <br>
+                    “Who looks closest?”
+                </h2>
+
+                <p>
+                    Unlike Dijkstra's algorithm, Greedy Best-First Search
+                    does not prioritize the total distance already travelled.
+                    It focuses on the heuristic estimate h(n) of the remaining
+                    distance to the goal.
+                </p>
+            </div>
+
+            <button id="heuristicBtn" class="btn btn-green">
+                Explain Heuristic
+            </button>
+        </div>
+
+        <div id="steps" class="steps">
+
+            <article class="step">
+                <div class="step-number">1</div>
+                <h3>Start</h3>
+                <p>
+                    Put the starting node into the frontier.
+                </p>
+            </article>
+
+            <article class="step">
+                <div class="step-number">2</div>
+                <h3>Compare</h3>
+                <p>
+                    Look at the heuristic h(n) of available nodes.
+                </p>
+            </article>
+
+            <article class="step">
+                <div class="step-number">3</div>
+                <h3>Choose</h3>
+                <p>
+                    Select the node with the smallest heuristic value.
+                </p>
+            </article>
+
+            <article class="step">
+                <div class="step-number">4</div>
+                <h3>Repeat</h3>
+                <p>
+                    Continue until the goal is reached or the frontier
+                    becomes empty.
+                </p>
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="algorithm-section">
+
+    <div class="section-heading">
+        <div class="mini">Understand the algorithm</div>
+
+        <h2>
+            Greedy means “look ahead.”
+        </h2>
+
+        <p>
+            The algorithm uses a heuristic to estimate which frontier
+            node appears closest to the goal. This can make it fast,
+            but the heuristic-only strategy does not guarantee the
+            shortest path in a general weighted graph.
+        </p>
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">🎯</div>
+
+            <h3>Heuristic h(n)</h3>
+
+            <p>
+                A heuristic estimates how close a node is to the goal.
+                Smaller values are preferred by Greedy Best-First Search.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">⚡</div>
+
+            <h3>Fast decisions</h3>
+
+            <p>
+                Because the algorithm concentrates on the estimated
+                remaining distance, it can avoid exploring many nodes.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🗺️</div>
+
+            <h3>Frontier</h3>
+
+            <p>
+                The frontier contains discovered nodes that have not
+                yet been expanded. The smallest heuristic gets priority.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">⚖️</div>
+
+            <h3>Not always optimal</h3>
+
+            <p>
+                Greedy Best-First Search ignores the cost already travelled.
+                Therefore, its first discovered route to the goal may not
+                be the shortest route.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+        <div class="mini">Implementation</div>
+
+        <h2>
+            The core idea in code.
+        </h2>
+
+        <p>
+            The important operation is selecting the frontier node
+            with the smallest heuristic value.
+        </p>
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">greedy-bfs.js</span>
+
+            <span></span>
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">greedyBestFirstSearch</span>(graph, start, goal) {
+<span class="kw">const</span> frontier = [start];
+<span class="kw">const</span> visited = <span class="kw">new</span> Set();
+<span class="kw">const</span> parent = <span class="kw">new</span> Map();
+
+<span class="kw">while</span> (frontier.length &gt; <span class="num">0</span>) {
+
+    frontier.sort(
+        (a, b) =&gt; heuristic[a] - heuristic[b]
+    );
+
+    <span class="kw">const</span> current = frontier.shift();
+
+    <span class="kw">if</span> (current === goal) {
+        <span class="kw">return</span> <span class="fn">reconstructPath</span>(
+            parent,
+            start,
+            goal
+        );
+    }
+
+    <span class="kw">if</span> (visited.has(current)) {
+        <span class="kw">continue</span>;
+    }
+
+    visited.add(current);
+
+    <span class="kw">for</span> (<span class="kw">const</span> neighbor <span class="kw">of</span> graph[current]) {
+        <span class="kw">if</span> (!visited.has(neighbor)) {
+            parent.set(neighbor, current);
+            frontier.push(neighbor);
+        }
+    }
+}
+
+<span class="kw">return</span> <span class="kw">null</span>;
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+<section class="complexity">
+
+    <div class="complexity-card">
+        <span>Priority Selection</span>
+        <strong>O(V log V)</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Space</span>
+        <strong>O(V)</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Uses</span>
+        <strong>h(n)</strong>
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    const nodes = Array.from(document.querySelectorAll(".node"));
+    const statusBadge = document.getElementById("statusBadge");
+    const priorityBox = document.getElementById("priorityBox");
+
+    const runBtn = document.getElementById("runBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const heuristicBtn = document.getElementById("heuristicBtn");
+
+    const visitedCountElement = document.getElementById("visitedCount");
+    const queueCountElement = document.getElementById("queueCount");
+    const pathLengthElement = document.getElementById("pathLength");
+    const toast = document.getElementById("toast");
+
+    const graph = {
+        A: ["B", "C"],
+        B: ["D", "E"],
+        C: ["F", "E"],
+        D: ["G"],
+        E: ["G"],
+        F: ["G"],
+        G: []
+    };
+
+    const heuristic = {
+        A: 6,
+        B: 4,
+        C: 5,
+        D: 3,
+        E: 2,
+        F: 4,
+        G: 0
+    };
+
+    const edgeIds = [
+        "AB",
+        "AC",
+        "BD",
+        "BE",
+        "CF",
+        "CE",
+        "DG",
+        "EG",
+        "FG"
+    ];
+
+    let frontier = [];
+    let visited = [];
+    let parent = {};
+    let currentNode = null;
+    let finished = false;
+    let running = false;
+    let runTimer = null;
+
+    function getNodeElement(name) {
+        return document.querySelector(`[data-node="${name}"]`);
+    }
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        window.clearTimeout(showToast.timer);
+
+        showToast.timer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2400);
+    }
+
+    function updateMetrics() {
+        visitedCountElement.textContent = visited.length;
+        queueCountElement.textContent = frontier.length;
+
+        if (finished) {
+            const path = reconstructPath("A", "G");
+            pathLengthElement.textContent = path ? path.length : "—";
+        } else {
+            pathLengthElement.textContent = "—";
+        }
+    }
+
+    function reconstructPath(start, goal) {
+        if (goal !== start && !parent[goal]) {
+            return null;
+        }
+
+        const path = [goal];
+        let current = goal;
+
+        while (current !== start) {
+            current = parent[current];
+
+            if (!current) {
+                return null;
+            }
+
+            path.push(current);
+        }
+
+        path.reverse();
+        return path;
+    }
+
+    function clearNodeClasses() {
+        nodes.forEach(node => {
+            node.classList.remove(
+                "frontier",
+                "visited",
+                "current",
+                "path"
+            );
+        });
+
+        edgeIds.forEach(id => {
+            const edge = document.getElementById("edge-" + id);
+
+            if (edge) {
+                edge.classList.remove("path");
+            }
+        });
+
+        getNodeElement("A").classList.add("start");
+        getNodeElement("G").classList.add("goal");
+    }
+
+    function renderState() {
+        clearNodeClasses();
+
+        visited.forEach(name => {
+            const element = getNodeElement(name);
+
+            if (element && name !== "A" && name !== "G") {
+                element.classList.add("visited");
+            }
+        });
+
+        frontier.forEach(name => {
+            const element = getNodeElement(name);
+
+            if (element && name !== "A" && name !== "G") {
+                element.classList.add("frontier");
+            }
+        });
+
+        if (currentNode) {
+            const element = getNodeElement(currentNode);
+
+            if (element) {
+                element.classList.remove("frontier", "visited");
+                element.classList.add("current");
+            }
+        }
+
+        if (finished) {
+            const path = reconstructPath("A", "G");
+
+            if (path) {
+                path.forEach(name => {
+                    const element = getNodeElement(name);
+
+                    if (element) {
+                        element.classList.remove(
+                            "frontier",
+                            "visited",
+                            "current"
+                        );
+
+                        element.classList.add("path");
+                    }
+                });
+
+                for (let i = 0; i < path.length - 1; i++) {
+                    const id = path[i] + path[i + 1];
+                    const reverseId = path[i + 1] + path[i];
+
+                    const edge =
+                        document.getElementById("edge-" + id) ||
+                        document.getElementById("edge-" + reverseId);
+
+                    if (edge) {
+                        edge.classList.add("path");
+                    }
+                }
+            }
+        }
+
+        updateMetrics();
+        renderPriorityQueue();
+    }
+
+    function renderPriorityQueue() {
+        if (
+            frontier.length === 0 &&
+            visited.length === 0 &&
+            !currentNode
+        ) {
+            priorityBox.innerHTML = `
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">🧠</span>
+                        <strong>Ready to search.</strong>
+                        <p>
+                            Run the algorithm or use Step to watch
+                            each decision happen one at a time.
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            return;
+        }
+
+        const sorted = [...frontier].sort(
+            (a, b) => heuristic[a] - heuristic[b]
+        );
+
+        const queueItems = sorted.map((name, index) => {
+            const selected = index === 0;
+
+            return `
+                <div class="queue-item ${selected ? "selected" : ""}">
+                    <div class="queue-number">
+                        ${index + 1}
+                    </div>
+
+                    <div class="queue-info">
+                        <strong>
+                            ${selected ? "⭐ " : ""}
+                            Node ${name}
+                        </strong>
+
+                        <small>
+                            h(${name}) = ${heuristic[name]}
+                        </small>
+                    </div>
+
+                    <div class="heuristic">
+                        h = ${heuristic[name]}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        const currentText = currentNode
+            ? `
+                <div class="summary">
+                    <strong>Current decision:</strong><br>
+                    The algorithm expanded <strong>${currentNode}</strong>.
+                    It now prefers the available frontier node with the
+                    smallest heuristic value.
+                </div>
+            `
+            : "";
+
+        const visitedText = visited.length > 0
+            ? `
+                <div class="summary">
+                    <strong>Visited:</strong>
+                    ${visited.join(" → ")}
+                </div>
+            `
+            : "";
+
+        priorityBox.innerHTML = `
+            ${
+                sorted.length > 0
+                    ? `<div class="queue-list">${queueItems}</div>`
+                    : `
+                        <div class="empty-state">
+                            <div>
+                                <span class="emoji">🔎</span>
+                                <strong>The frontier is empty.</strong>
+                                <p>
+                                    There are no more nodes available
+                                    to explore.
+                                </p>
+                            </div>
+                        </div>
+                    `
+            }
+
+            ${currentText}
+            ${visitedText}
+        `;
+    }
+
+    function resetSearch() {
+        window.clearInterval(runTimer);
+        runTimer = null;
+
+        frontier = ["A"];
+        visited = [];
+        parent = {};
+        currentNode = null;
+        finished = false;
+        running = false;
+
+        setStatus("Ready");
+        runBtn.disabled = false;
+        stepBtn.disabled = false;
+
+        runBtn.textContent = "▶ Run Search";
+        stepBtn.textContent = "Step";
+
+        renderState();
+
+        showToast("Search reset. Ready to explore.");
+    }
+
+    function performStep() {
+        if (finished) {
+            return;
+        }
+
+        if (frontier.length === 0) {
+            finished = true;
+            running = false;
+            setStatus("No path", "done");
+
+            window.clearInterval(runTimer);
+            runTimer = null;
+
+            runBtn.disabled = false;
+            stepBtn.disabled = true;
+
+            renderState();
+            showToast("The search could not find the goal.");
+
+            return;
+        }
+
+        frontier.sort(
+            (a, b) => heuristic[a] - heuristic[b]
+        );
+
+        currentNode = frontier.shift();
+
+        if (visited.includes(currentNode)) {
+            currentNode = null;
+            renderState();
+            return;
+        }
+
+        visited.push(currentNode);
+
+        setStatus(
+            "Exploring " + currentNode,
+            "running"
+        );
+
+        if (currentNode === "G") {
+            finished = true;
+            running = false;
+
+            window.clearInterval(runTimer);
+            runTimer = null;
+
+            setStatus("Goal reached", "done");
+
+            runBtn.disabled = false;
+            stepBtn.disabled = true;
+
+            renderState();
+
+            const path = reconstructPath("A", "G");
+
+            if (path) {
+                showToast(
+                    "Goal reached: " + path.join(" → ")
+                );
+            }
+
+            return;
+        }
+
+        for (const neighbor of graph[currentNode]) {
+            if (
+                !visited.includes(neighbor) &&
+                !frontier.includes(neighbor)
+            ) {
+                parent[neighbor] = currentNode;
+                frontier.push(neighbor);
+            }
+        }
+
+        renderState();
+    }
+
+    function startSearch() {
+        if (finished) {
+            resetSearch();
+        }
+
+        if (running) {
+            return;
+        }
+
+        running = true;
+        runBtn.disabled = true;
+        stepBtn.disabled = true;
+
+        setStatus("Searching...", "running");
+
+        performStep();
+
+        runTimer = window.setInterval(() => {
+            if (finished) {
+                window.clearInterval(runTimer);
+                runTimer = null;
+                return;
+            }
+
+            performStep();
+        }, 850);
+    }
+
+    function explainHeuristic() {
+        priorityBox.innerHTML = `
+            <div class="summary" style="margin-top:0;">
+                <strong>What is h(n)?</strong><br><br>
+
+                h(n) is a heuristic estimate of how far node n appears
+                to be from the goal. Greedy Best-First Search uses this
+                value as its main decision rule.
+                <br><br>
+
+                In this example:
+                <br><br>
+
+                <strong>A = 6</strong><br>
+                <strong>B = 4</strong><br>
+                <strong>C = 5</strong><br>
+                <strong>D = 3</strong><br>
+                <strong>E = 2</strong><br>
+                <strong>F = 4</strong><br>
+                <strong>G = 0</strong>
+                <br><br>
+
+                Therefore, when E and D are available,
+                the algorithm prefers E because
+                <strong>h(E) = 2</strong> is smaller than
+                <strong>h(D) = 3</strong>.
+            </div>
+        `;
+
+        showToast("Heuristic explained.");
+    }
+
+    runBtn.addEventListener("click", startSearch);
+
+    stepBtn.addEventListener("click", () => {
+        if (finished) {
+            return;
+        }
+
+        performStep();
+    });
+
+    resetBtn.addEventListener("click", resetSearch);
+
+    heuristicBtn.addEventListener("click", explainHeuristic);
+
+    resetSearch();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Bayesian Reasoning">
+    <title>Bayesian Reasoning — AI Behind The State</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255,220,232,0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220,238,255,0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223,247,235,0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255,250,242,0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70,60,100,0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .experiment-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .result-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.active {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .control-card {
+        padding: 20px;
+        border-radius: 22px;
+        background: #fffdf9;
+        border: 1px solid var(--border);
+        margin-bottom: 15px;
+    }
+
+    .control-card h3 {
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+
+    .control-card p {
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+
+    .slider-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        align-items: center;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        accent-color: var(--purple);
+        cursor: pointer;
+    }
+
+    .value-pill {
+        min-width: 68px;
+        padding: 8px 11px;
+        text-align: center;
+        border-radius: 12px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-weight: 900;
+        font-size: 0.82rem;
+    }
+
+    .scenario-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .scenario {
+        border: 0;
+        padding: 13px;
+        border-radius: 15px;
+        background: var(--blue);
+        color: #4779ad;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .scenario:hover {
+        transform: translateY(-2px);
+    }
+
+    .scenario.active {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.22);
+    }
+
+    .calculate-btn {
+        width: 100%;
+        border: 0;
+        padding: 14px 18px;
+        border-radius: 15px;
+        background: var(--purple);
+        color: white;
+        font-weight: 900;
+        box-shadow: 0 9px 22px rgba(139,114,216,0.24);
+        transition: 0.2s ease;
+    }
+
+    .calculate-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .posterior-display {
+        text-align: center;
+        padding: 25px 20px;
+        border-radius: 24px;
+        background:
+            linear-gradient(135deg, #f2efff, #eef8ff);
+        border: 1px solid rgba(139,114,216,0.12);
+        margin-bottom: 18px;
+    }
+
+    .posterior-display span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .posterior-number {
+        font-size: clamp(3rem, 7vw, 5rem);
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: -0.07em;
+        background: linear-gradient(100deg, #7964c5, #d66d98);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .confidence-bar {
+        height: 16px;
+        border-radius: 999px;
+        background: #eeeaf7;
+        overflow: hidden;
+        margin: 15px 0 8px;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #9d8ce0, #d9789d, #6099d8);
+        transition: width 0.7s ease;
+    }
+
+    .bar-labels {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 0.72rem;
+    }
+
+    .formula-card {
+        padding: 19px;
+        border-radius: 20px;
+        background: var(--yellow);
+        color: #6f5a25;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+
+    .formula {
+        text-align: center;
+        font-size: 1.15rem;
+        font-weight: 900;
+        margin: 8px 0;
+    }
+
+    .steps {
+        display: grid;
+        gap: 10px;
+    }
+
+    .step {
+        display: grid;
+        grid-template-columns: 38px 1fr;
+        gap: 12px;
+        align-items: start;
+        padding: 13px;
+        border-radius: 17px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+    }
+
+    .step strong {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .step span {
+        color: var(--muted);
+        font-size: 0.79rem;
+        line-height: 1.45;
+    }
+
+    .comparison-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .comparison-card {
+        padding: 23px;
+        border-radius: 23px;
+        border: 1px solid var(--border);
+    }
+
+    .comparison-card:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .comparison-card:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .comparison-card:nth-child(3) {
+        background: #effaf4;
+    }
+
+    .comparison-icon {
+        font-size: 1.6rem;
+        margin-bottom: 13px;
+    }
+
+    .comparison-card h3 {
+        margin-bottom: 7px;
+    }
+
+    .comparison-card p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+    }
+
+    .interactive-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .quiz-card {
+        padding: 30px;
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 30%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.7), transparent 30%),
+            white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .quiz-question {
+        text-align: center;
+        font-size: 1.25rem;
+        font-weight: 850;
+        margin-bottom: 22px;
+    }
+
+    .quiz-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .quiz-option {
+        border: 0;
+        padding: 15px;
+        border-radius: 16px;
+        background: var(--blue);
+        color: #4779ad;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .quiz-option:hover {
+        transform: translateY(-2px);
+    }
+
+    .quiz-result {
+        min-height: 28px;
+        margin-top: 18px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 800;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .comparison-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quiz-options {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .quiz-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .scenario-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Reasoning · Probability · Bayesian AI</div>
+
+
+<h1>
+    Update Your<br>
+    <span class="gradient">Beliefs.</span>
+</h1>
+
+<p>
+    Explore how Bayesian reasoning allows an AI system to update
+    the probability of a hypothesis after receiving new evidence.
+    Change the evidence yourself and watch the calculation happen.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Set a Belief</strong>
+        <span>Choose an initial probability.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Add Evidence</strong>
+    <span>Change how strongly evidence supports the hypothesis.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Update</strong>
+    <span>Watch Bayes' theorem calculate the new belief.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+
+<div class="layout">
+
+    <div class="panel experiment-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>🧪 Bayesian Lab</h2>
+                <p>Adjust the inputs and calculate a posterior probability.</p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3>Prior Probability</h3>
+            <p>
+                How likely was the hypothesis before seeing the new evidence?
+            </p>
+
+            <div class="slider-row">
+                <input
+                    id="priorSlider"
+                    type="range"
+                    min="1"
+                    max="99"
+                    value="30"
+                >
+
+                <div id="priorValue" class="value-pill">30%</div>
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3>Evidence if Hypothesis is True</h3>
+            <p>
+                P(E | H): how often would this evidence appear when
+                the hypothesis is actually true?
+            </p>
+
+            <div class="slider-row">
+                <input
+                    id="trueEvidenceSlider"
+                    type="range"
+                    min="1"
+                    max="99"
+                    value="80"
+                >
+
+                <div id="trueEvidenceValue" class="value-pill">80%</div>
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3>Evidence if Hypothesis is False</h3>
+            <p>
+                P(E | not H): how often would the same evidence appear
+                even when the hypothesis is false?
+            </p>
+
+            <div class="slider-row">
+                <input
+                    id="falseEvidenceSlider"
+                    type="range"
+                    min="1"
+                    max="99"
+                    value="20"
+                >
+
+                <div id="falseEvidenceValue" class="value-pill">20%</div>
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3>Quick Scenarios</h3>
+            <p>Load example situations instantly.</p>
+
+            <div class="scenario-buttons">
+                <button class="scenario" data-prior="20" data-true="90" data-false="10">
+                    🔍 Strong Evidence
+                </button>
+
+                <button class="scenario" data-prior="50" data-true="70" data-false="30">
+                    ⚖️ Balanced
+                </button>
+
+                <button class="scenario" data-prior="10" data-true="60" data-false="40">
+                    🌱 Rare Event
+                </button>
+
+                <button class="scenario" data-prior="70" data-true="55" data-false="45">
+                    🎲 Uncertain
+                </button>
+            </div>
+        </div>
+
+        <button id="calculateBtn" class="calculate-btn">
+            ✦ Calculate Posterior
+        </button>
+
+    </div>
+
+    <div class="panel result-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>✦ Behind The State</h2>
+                <p>
+                    The result below is calculated directly from
+                    Bayes' theorem using your selected values.
+                </p>
+            </div>
+        </div>
+
+        <div class="posterior-display">
+            <span>Updated Probability</span>
+
+            <div id="posteriorValue" class="posterior-number">
+                0%
+            </div>
+
+            <div class="confidence-bar">
+                <div id="confidenceFill" class="confidence-fill"></div>
+            </div>
+
+            <div class="bar-labels">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+            </div>
+        </div>
+
+        <div class="formula-card">
+            <strong>Bayes' Theorem</strong>
+
+            <div class="formula">
+                P(H | E) = P(E | H) × P(H) ÷ P(E)
+            </div>
+
+            <div id="calculationText">
+                Adjust the values and click calculate to see the numbers.
+            </div>
+        </div>
+
+        <div class="steps">
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Start with the prior</strong>
+                    <span id="stepPrior">
+                        The initial belief is 30%.
+                    </span>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Observe evidence</strong>
+                    <span id="stepEvidence">
+                        The evidence has not been evaluated yet.
+                    </span>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Update the belief</strong>
+                    <span id="stepPosterior">
+                        The posterior probability will appear here.
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="comparison-section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand the idea</div>
+
+    <h2>Bayesian thinking, simplified.</h2>
+
+    <p>
+        Bayesian reasoning is about changing a probability when
+        new information arrives. The important part is not simply
+        the evidence itself, but how expected that evidence is
+        under competing explanations.
+    </p>
+</div>
+
+<div class="comparison-grid">
+
+    <article class="comparison-card">
+        <div class="comparison-icon">🌱</div>
+        <h3>Prior</h3>
+        <p>
+            Your starting belief before the new observation.
+            It represents what you thought was plausible initially.
+        </p>
+    </article>
+
+    <article class="comparison-card">
+        <div class="comparison-icon">🔎</div>
+        <h3>Evidence</h3>
+        <p>
+            New information that can make one hypothesis more
+            or less plausible compared with another.
+        </p>
+    </article>
+
+    <article class="comparison-card">
+        <div class="comparison-icon">✨</div>
+        <h3>Posterior</h3>
+        <p>
+            The updated belief after combining the prior
+            with the observed evidence.
+        </p>
+    </article>
+
+</div>
+
+</section>
+
+<section class="interactive-section">
+
+
+<div class="section-heading">
+    <div class="mini">Quick Challenge</div>
+
+    <h2>Can you spot the Bayesian idea?</h2>
+
+    <p>
+        Test whether you can identify what changes when
+        new evidence is introduced.
+    </p>
+</div>
+
+<div class="quiz-card">
+
+    <div class="quiz-question">
+        A detective has an initial belief about who committed
+        a crime. New evidence strongly supports one suspect.
+        What should Bayesian reasoning do?
+    </div>
+
+    <div class="quiz-options">
+
+        <button class="quiz-option" data-answer="wrong">
+            Ignore the evidence
+        </button>
+
+        <button class="quiz-option" data-answer="correct">
+            Update the probability
+        </button>
+
+        <button class="quiz-option" data-answer="wrong">
+            Always set it to 100%
+        </button>
+
+    </div>
+
+    <div id="quizResult" class="quiz-result">
+        Choose an answer to test your understanding.
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>The calculation behind the screen.</h2>
+
+    <p>
+        This compact JavaScript function performs the core
+        Bayesian update used by the interactive laboratory.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">bayesian.js</span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">bayesianUpdate</span>(
+prior,
+evidenceGivenTrue,
+evidenceGivenFalse
+
+
+) { <span class="kw">const</span> evidence =
+evidenceGivenTrue * prior +
+evidenceGivenFalse * (<span class="num">1</span> - prior);
+
+
+<span class="kw">const</span> posterior =
+    (evidenceGivenTrue * prior) / evidence;
+
+<span class="kw">return</span> posterior;
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+const priorSlider = document.getElementById("priorSlider");
+const trueEvidenceSlider = document.getElementById("trueEvidenceSlider");
+const falseEvidenceSlider = document.getElementById("falseEvidenceSlider");
+
+const priorValue = document.getElementById("priorValue");
+const trueEvidenceValue = document.getElementById("trueEvidenceValue");
+const falseEvidenceValue = document.getElementById("falseEvidenceValue");
+
+const calculateBtn = document.getElementById("calculateBtn");
+
+const posteriorValue = document.getElementById("posteriorValue");
+const confidenceFill = document.getElementById("confidenceFill");
+
+const calculationText = document.getElementById("calculationText");
+
+const stepPrior = document.getElementById("stepPrior");
+const stepEvidence = document.getElementById("stepEvidence");
+const stepPosterior = document.getElementById("stepPosterior");
+
+const statusBadge = document.getElementById("statusBadge");
+
+const scenarioButtons = Array.from(
+    document.querySelectorAll(".scenario")
+);
+
+const quizOptions = Array.from(
+    document.querySelectorAll(".quiz-option")
+);
+
+const quizResult = document.getElementById("quizResult");
+
+const toast = document.getElementById("toast");
+
+function percent(value) {
+    return `${Math.round(value)}%`;
+}
+
+function bayesianUpdate(
+    prior,
+    evidenceGivenTrue,
+    evidenceGivenFalse
+) {
+    const probabilityOfEvidence =
+        evidenceGivenTrue * prior +
+        evidenceGivenFalse * (1 - prior);
+
+    if (probabilityOfEvidence === 0) {
+        return 0;
+    }
+
+    return (
+        evidenceGivenTrue * prior
+    ) / probabilityOfEvidence;
+}
+
+function updateSliderLabels() {
+    priorValue.textContent =
+        percent(Number(priorSlider.value));
+
+    trueEvidenceValue.textContent =
+        percent(Number(trueEvidenceSlider.value));
+
+    falseEvidenceValue.textContent =
+        percent(Number(falseEvidenceSlider.value));
+}
+
+function setStatus(text, active = false) {
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = active
+        ? "status active"
+        : "status";
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    window.clearTimeout(showToast.timer);
+
+    showToast.timer = window.setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
+}
+
+function calculate() {
+    const prior =
+        Number(priorSlider.value) / 100;
+
+    const evidenceGivenTrue =
+        Number(trueEvidenceSlider.value) / 100;
+
+    const evidenceGivenFalse =
+        Number(falseEvidenceSlider.value) / 100;
+
+    const probabilityOfEvidence =
+        evidenceGivenTrue * prior +
+        evidenceGivenFalse * (1 - prior);
+
+    const posterior =
+        bayesianUpdate(
+            prior,
+            evidenceGivenTrue,
+            evidenceGivenFalse
+        );
+
+    const posteriorPercent =
+        posterior * 100;
+
+    const evidencePercent =
+        probabilityOfEvidence * 100;
+
+    posteriorValue.textContent =
+        posteriorPercent.toFixed(1) + "%";
+
+    confidenceFill.style.width =
+        posteriorPercent + "%";
+
+    calculationText.innerHTML = `
+        P(E) = (${evidenceGivenTrue.toFixed(2)} ×
+        ${prior.toFixed(2)}) +
+        (${evidenceGivenFalse.toFixed(2)} ×
+        ${(1 - prior).toFixed(2)})
+        = <strong>${evidencePercent.toFixed(3)}</strong>.
+        <br><br>
+        Therefore,
+        P(H | E) =
+        <strong>${posteriorPercent.toFixed(1)}%</strong>.
+    `;
+
+    stepPrior.textContent =
+        `The initial probability of the hypothesis is ${percent(
+            prior * 100
+        )}.`;
+
+    stepEvidence.textContent =
+        `The observed evidence has probability ${evidencePercent.toFixed(
+            1
+        )}% overall, considering both the hypothesis and its alternative.`;
+
+    stepPosterior.textContent =
+        `After incorporating the evidence, the updated probability is ${posteriorPercent.toFixed(
+            1
+        )}%.`;
+
+    setStatus("Updated", false);
+
+    showToast("Bayesian belief updated ✦");
+}
+
+function loadScenario(button) {
+    priorSlider.value =
+        button.dataset.prior;
+
+    trueEvidenceSlider.value =
+        button.dataset.true;
+
+    falseEvidenceSlider.value =
+        button.dataset.false;
+
+    scenarioButtons.forEach(item => {
+        item.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    updateSliderLabels();
+    calculate();
+
+    showToast("Scenario loaded");
+}
+
+priorSlider.addEventListener(
+    "input",
+    updateSliderLabels
+);
+
+trueEvidenceSlider.addEventListener(
+    "input",
+    updateSliderLabels
+);
+
+falseEvidenceSlider.addEventListener(
+    "input",
+    updateSliderLabels
+);
+
+calculateBtn.addEventListener(
+    "click",
+    calculate
+);
+
+scenarioButtons.forEach(button => {
+    button.addEventListener(
+        "click",
+        () => loadScenario(button)
+    );
+});
+
+quizOptions.forEach(option => {
+    option.addEventListener("click", () => {
+
+        quizOptions.forEach(item => {
+            item.style.opacity = "0.65";
+        });
+
+        option.style.opacity = "1";
+
+        if (option.dataset.answer === "correct") {
+            quizResult.textContent =
+                "✓ Correct. Bayesian reasoning updates the probability using the new evidence.";
+            quizResult.style.color = "#39765a";
+            showToast("Correct — nice reasoning!");
+        } else {
+            quizResult.textContent =
+                "Not quite. Bayesian reasoning does not automatically jump to certainty; it updates the probability.";
+            quizResult.style.color = "#a15c76";
+            showToast("Try thinking about probability, not certainty.");
+        }
+    });
+});
+
+updateSliderLabels();
+calculate();
+</script>
+
+</body>
+</html>

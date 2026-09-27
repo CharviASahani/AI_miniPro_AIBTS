@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Depth First Search">
+    <title>DFS — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button {
+        border: 0;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139, 114, 216, 0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .visual-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220, 238, 255, 0.65), transparent 32%),
+            rgba(255, 255, 255, 0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .graph-area {
+        position: relative;
+        width: 100%;
+        min-height: 430px;
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255, 220, 232, 0.42), transparent 28%),
+            radial-gradient(circle at 80% 75%, rgba(223, 247, 235, 0.52), transparent 30%),
+            #fbfaff;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .graph-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .edge {
+        stroke: #cfc7e2;
+        stroke-width: 2.5;
+        transition: 0.3s ease;
+    }
+
+    .edge.active {
+        stroke: var(--purple);
+        stroke-width: 4;
+    }
+
+    .edge.completed {
+        stroke: #8cc6a7;
+        stroke-width: 3.5;
+    }
+
+    .node {
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 3px solid #d9d1ee;
+        color: var(--ink);
+        font-weight: 950;
+        box-shadow: 0 8px 20px rgba(70, 60, 100, 0.10);
+        transition: 0.3s ease;
+        z-index: 2;
+    }
+
+    .node:hover {
+        transform: translate(-50%, -50%) scale(1.08) rotate(-2deg);
+    }
+
+    .node.start {
+        background: var(--lavender);
+        border-color: #bcaee7;
+        color: #6855ad;
+    }
+
+    .node.frontier {
+        background: var(--yellow);
+        border-color: #e6cf84;
+        color: #886c1f;
+        animation: pulse 0.9s ease infinite alternate;
+    }
+
+    .node.visited {
+        background: var(--mint);
+        border-color: #a7d8bc;
+        color: #39765a;
+    }
+
+    .node.current {
+        background: var(--pink);
+        border-color: #e8a2b9;
+        color: #9a4c6b;
+        animation: bounce 0.45s ease;
+    }
+
+    .node.target {
+        background: var(--peach);
+        border-color: #efb991;
+        color: #a86236;
+    }
+
+    @keyframes pulse {
+        from {
+            box-shadow: 0 5px 15px rgba(212, 168, 62, 0.12);
+        }
+        to {
+            box-shadow: 0 8px 28px rgba(212, 168, 62, 0.35);
+        }
+    }
+
+    @keyframes bounce {
+        0% {
+            transform: translate(-50%, -50%) scale(0.85);
+        }
+        70% {
+            transform: translate(-50%, -50%) scale(1.12);
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    .node-label {
+        position: absolute;
+        top: 66px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+        pointer-events: none;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn {
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139, 114, 216, 0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .message {
+        min-height: 28px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 750;
+        line-height: 1.5;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .stat {
+        padding: 12px;
+        text-align: center;
+        border-radius: 15px;
+        background: #faf8ff;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .stat strong {
+        font-size: 1.2rem;
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255, 220, 232, 0.60), transparent 35%),
+            rgba(255, 255, 255, 0.88);
+    }
+
+    .state-header {
+        margin-bottom: 20px;
+    }
+
+    .state-header h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .state-header p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+        margin-top: 6px;
+    }
+
+    .stack-box {
+        min-height: 260px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+    }
+
+    .stack-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .stack-title strong {
+        font-size: 0.92rem;
+    }
+
+    .stack-title span {
+        color: var(--muted);
+        font-size: 0.75rem;
+    }
+
+    .stack {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 8px;
+        min-height: 185px;
+        justify-content: flex-start;
+    }
+
+    .stack-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: white;
+        border: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideIn 0.25s ease;
+    }
+
+    .stack-item.current {
+        background: var(--pink);
+        border-color: rgba(233, 137, 170, 0.30);
+    }
+
+    .stack-item span:first-child {
+        font-weight: 900;
+    }
+
+    .stack-item span:last-child {
+        color: var(--muted);
+        font-size: 0.72rem;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .empty-state {
+        min-height: 185px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .log-box {
+        margin-top: 15px;
+        max-height: 185px;
+        overflow-y: auto;
+        padding: 14px;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid var(--border);
+    }
+
+    .log-item {
+        display: flex;
+        gap: 10px;
+        padding: 9px 5px;
+        border-bottom: 1px solid rgba(55, 48, 80, 0.07);
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .log-item:last-child {
+        border-bottom: 0;
+    }
+
+    .log-number {
+        min-width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 0.7rem;
+    }
+
+    .log-item strong {
+        display: block;
+    }
+
+    .log-item span {
+        color: var(--muted);
+    }
+
+    .explain-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .explain-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233, 225, 255, 0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255, 220, 232, 0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41, 38, 58, 0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+        transition: transform 0.3s ease;
+        pointer-events: none;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 950px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 650px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .explain-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .graph-area {
+            min-height: 390px;
+        }
+
+        .node {
+            width: 50px;
+            height: 50px;
+        }
+
+        .node-label {
+            top: 57px;
+        }
+
+        .explain-card {
+            padding: 24px 18px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Graphs · Depth First Search</div>
+
+
+<h1>
+    Go Deeper<br>
+    <span class="gradient">with DFS.</span>
+</h1>
+
+<p>
+    Explore a graph using Depth First Search and watch the algorithm
+    travel down one path before backtracking to discover what comes next.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Build</strong>
+        <span>Start with a connected graph.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Explore</strong>
+    <span>Watch DFS visit each node.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>See the stack and traversal order.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+
+<div class="layout">
+
+    <div class="panel visual-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>🧭 Explore the Graph</h2>
+                <p>DFS starts at A and searches deeply before backtracking.</p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div id="message" class="message">
+            Press Start DFS to begin exploring the graph.
+        </div>
+
+        <div class="graph-area" id="graphArea">
+
+            <svg class="graph-lines" viewBox="0 0 600 430"
+                preserveAspectRatio="none">
+
+                <line class="edge" id="edgeAB"
+                    x1="15%" y1="18%" x2="38%" y2="34%"></line>
+
+                <line class="edge" id="edgeAC"
+                    x1="15%" y1="18%" x2="72%" y2="34%"></line>
+
+                <line class="edge" id="edgeBD"
+                    x1="38%" y1="34%" x2="24%" y2="63%"></line>
+
+                <line class="edge" id="edgeBE"
+                    x1="38%" y1="34%" x2="52%" y2="66%"></line>
+
+                <line class="edge" id="edgeCF"
+                    x1="72%" y1="34%" x2="82%" y2="63%"></line>
+
+                <line class="edge" id="edgeCE"
+                    x1="72%" y1="34%" x2="52%" y2="66%"></line>
+
+                <line class="edge" id="edgeDG"
+                    x1="24%" y1="63%" x2="38%" y2="86%"></line>
+
+                <line class="edge" id="edgeEF"
+                    x1="52%" y1="66%" x2="82%" y2="63%"></line>
+
+                <line class="edge" id="edgeFG"
+                    x1="82%" y1="63%" x2="38%" y2="86%"></line>
+
+            </svg>
+
+            <div class="node start" id="nodeA"
+                style="left:15%; top:18%;">
+                A
+                <span class="node-label">Start</span>
+            </div>
+
+            <div class="node" id="nodeB"
+                style="left:38%; top:34%;">
+                B
+            </div>
+
+            <div class="node" id="nodeC"
+                style="left:72%; top:34%;">
+                C
+            </div>
+
+            <div class="node" id="nodeD"
+                style="left:24%; top:63%;">
+                D
+            </div>
+
+            <div class="node" id="nodeE"
+                style="left:52%; top:66%;">
+                E
+            </div>
+
+            <div class="node target" id="nodeF"
+                style="left:82%; top:63%;">
+                F
+                <span class="node-label">Target</span>
+            </div>
+
+            <div class="node" id="nodeG"
+                style="left:38%; top:86%;">
+                G
+            </div>
+
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" class="btn btn-primary">
+                ▶ Start DFS
+            </button>
+
+            <button id="stepBtn" class="btn btn-blue">
+                Step
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset
+            </button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <small>Visited</small>
+                <strong id="visitedCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Stack</small>
+                <strong id="stackCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Steps</small>
+                <strong id="stepCount">0</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="panel state-panel">
+
+        <div class="state-header">
+            <h2>✦ Behind The State</h2>
+            <p>
+                DFS uses a stack-based strategy. The stack shows
+                which nodes are waiting to be explored.
+            </p>
+        </div>
+
+        <div class="stack-box">
+
+            <div class="stack-title">
+                <strong>📚 DFS Stack</strong>
+                <span>Last in → first out</span>
+            </div>
+
+            <div id="stack" class="stack">
+
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">🧩</span>
+                        <strong>The stack is waiting.</strong>
+                        <p>
+                            Start DFS to see nodes being added
+                            and removed from the stack.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="log-box" id="logBox">
+
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🔎</span>
+                    <strong>Traversal log</strong>
+                    <p>
+                        Every DFS action will appear here.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="explain-section">
+
+
+<div class="explain-card">
+
+    <div class="section-heading">
+        <div class="mini">Understand the algorithm</div>
+
+        <h2>DFS loves going deeper.</h2>
+
+        <p>
+            Depth First Search explores one branch of a graph as far
+            as possible before returning and trying another branch.
+            This implementation uses an explicit stack so you can
+            see the algorithm's state directly.
+        </p>
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">⬇️</div>
+            <h3>Go deeper</h3>
+            <p>
+                DFS follows an available neighbour and continues
+                deeper instead of immediately exploring every nearby node.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">📚</div>
+            <h3>Use a stack</h3>
+            <p>
+                The most recently discovered node is processed first.
+                This gives DFS its last-in, first-out behaviour.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">↩️</div>
+            <h3>Backtrack</h3>
+            <p>
+                When a node has no unexplored neighbours, DFS returns
+                to an earlier point and continues from there.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🎯</div>
+            <h3>Find targets</h3>
+            <p>
+                DFS can be used to determine whether a target is reachable
+                and to construct traversal paths through graphs.
+            </p>
+        </article>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>See the code behind DFS.</h2>
+
+    <p>
+        This is the core iterative idea used by the interactive
+        visualisation above.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">dfs.js</span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">dfs</span>(graph, start, target) {
+<span class="kw">const</span> stack = [start];
+<span class="kw">const</span> visited = <span class="kw">new</span> Set();
+
+<span class="kw">while</span> (stack.length &gt; <span class="num">0</span>) {
+
+    <span class="kw">const</span> node = stack.<span class="fn">pop</span>();
+
+    <span class="kw">if</span> (visited.<span class="fn">has</span>(node)) {
+        <span class="kw">continue</span>;
+    }
+
+    visited.<span class="fn">add</span>(node);
+
+    <span class="kw">if</span> (node === target) {
+        <span class="kw">return</span> visited;
+    }
+
+    <span class="kw">for</span> (<span class="kw">const</span> neighbor <span class="kw">of</span> graph[node]) {
+        <span class="kw">if</span> (!visited.<span class="fn">has</span>(neighbor)) {
+            stack.<span class="fn">push</span>(neighbor);
+        }
+    }
+}
+
+<span class="kw">return</span> visited;
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Time Complexity</span>
+    <strong>O(V + E)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Space Complexity</span>
+    <strong>O(V)</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    const graph = {
+        A: ["B", "C"],
+        B: ["A", "D", "E"],
+        C: ["A", "E", "F"],
+        D: ["B", "G"],
+        E: ["B", "C", "F"],
+        F: ["C", "E", "G"],
+        G: ["D", "F"]
+    };
+
+    const nodeIds = {
+        A: "nodeA",
+        B: "nodeB",
+        C: "nodeC",
+        D: "nodeD",
+        E: "nodeE",
+        F: "nodeF",
+        G: "nodeG"
+    };
+
+    const edgeIds = {
+        "A-B": "edgeAB",
+        "A-C": "edgeAC",
+        "B-D": "edgeBD",
+        "B-E": "edgeBE",
+        "C-F": "edgeCF",
+        "C-E": "edgeCE",
+        "D-G": "edgeDG",
+        "E-F": "edgeEF",
+        "F-G": "edgeFG"
+    };
+
+    const statusBadge = document.getElementById("statusBadge");
+    const message = document.getElementById("message");
+    const stackElement = document.getElementById("stack");
+    const logBox = document.getElementById("logBox");
+
+    const startBtn = document.getElementById("startBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const visitedCount = document.getElementById("visitedCount");
+    const stackCount = document.getElementById("stackCount");
+    const stepCount = document.getElementById("stepCount");
+
+    const toast = document.getElementById("toast");
+
+    let stack = [];
+    let visited = new Set();
+    let traversalOrder = [];
+    let steps = 0;
+    let running = false;
+    let finished = false;
+    let timer = null;
+
+    function showToast(text) {
+        toast.textContent = text;
+        toast.classList.add("show");
+
+        clearTimeout(showToast.timer);
+
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+    }
+
+    function setStatus(text, type) {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function updateStats() {
+        visitedCount.textContent = visited.size;
+        stackCount.textContent = stack.length;
+        stepCount.textContent = steps;
+    }
+
+    function clearNodeClasses() {
+        Object.keys(nodeIds).forEach(node => {
+            const element = document.getElementById(nodeIds[node]);
+
+            element.classList.remove(
+                "visited",
+                "current",
+                "frontier"
+            );
+        });
+    }
+
+    function clearEdges() {
+        Object.keys(edgeIds).forEach(key => {
+            const element = document.getElementById(edgeIds[key]);
+
+            element.classList.remove(
+                "active",
+                "completed"
+            );
+        });
+    }
+
+    function edgeKey(a, b) {
+        const direct = a + "-" + b;
+        const reverse = b + "-" + a;
+
+        if (edgeIds[direct]) {
+            return direct;
+        }
+
+        if (edgeIds[reverse]) {
+            return reverse;
+        }
+
+        return null;
+    }
+
+    function updateNodes(currentNode = null) {
+        clearNodeClasses();
+
+        visited.forEach(node => {
+            document
+                .getElementById(nodeIds[node])
+                .classList.add("visited");
+        });
+
+        stack.forEach(node => {
+            if (!visited.has(node)) {
+                document
+                    .getElementById(nodeIds[node])
+                    .classList.add("frontier");
+            }
+        });
+
+        if (currentNode) {
+            document
+                .getElementById(nodeIds[currentNode])
+                .classList.remove("visited", "frontier");
+
+            document
+                .getElementById(nodeIds[currentNode])
+                .classList.add("current");
+        }
+    }
+
+    function updateEdges() {
+        clearEdges();
+
+        for (let i = 0; i < traversalOrder.length - 1; i++) {
+            const previous = traversalOrder[i];
+            const current = traversalOrder[i + 1];
+
+            const key = edgeKey(previous, current);
+
+            if (key) {
+                document
+                    .getElementById(edgeIds[key])
+                    .classList.add("completed");
+            }
+        }
+    }
+
+    function renderStack() {
+        if (stack.length === 0) {
+            stackElement.innerHTML = `
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">📭</span>
+                        <strong>Stack is empty.</strong>
+                        <p>No nodes are currently waiting.</p>
+                    </div>
+                </div>
+            `;
+            updateStats();
+            return;
+        }
+
+        stackElement.innerHTML = stack
+            .slice()
+            .reverse()
+            .map((node, index) => {
+                const isTop = index === 0;
+
+                return `
+                    <div class="stack-item ${isTop ? "current" : ""}">
+                        <span>${node}</span>
+                        <span>${isTop ? "TOP" : "waiting"}</span>
+                    </div>
+                `;
+            })
+            .join("");
+
+        updateStats();
+    }
+
+    function addLog(title, detail) {
+        if (
+            logBox.querySelector(".empty-state")
+        ) {
+            logBox.innerHTML = "";
+        }
+
+        const number = logBox.querySelectorAll(".log-item").length + 1;
+
+        const item = document.createElement("div");
+        item.className = "log-item";
+
+        item.innerHTML = `
+            <div class="log-number">${number}</div>
+            <div>
+                <strong>${title}</strong>
+                <span>${detail}</span>
+            </div>
+        `;
+
+        logBox.appendChild(item);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function initializeDFS() {
+        clearTimeout(timer);
+
+        stack = ["A"];
+        visited = new Set();
+        traversalOrder = [];
+        steps = 0;
+        running = false;
+        finished = false;
+
+        clearNodeClasses();
+        clearEdges();
+
+        document.getElementById("nodeA").classList.add("start");
+
+        setStatus("Ready");
+        message.textContent =
+            "DFS is ready. Node A is the starting point.";
+
+        renderStack();
+
+        logBox.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🔎</span>
+                    <strong>Traversal log</strong>
+                    <p>
+                        Every DFS action will appear here.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        updateStats();
+
+        startBtn.disabled = false;
+        stepBtn.disabled = false;
+    }
+
+    function performStep() {
+        if (finished) {
+            return;
+        }
+
+        if (stack.length === 0) {
+            finishSearch();
+            return;
+        }
+
+        const current = stack.pop();
+
+        steps++;
+
+        if (visited.has(current)) {
+            renderStack();
+
+            addLog(
+                "Skipped " + current,
+                "This node had already been visited."
+            );
+
+            updateStats();
+
+            return;
+        }
+
+        visited.add(current);
+        traversalOrder.push(current);
+
+        updateNodes(current);
+        updateEdges();
+
+        addLog(
+            "Visited " + current,
+            "DFS removed " + current + " from the stack and explored it."
+        );
+
+        message.textContent =
+            "DFS is currently exploring node " + current + ".";
+
+        renderStack();
+
+        if (current === "F") {
+            finished = true;
+            running = false;
+
+            setStatus("Target found", "done");
+
+            message.textContent =
+                "DFS reached the target node F.";
+
+            showToast("Target F found!");
+
+            startBtn.disabled = false;
+            stepBtn.disabled = true;
+
+            return;
+        }
+
+        /*
+         * Reverse neighbour order before pushing.
+         * This makes the visual traversal deterministic:
+         * A → B → D → G → F.
+         */
+        const neighbors = graph[current].slice().reverse();
+
+        neighbors.forEach(neighbor => {
+            if (!visited.has(neighbor)) {
+                stack.push(neighbor);
+            }
+        });
+
+        updateNodes(current);
+        renderStack();
+        updateStats();
+
+        if (stack.length === 0) {
+            finishSearch();
+        }
+    }
+
+    function finishSearch() {
+        if (finished) {
+            return;
+        }
+
+        finished = true;
+        running = false;
+
+        setStatus("Complete", "done");
+
+        message.textContent =
+            "DFS finished exploring the reachable graph.";
+
+        addLog(
+            "Traversal complete",
+            "There are no more nodes waiting in the stack."
+        );
+
+        startBtn.disabled = false;
+        stepBtn.disabled = true;
+
+        showToast("DFS traversal complete.");
+    }
+
+    function startDFS() {
+        if (finished) {
+            initializeDFS();
+        }
+
+        if (running) {
+            running = false;
+            clearTimeout(timer);
+
+            startBtn.textContent = "▶ Resume DFS";
+            setStatus("Paused");
+            message.textContent =
+                "DFS is paused. Press Resume DFS to continue.";
+
+            return;
+        }
+
+        running = true;
+
+        startBtn.textContent = "Ⅱ Pause DFS";
+        setStatus("Exploring...", "running");
+
+        message.textContent =
+            "DFS is exploring the graph step by step.";
+
+        runAutomatically();
+    }
+
+    function runAutomatically() {
+        if (!running || finished) {
+            return;
+        }
+
+        performStep();
+
+        if (!finished && running) {
+            timer = setTimeout(runAutomatically, 850);
+        }
+    }
+
+    startBtn.addEventListener("click", startDFS);
+
+    stepBtn.addEventListener("click", () => {
+        if (finished) {
+            return;
+        }
+
+        running = false;
+        clearTimeout(timer);
+
+        startBtn.textContent = "▶ Start DFS";
+
+        setStatus("Stepping", "running");
+
+        performStep();
+
+        if (!finished) {
+            message.textContent =
+                "One DFS step completed. Press Step again to continue.";
+        }
+    });
+
+    resetBtn.addEventListener("click", () => {
+        initializeDFS();
+        showToast("Graph reset.");
+    });
+
+    initializeDFS();
+</script>
+
+</body>
+</html>

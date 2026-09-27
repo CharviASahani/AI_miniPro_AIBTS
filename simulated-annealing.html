@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Simulated Annealing">
+    <title>Simulated Annealing — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button {
+        border: 0;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70,60,100,0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .workspace {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(233,225,255,0.72), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .result-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.62), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.55;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.complete {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .control-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .control-card {
+        padding: 17px;
+        border-radius: 19px;
+        background: #fffdf9;
+        border: 1px solid var(--border);
+    }
+
+    .control-card label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 850;
+        color: var(--muted);
+        margin-bottom: 9px;
+    }
+
+    .control-card input,
+    .control-card select {
+        width: 100%;
+        border: 1px solid rgba(55,48,80,0.12);
+        background: white;
+        border-radius: 12px;
+        padding: 10px 11px;
+        color: var(--ink);
+        outline: none;
+    }
+
+    .control-card input:focus,
+    .control-card select:focus {
+        border-color: rgba(139,114,216,0.5);
+        box-shadow: 0 0 0 4px rgba(139,114,216,0.08);
+    }
+
+    .temperature-box {
+        margin: 5px 0 20px;
+        padding: 18px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #fff5d8, #fffdf7);
+        border: 1px solid rgba(212,168,62,0.15);
+    }
+
+    .temperature-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .temperature-top strong {
+        font-size: 0.92rem;
+    }
+
+    .temperature-value {
+        color: #9a761e;
+        font-weight: 950;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        accent-color: var(--orange);
+        cursor: pointer;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .btn {
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 9px;
+        margin-top: 18px;
+    }
+
+    .stat {
+        padding: 13px 8px;
+        border-radius: 15px;
+        text-align: center;
+        background: #faf8ff;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.7rem;
+        margin-bottom: 5px;
+    }
+
+    .stat strong {
+        font-size: 1.05rem;
+    }
+
+    .canvas-wrap {
+        position: relative;
+        width: 100%;
+        min-height: 370px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    #chart {
+        width: 100%;
+        height: 370px;
+        display: block;
+    }
+
+    .chart-label {
+        position: absolute;
+        top: 13px;
+        left: 15px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.82);
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 850;
+        pointer-events: none;
+    }
+
+    .explanation {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 18px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.6;
+        font-size: 0.87rem;
+    }
+
+    .decision-box {
+        margin-top: 15px;
+        padding: 16px;
+        border-radius: 18px;
+        background: var(--mint);
+        color: #39765a;
+        line-height: 1.6;
+        font-size: 0.87rem;
+    }
+
+    .timeline-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .timeline {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .timeline-card {
+        padding: 23px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .timeline-card:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .timeline-card:nth-child(2) {
+        background: #fff8df;
+    }
+
+    .timeline-card:nth-child(3) {
+        background: #eef7ff;
+    }
+
+    .timeline-card:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .timeline-icon {
+        width: 43px;
+        height: 43px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.8);
+        font-size: 1.25rem;
+        margin-bottom: 15px;
+    }
+
+    .timeline-card h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .timeline-card p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.88rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .formula-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .formula-card {
+        padding: 30px;
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.7), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.7), transparent 28%),
+            white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .formula {
+        display: inline-block;
+        padding: 18px 25px;
+        margin: 18px 0;
+        border-radius: 18px;
+        background: #29263a;
+        color: #f1eef9;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(0.9rem, 2vw, 1.2rem);
+    }
+
+    .formula-card p {
+        max-width: 680px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .workspace {
+            grid-template-columns: 1fr;
+        }
+
+        .timeline {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .formula-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .control-grid,
+        .stats,
+        .timeline {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .canvas-wrap,
+        #chart {
+            min-height: 300px;
+            height: 300px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Optimization · Search · Simulated Annealing</div>
+
+
+<h1>
+    Sometimes You<br>
+    <span class="gradient">Take a Worse Move.</span>
+</h1>
+
+<p>
+    Explore Simulated Annealing through an interactive optimization
+    landscape. Watch the algorithm occasionally accept worse solutions
+    early on, then become increasingly selective as the temperature cools.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Run</strong>
+        <span>Start the optimization.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Observe</strong>
+    <span>Watch temperature and score change.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>See why worse moves can be useful.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="main-section">
+
+    <div class="workspace">
+
+        <div class="panel control-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🌡️ Optimization Lab</h2>
+                    <p>
+                        Tune the algorithm and watch it search for
+                        a better solution.
+                    </p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="control-grid">
+
+                <div class="control-card">
+                    <label for="iterations">Iterations</label>
+                    <input
+                        id="iterations"
+                        type="number"
+                        min="50"
+                        max="1000"
+                        step="50"
+                        value="300"
+                    >
+                </div>
+
+                <div class="control-card">
+                    <label for="cooling">Cooling Rate</label>
+                    <input
+                        id="cooling"
+                        type="number"
+                        min="0.80"
+                        max="0.999"
+                        step="0.001"
+                        value="0.970"
+                    >
+                </div>
+
+                <div class="control-card">
+                    <label for="startScore">Starting Solution</label>
+                    <select id="startScore">
+                        <option value="random">Random</option>
+                        <option value="low">Low Quality</option>
+                        <option value="medium">Medium Quality</option>
+                    </select>
+                </div>
+
+                <div class="control-card">
+                    <label for="landscape">Landscape</label>
+                    <select id="landscape">
+                        <option value="multi">Multi-Peak</option>
+                        <option value="smooth">Smooth</option>
+                        <option value="rugged">Rugged</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="temperature-box">
+                <div class="temperature-top">
+                    <strong>Current Temperature</strong>
+                    <span id="temperatureValue" class="temperature-value">
+                        100.00
+                    </span>
+                </div>
+
+                <input
+                    id="temperatureSlider"
+                    type="range"
+                    min="10"
+                    max="150"
+                    value="100"
+                    step="1"
+                >
+            </div>
+
+            <div class="controls">
+                <button id="runBtn" class="btn btn-primary">
+                    ▶ Run Simulation
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    → Single Step
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ Reset
+                </button>
+            </div>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <small>Iteration</small>
+                    <strong id="iterationStat">0</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Current Score</small>
+                    <strong id="currentStat">0</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Best Score</small>
+                    <strong id="bestStat">0</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Accepted</small>
+                    <strong id="acceptedStat">0</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="panel result-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>📈 Search Landscape</h2>
+                    <p>
+                        The purple line shows the current solution.
+                        The green line tracks the best solution found.
+                    </p>
+                </div>
+            </div>
+
+            <div class="canvas-wrap">
+                <canvas id="chart"></canvas>
+                <div class="chart-label">
+                    Solution quality over time
+                </div>
+            </div>
+
+            <div id="explanation" class="explanation">
+                <strong>Ready to explore.</strong><br>
+                Start the simulation to watch the algorithm search
+                through different possible solutions.
+            </div>
+
+            <div id="decisionBox" class="decision-box">
+                <strong>Decision:</strong>
+                No move has been evaluated yet.
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="timeline-section">
+
+    <div class="section-heading">
+        <div class="mini">Behind the state</div>
+        <h2>Why would AI accept a worse move?</h2>
+
+        <p>
+            Simulated Annealing borrows an idea from physical
+            annealing. Early in the search, the algorithm has
+            enough "temperature" to escape local traps.
+            As temperature decreases, the search settles down.
+        </p>
+    </div>
+
+    <div class="timeline">
+
+        <article class="timeline-card">
+            <div class="timeline-icon">🔥</div>
+            <h3>Start Hot</h3>
+            <p>
+                A high temperature means the algorithm is more
+                willing to explore unfamiliar solutions.
+            </p>
+        </article>
+
+        <article class="timeline-card">
+            <div class="timeline-icon">🎲</div>
+            <h3>Explore</h3>
+            <p>
+                Even a worse candidate can sometimes be accepted.
+                This helps the search escape a local optimum.
+            </p>
+        </article>
+
+        <article class="timeline-card">
+            <div class="timeline-icon">🌤️</div>
+            <h3>Cool Down</h3>
+            <p>
+                The temperature gradually decreases according to
+                the cooling schedule.
+            </p>
+        </article>
+
+        <article class="timeline-card">
+            <div class="timeline-icon">🏆</div>
+            <h3>Settle</h3>
+            <p>
+                At low temperatures, worse moves become unlikely,
+                allowing the algorithm to stabilize around a strong solution.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="formula-section">
+
+    <div class="formula-card">
+
+        <div class="eyebrow">The acceptance rule</div>
+
+        <h2>
+            A worse move isn't always rejected.
+        </h2>
+
+        <div class="formula">
+            P(accept) = e<sup>ΔE / T</sup>
+        </div>
+
+        <p>
+            When a candidate solution is worse, ΔE is negative.
+            A higher temperature makes acceptance more likely,
+            while a lower temperature makes the algorithm increasingly
+            selective.
+        </p>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+        <div class="mini">Implementation</div>
+
+        <h2>See the core idea.</h2>
+
+        <p>
+            This simplified implementation demonstrates the central
+            acceptance rule used by Simulated Annealing.
+        </p>
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">
+                simulated-annealing.js
+            </span>
+
+            <span></span>
+
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">simulatedAnnealing</span>(current, temperature) {
+
+<span class="kw">const</span> candidate =
+    <span class="fn">getNeighbor</span>(current);
+
+<span class="kw">const</span> difference =
+    candidate.score - current.score;
+
+<span class="kw">if</span> (difference &gt; <span class="num">0</span>) {
+    <span class="kw">return</span> candidate;
+}
+
+<span class="kw">const</span> probability =
+    Math.<span class="fn">exp</span>(difference / temperature);
+
+<span class="kw">if</span> (Math.<span class="fn">random</span>() &lt; probability) {
+    <span class="kw">return</span> candidate;
+}
+
+<span class="kw">return</span> current;
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    const runBtn = document.getElementById("runBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const iterationsInput = document.getElementById("iterations");
+    const coolingInput = document.getElementById("cooling");
+    const startScoreSelect = document.getElementById("startScore");
+    const landscapeSelect = document.getElementById("landscape");
+
+    const temperatureSlider = document.getElementById("temperatureSlider");
+    const temperatureValue = document.getElementById("temperatureValue");
+
+    const statusBadge = document.getElementById("statusBadge");
+    const iterationStat = document.getElementById("iterationStat");
+    const currentStat = document.getElementById("currentStat");
+    const bestStat = document.getElementById("bestStat");
+    const acceptedStat = document.getElementById("acceptedStat");
+
+    const explanation = document.getElementById("explanation");
+    const decisionBox = document.getElementById("decisionBox");
+
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    let iteration = 0;
+    let temperature = 100;
+    let currentScore = 0;
+    let bestScore = 0;
+    let acceptedMoves = 0;
+
+    let historyCurrent = [];
+    let historyBest = [];
+
+    let running = false;
+    let timer = null;
+
+    let landscapePoints = [];
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function randomBetween(min, max) {
+        return min + Math.random() * (max - min);
+    }
+
+    function createLandscape() {
+        const type = landscapeSelect.value;
+        const points = [];
+        const count = 180;
+
+        for (let i = 0; i < count; i++) {
+            const x = i / (count - 1);
+
+            let value;
+
+            if (type === "smooth") {
+                value =
+                    55 +
+                    25 * Math.sin(x * Math.PI * 2.1) +
+                    14 * Math.sin(x * Math.PI * 5.2);
+            } else if (type === "rugged") {
+                value =
+                    50 +
+                    20 * Math.sin(x * Math.PI * 3.8) +
+                    13 * Math.sin(x * Math.PI * 11) +
+                    7 * Math.sin(x * Math.PI * 25);
+            } else {
+                value =
+                    50 +
+                    25 * Math.sin(x * Math.PI * 2.7) +
+                    15 * Math.sin(x * Math.PI * 7.5) +
+                    7 * Math.cos(x * Math.PI * 13);
+            }
+
+            points.push(value);
+        }
+
+        landscapePoints = points;
+    }
+
+    function getLandscapeScore(position) {
+        const normalized = clamp(position, 0, 1);
+
+        const index =
+            Math.round(
+                normalized * (landscapePoints.length - 1)
+            );
+
+        return landscapePoints[index];
+    }
+
+    function createInitialPosition() {
+        const mode = startScoreSelect.value;
+
+        if (mode === "low") {
+            return randomBetween(0.00, 0.25);
+        }
+
+        if (mode === "medium") {
+            return randomBetween(0.25, 0.65);
+        }
+
+        return Math.random();
+    }
+
+    let currentPosition = 0;
+
+    function updateTemperatureDisplay() {
+        temperatureValue.textContent =
+            temperature.toFixed(2);
+
+        temperatureSlider.value =
+            Math.round(temperature);
+    }
+
+    function updateStats() {
+        iterationStat.textContent = iteration;
+        currentStat.textContent = currentScore.toFixed(2);
+        bestStat.textContent = bestScore.toFixed(2);
+        acceptedStat.textContent = acceptedMoves;
+    }
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById("toast");
+
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        clearTimeout(showToast.timer);
+
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+    }
+
+    function drawRoundedRect(context, x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+
+        context.beginPath();
+        context.moveTo(x + r, y);
+        context.arcTo(x + width, y, x + width, y + height, r);
+        context.arcTo(x + width, y + height, x, y + height, r);
+        context.arcTo(x, y + height, x, y, r);
+        context.arcTo(x, y, x + width, y, r);
+        context.closePath();
+    }
+
+    function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = Math.max(1, Math.round(rect.width * dpr));
+        canvas.height = Math.max(1, Math.round(rect.height * dpr));
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        drawChart();
+    }
+
+    function drawChart() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+
+        if (!width || !height) {
+            return;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+
+        const padding = {
+            top: 35,
+            right: 20,
+            bottom: 35,
+            left: 42
+        };
+
+        const chartWidth =
+            width - padding.left - padding.right;
+
+        const chartHeight =
+            height - padding.top - padding.bottom;
+
+        const values = landscapePoints.length
+            ? landscapePoints
+            : [0];
+
+        let minValue = Math.min(...values);
+        let maxValue = Math.max(...values);
+
+        minValue -= 8;
+        maxValue += 8;
+
+        function xFor(index) {
+            return (
+                padding.left +
+                (index / (values.length - 1)) * chartWidth
+            );
+        }
+
+        function yFor(value) {
+            return (
+                padding.top +
+                (1 - (value - minValue) / (maxValue - minValue)) *
+                chartHeight
+            );
+        }
+
+        ctx.strokeStyle = "rgba(55,48,80,0.07)";
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i <= 4; i++) {
+            const y =
+                padding.top +
+                (i / 4) * chartHeight;
+
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+
+        values.forEach((value, index) => {
+            const x = xFor(index);
+            const y = yFor(value);
+
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+
+        ctx.lineTo(
+            width - padding.right,
+            height - padding.bottom
+        );
+
+        ctx.lineTo(
+            padding.left,
+            height - padding.bottom
+        );
+
+        ctx.closePath();
+
+        const gradient =
+            ctx.createLinearGradient(
+                0,
+                padding.top,
+                0,
+                height
+            );
+
+        gradient.addColorStop(
+            0,
+            "rgba(139,114,216,0.22)"
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(139,114,216,0.02)"
+        );
+
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.beginPath();
+
+        values.forEach((value, index) => {
+            const x = xFor(index);
+            const y = yFor(value);
+
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+
+        ctx.strokeStyle = "#b5a5e8";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        if (historyCurrent.length > 1) {
+            drawHistoryLine(
+                historyCurrent,
+                "#d66d98",
+                yFor,
+                chartWidth,
+                padding
+            );
+        }
+
+        if (historyBest.length > 1) {
+            drawHistoryLine(
+                historyBest,
+                "#58a67c",
+                yFor,
+                chartWidth,
+                padding
+            );
+        }
+
+        ctx.font =
+            "700 11px Inter, system-ui, sans-serif";
+
+        ctx.fillStyle = "#777386";
+
+        ctx.fillText(
+            "Quality",
+            8,
+            padding.top - 10
+        );
+
+        ctx.fillText(
+            "Time →",
+            width - 58,
+            height - 12
+        );
+    }
+
+    function drawHistoryLine(
+        history,
+        color,
+        yFor,
+        chartWidth,
+        padding
+    ) {
+        const maxIterations =
+            Math.max(
+                2,
+                Number(iterationsInput.value) || 300
+            );
+
+        ctx.beginPath();
+
+        history.forEach((item, index) => {
+            const x =
+                padding.left +
+                (index / (maxIterations - 1)) *
+                chartWidth;
+
+            const y = yFor(item);
+
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        const lastIndex = history.length - 1;
+
+        if (lastIndex >= 0) {
+            const x =
+                padding.left +
+                (lastIndex / (maxIterations - 1)) *
+                chartWidth;
+
+            const y = yFor(history[lastIndex]);
+
+            ctx.beginPath();
+            ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+    }
+
+    function resetSimulation() {
+        stopSimulation();
+
+        createLandscape();
+
+        iteration = 0;
+        temperature =
+            Number(temperatureSlider.value);
+
+        currentPosition =
+            createInitialPosition();
+
+        currentScore =
+            getLandscapeScore(currentPosition);
+
+        bestScore = currentScore;
+        acceptedMoves = 0;
+
+        historyCurrent = [currentScore];
+        historyBest = [bestScore];
+
+        updateTemperatureDisplay();
+        updateStats();
+        updateExplanation(
+            "start",
+            false
+        );
+
+        setStatus("Ready");
+
+        drawChart();
+    }
+
+    function getNeighbor(position) {
+        const movement =
+            randomBetween(-0.13, 0.13);
+
+        return clamp(
+            position + movement,
+            0,
+            1
+        );
+    }
+
+    function calculateAcceptanceProbability(
+        difference,
+        temp
+    ) {
+        if (difference >= 0) {
+            return 1;
+        }
+
+        if (temp <= 0) {
+            return 0;
+        }
+
+        return Math.exp(
+            difference / temp
+        );
+    }
+
+    function performStep() {
+        if (
+            iteration >=
+            Number(iterationsInput.value)
+        ) {
+            finishSimulation();
+            return;
+        }
+
+        const oldScore = currentScore;
+
+        const candidatePosition =
+            getNeighbor(currentPosition);
+
+        const candidateScore =
+            getLandscapeScore(candidatePosition);
+
+        const difference =
+            candidateScore - currentScore;
+
+        const probability =
+            calculateAcceptanceProbability(
+                difference,
+                temperature
+            );
+
+        const randomValue = Math.random();
+
+        let accepted = false;
+        let reason = "";
+
+        if (difference >= 0) {
+            accepted = true;
+            reason =
+                "The candidate is better, so it was accepted.";
+        } else if (randomValue < probability) {
+            accepted = true;
+            reason =
+                "The candidate is worse, but the current temperature allowed exploration.";
+        } else {
+            accepted = false;
+            reason =
+                "The candidate is worse and was rejected at this temperature.";
+        }
+
+        if (accepted) {
+            currentPosition = candidatePosition;
+            currentScore = candidateScore;
+            acceptedMoves++;
+        }
+
+        if (currentScore > bestScore) {
+            bestScore = currentScore;
+        }
+
+        iteration++;
+
+        const coolingRate =
+            clamp(
+                Number(coolingInput.value),
+                0.80,
+                0.999
+            );
+
+        temperature *= coolingRate;
+
+        temperature = Math.max(
+            0.01,
+            temperature
+        );
+
+        historyCurrent.push(currentScore);
+        historyBest.push(bestScore);
+
+        updateTemperatureDisplay();
+        updateStats();
+        drawChart();
+
+        updateExplanation(
+            difference > 0
+                ? "better"
+                : accepted
+                    ? "worseAccepted"
+                    : "rejected",
+            accepted,
+            oldScore,
+            candidateScore,
+            probability,
+            reason
+        );
+
+        if (
+            iteration >=
+            Number(iterationsInput.value)
+        ) {
+            finishSimulation();
+        }
+    }
+
+    function updateExplanation(
+        type,
+        accepted,
+        oldScore = currentScore,
+        candidateScore = currentScore,
+        probability = 0,
+        reason = ""
+    ) {
+        if (type === "start") {
+            explanation.innerHTML = `
+                <strong>Ready to explore.</strong><br>
+                The search begins at a starting position and will
+                move through the landscape while the temperature
+                gradually decreases.
+            `;
+
+            decisionBox.innerHTML = `
+                <strong>Decision:</strong>
+                The algorithm has not evaluated a candidate yet.
+            `;
+
+            return;
+        }
+
+        if (type === "better") {
+            explanation.innerHTML = `
+                <strong>⬆ Better candidate found.</strong><br>
+                The new solution improved from
+                <strong>${oldScore.toFixed(2)}</strong>
+                to
+                <strong>${candidateScore.toFixed(2)}</strong>.
+                Improving moves are accepted directly.
+            `;
+        } else if (type === "worseAccepted") {
+            explanation.innerHTML = `
+                <strong>🎲 A worse move was accepted.</strong><br>
+                The candidate dropped from
+                <strong>${oldScore.toFixed(2)}</strong>
+                to
+                <strong>${candidateScore.toFixed(2)}</strong>,
+                but its acceptance probability was
+                <strong>${(probability * 100).toFixed(1)}%</strong>.
+                This exploration can help escape local optima.
+            `;
+        } else {
+            explanation.innerHTML = `
+                <strong>🧊 Candidate rejected.</strong><br>
+                The candidate changed from
+                <strong>${oldScore.toFixed(2)}</strong>
+                to
+                <strong>${candidateScore.toFixed(2)}</strong>.
+                At the current temperature, the algorithm decided
+                not to accept this worse solution.
+            `;
+        }
+
+        decisionBox.innerHTML = `
+            <strong>Decision:</strong>
+            ${reason}
+            <br>
+            Temperature:
+            <strong>${temperature.toFixed(2)}</strong>
+        `;
+    }
+
+    function startSimulation() {
+        if (running) {
+            return;
+        }
+
+        if (
+            iteration >=
+            Number(iterationsInput.value)
+        ) {
+            resetSimulation();
+        }
+
+        running = true;
+
+        runBtn.disabled = true;
+        stepBtn.disabled = true;
+        resetBtn.disabled = true;
+
+        setStatus("Running...", "running");
+
+        timer = setInterval(() => {
+            for (let i = 0; i < 3; i++) {
+                if (!running) {
+                    break;
+                }
+
+                performStep();
+
+                if (
+                    iteration >=
+                    Number(iterationsInput.value)
+                ) {
+                    break;
+                }
+            }
+        }, 80);
+    }
+
+    function stopSimulation() {
+        running = false;
+
+        if (timer !== null) {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        runBtn.disabled = false;
+        stepBtn.disabled = false;
+        resetBtn.disabled = false;
+    }
+
+    function finishSimulation() {
+        stopSimulation();
+
+        setStatus("Complete", "complete");
+
+        explanation.innerHTML = `
+            <strong>🏁 Search complete.</strong><br>
+            The algorithm finished after
+            <strong>${iteration}</strong>
+            iterations and found a best solution quality of
+            <strong>${bestScore.toFixed(2)}</strong>.
+        `;
+
+        decisionBox.innerHTML = `
+            <strong>Final result:</strong>
+            ${acceptedMoves} candidate moves were accepted during
+            the search. The final temperature was
+            <strong>${temperature.toFixed(2)}</strong>.
+        `;
+
+        showToast("Simulation complete!");
+    }
+
+    temperatureSlider.addEventListener(
+        "input",
+        () => {
+            temperature =
+                Number(temperatureSlider.value);
+
+            updateTemperatureDisplay();
+        }
+    );
+
+    runBtn.addEventListener(
+        "click",
+        startSimulation
+    );
+
+    stepBtn.addEventListener(
+        "click",
+        () => {
+            if (running) {
+                return;
+            }
+
+            if (
+                iteration >=
+                Number(iterationsInput.value)
+            ) {
+                resetSimulation();
+            }
+
+            setStatus("Stepping...", "running");
+
+            performStep();
+
+            if (
+                iteration <
+                Number(iterationsInput.value)
+            ) {
+                setStatus("Paused");
+            }
+        }
+    );
+
+    resetBtn.addEventListener(
+        "click",
+        resetSimulation
+    );
+
+    landscapeSelect.addEventListener(
+        "change",
+        () => {
+            resetSimulation();
+            showToast("New landscape created.");
+        }
+    );
+
+    startScoreSelect.addEventListener(
+        "change",
+        resetSimulation
+    );
+
+    coolingInput.addEventListener(
+        "change",
+        () => {
+            const value =
+                clamp(
+                    Number(coolingInput.value),
+                    0.80,
+                    0.999
+                );
+
+            coolingInput.value =
+                value.toFixed(3);
+        }
+    );
+
+    iterationsInput.addEventListener(
+        "change",
+        () => {
+            const value =
+                clamp(
+                    Number(iterationsInput.value),
+                    50,
+                    1000
+                );
+
+            iterationsInput.value =
+                Math.round(value);
+        }
+    );
+
+    window.addEventListener(
+        "resize",
+        resizeCanvas
+    );
+
+    resetSimulation();
+    resizeCanvas();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Minimax Tic-Tac-Toe">
+    <title>Minimax — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 690px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .game-section {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding-bottom: 80px;
+    }
+
+    .game-layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.82);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .game-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.thinking {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .board {
+        width: min(390px, 100%);
+        aspect-ratio: 1;
+        margin: 5px auto 24px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+    }
+
+    .cell {
+        border: 0;
+        border-radius: 20px;
+        background: #fffdf9;
+        box-shadow: inset 0 0 0 1px var(--border), 0 5px 15px rgba(60,50,80,0.04);
+        color: var(--ink);
+        font-size: clamp(2.7rem, 8vw, 4.2rem);
+        font-weight: 950;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .cell:hover:not(:disabled) {
+        transform: translateY(-3px) rotate(-1deg);
+        box-shadow: 0 10px 22px rgba(60,50,80,0.10);
+        background: #fff7fb;
+    }
+
+    .cell:disabled {
+        cursor: default;
+    }
+
+    .cell.x {
+        color: #d86f96;
+    }
+
+    .cell.o {
+        color: #6099d8;
+    }
+
+    .cell.win {
+        background: var(--mint);
+        box-shadow: inset 0 0 0 2px rgba(88,166,124,0.35);
+        animation: pop 0.45s ease;
+    }
+
+    @keyframes pop {
+        0% { transform: scale(0.92); }
+        65% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .game-message {
+        text-align: center;
+        min-height: 28px;
+        color: var(--muted);
+        font-weight: 750;
+        margin-bottom: 12px;
+    }
+
+    .scoreboard {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .score {
+        padding: 12px;
+        text-align: center;
+        border-radius: 15px;
+        background: #faf8ff;
+    }
+
+    .score small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .score strong {
+        font-size: 1.25rem;
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .state-header {
+        margin-bottom: 20px;
+    }
+
+    .state-header h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .state-header p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+        margin-top: 6px;
+    }
+
+    .thinking-box {
+        min-height: 270px;
+        padding: 18px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .empty-state {
+        min-height: 230px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .move-analysis {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+        gap: 10px;
+    }
+
+    .move-card {
+        padding: 13px;
+        border-radius: 17px;
+        background: white;
+        border: 1px solid var(--border);
+        transition: 0.2s ease;
+    }
+
+    .move-card.best {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.30);
+    }
+
+    .move-card.evaluating {
+        background: var(--yellow);
+    }
+
+    .move-card .move-name {
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .move-card .move-score {
+        font-size: 1.25rem;
+        font-weight: 950;
+    }
+
+    .move-card small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        margin-top: 4px;
+    }
+
+    .thinking-summary {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.55;
+        font-size: 0.86rem;
+    }
+
+    .reveal-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .reveal-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .reveal-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        align-items: flex-end;
+        margin-bottom: 28px;
+    }
+
+    .reveal-top h2 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.06em;
+    }
+
+    .reveal-top p {
+        color: var(--muted);
+        max-width: 600px;
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .tree-area {
+        overflow-x: auto;
+        padding: 15px 5px 25px;
+    }
+
+    .tree {
+        min-width: 720px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tree-node {
+        min-width: 180px;
+        padding: 14px 18px;
+        border-radius: 17px;
+        background: white;
+        border: 2px solid #ded8f5;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(80,70,110,0.07);
+        position: relative;
+    }
+
+    .tree-node.root {
+        background: var(--lavender);
+        border-color: #c9bbed;
+    }
+
+    .tree-node.best {
+        background: var(--mint);
+        border-color: #a7d8bc;
+    }
+
+    .tree-node .symbol {
+        font-size: 1.25rem;
+        font-weight: 950;
+    }
+
+    .tree-node small {
+        display: block;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    .connector {
+        width: 2px;
+        height: 20px;
+        background: #c9c2dc;
+    }
+
+    .branches {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        position: relative;
+    }
+
+    .branches::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: #c9c2dc;
+    }
+
+    .branch {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .algorithm-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 650px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) { background: #fff1f5; }
+    .concept:nth-child(2) { background: #eef7ff; }
+    .concept:nth-child(3) { background: #f2efff; }
+    .concept:nth-child(4) { background: #effaf4; }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red { background: #ff9db6; }
+    .dot.yellow { background: #ffd98a; }
+    .dot.green { background: #9ee3bd; }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw { color: #d6b9ff; }
+    .fn { color: #9fd8ff; }
+    .num { color: #ffd899; }
+    .comment { color: #9993ad; }
+    .str { color: #a9e6c5; }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 850px) {
+        .game-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .reveal-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .reveal-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .board {
+            gap: 6px;
+        }
+
+        .cell {
+            border-radius: 14px;
+        }
+
+        .reveal-card {
+            padding: 24px 18px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Games · Decision Making · Minimax</div>
+
+    <h1>
+        Can You Beat<br>
+        <span class="gradient">the AI?</span>
+    </h1>
+
+    <p>
+        Play Tic-Tac-Toe against an AI powered by Minimax.
+        Then peek behind the state and discover how it evaluates
+        possible futures before choosing its move.
+    </p>
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Play</strong>
+        <span>Challenge the AI.</span>
+    </div>
+
+    <div class="path-card">
+        <span class="path-number">02</span>
+        <strong>Explore</strong>
+        <span>Reveal its decision process.</span>
+    </div>
+
+    <div class="path-card">
+        <span class="path-number">03</span>
+        <strong>Learn</strong>
+        <span>Understand Minimax and the code.</span>
+    </div>
+</section>
+
+<main>
+
+    <section class="game-section">
+        <div class="game-layout">
+
+            <div class="panel game-panel">
+
+                <div class="panel-title">
+                    <div>
+                        <h2>🎮 Your Turn</h2>
+                        <p>You are <strong>X</strong>. The AI is <strong>O</strong>.</p>
+                    </div>
+
+                    <div id="statusBadge" class="status">
+                        ● Ready
+                    </div>
+                </div>
+
+                <div id="gameMessage" class="game-message">
+                    Choose a square to make your move.
+                </div>
+
+                <div id="board" class="board" aria-label="Tic-Tac-Toe board">
+                    <button class="cell" data-index="0" aria-label="Top left"></button>
+                    <button class="cell" data-index="1" aria-label="Top middle"></button>
+                    <button class="cell" data-index="2" aria-label="Top right"></button>
+                    <button class="cell" data-index="3" aria-label="Middle left"></button>
+                    <button class="cell" data-index="4" aria-label="Center"></button>
+                    <button class="cell" data-index="5" aria-label="Middle right"></button>
+                    <button class="cell" data-index="6" aria-label="Bottom left"></button>
+                    <button class="cell" data-index="7" aria-label="Bottom middle"></button>
+                    <button class="cell" data-index="8" aria-label="Bottom right"></button>
+                </div>
+
+                <div class="controls">
+                    <button id="resetBtn" class="btn btn-secondary">↻ New Game</button>
+                    <button id="thinkingBtn" class="btn btn-primary">✦ Reveal AI Thinking</button>
+                </div>
+
+                <div class="scoreboard">
+                    <div class="score">
+                        <small>You</small>
+                        <strong id="playerScore">0</strong>
+                    </div>
+
+                    <div class="score">
+                        <small>Draws</small>
+                        <strong id="drawScore">0</strong>
+                    </div>
+
+                    <div class="score">
+                        <small>AI</small>
+                        <strong id="aiScore">0</strong>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="panel state-panel">
+
+                <div class="state-header">
+                    <h2>✦ Behind The State</h2>
+                    <p>
+                        This panel shows real evaluations produced by the
+                        Minimax algorithm — not a prerecorded animation.
+                    </p>
+                </div>
+
+                <div id="thinkingBox" class="thinking-box">
+
+                    <div class="empty-state">
+                        <div>
+                            <span class="emoji">🧠</span>
+                            <strong>Make a move first.</strong>
+                            <p>
+                                When the AI responds, reveal its thinking
+                                to see the moves it evaluated.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section id="reveal" class="reveal-section">
+
+        <div class="reveal-card">
+
+            <div class="reveal-top">
+                <div>
+                    <div class="eyebrow">The Game Tree</div>
+                    <h2>Every move opens a future.</h2>
+                    <p>
+                        Minimax explores possible future game states.
+                        Winning states are valuable, losing states are
+                        undesirable, and draws sit between them.
+                    </p>
+                </div>
+
+                <button id="treeBtn" class="btn btn-blue">
+                    Show Example Tree
+                </button>
+            </div>
+
+            <div id="treeArea" class="tree-area">
+                <div class="empty-state">
+                    <div>
+                        <span class="emoji">🌳</span>
+                        <strong>Your decision tree will appear here.</strong>
+                        <p>
+                            Click "Show Example Tree" to see how
+                            Minimax thinks recursively.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="algorithm-section">
+
+        <div class="section-heading">
+            <div class="mini">Understand the algorithm</div>
+            <h2>So, what is Minimax?</h2>
+            <p>
+                Minimax is a decision-making algorithm commonly used
+                in turn-based, two-player games where one player tries
+                to maximize the outcome while the opponent tries to
+                minimize it.
+            </p>
+        </div>
+
+        <div class="concept-grid">
+
+            <article class="concept">
+                <div class="concept-icon">🔮</div>
+                <h3>Look ahead</h3>
+                <p>
+                    The algorithm considers possible moves and the
+                    game states that could follow them.
+                </p>
+            </article>
+
+            <article class="concept">
+                <div class="concept-icon">⚖️</div>
+                <h3>Max vs Min</h3>
+                <p>
+                    The AI tries to maximize its result while assuming
+                    the opponent will make choices that minimize it.
+                </p>
+            </article>
+
+            <article class="concept">
+                <div class="concept-icon">🏁</div>
+                <h3>Terminal states</h3>
+                <p>
+                    Completed games receive scores. In this implementation:
+                    AI win = +1, draw = 0, AI loss = −1.
+                </p>
+            </article>
+
+            <article class="concept">
+                <div class="concept-icon">↩️</div>
+                <h3>Backtracking</h3>
+                <p>
+                    Scores are returned through the recursive game tree
+                    until the AI can compare its available moves.
+                </p>
+            </article>
+
+        </div>
+
+    </section>
+
+    <section class="code-section">
+
+        <div class="section-heading">
+            <div class="mini">Implementation</div>
+            <h2>See the code behind the decision.</h2>
+            <p>
+                This simplified version shows the core recursive idea
+                behind the Minimax implementation used by the game.
+            </p>
+        </div>
+
+        <div class="code-card">
+
+            <div class="code-top">
+                <div class="dots">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+
+                <span class="code-title">minimax.js</span>
+
+                <span></span>
+            </div>
+
+            <pre><code><span class="kw">function</span> <span class="fn">minimax</span>(board, maximizingPlayer) {
+<span class="kw">const</span> result = <span class="fn">checkWinner</span>(board);
+
+<span class="kw">if</span> (result !== <span class="kw">null</span>) {
+    <span class="kw">return</span> <span class="fn">scoreTerminalState</span>(result);
+}
+
+<span class="kw">const</span> moves = <span class="fn">getAvailableMoves</span>(board);
+
+<span class="kw">if</span> (maximizingPlayer) {
+    <span class="kw">let</span> bestScore = -Infinity;
+
+    <span class="kw">for</span> (<span class="kw">const</span> move <span class="kw">of</span> moves) {
+        board[move] = <span class="str">"O"</span>;
+
+        <span class="kw">const</span> score =
+            <span class="fn">minimax</span>(board, <span class="kw">false</span>);
+
+        board[move] = <span class="str">""</span>;
+        bestScore = Math.<span class="fn">max</span>(bestScore, score);
+    }
+
+    <span class="kw">return</span> bestScore;
+}
+
+<span class="kw">let</span> bestScore = Infinity;
+
+<span class="kw">for</span> (<span class="kw">const</span> move <span class="kw">of</span> moves) {
+    board[move] = <span class="str">"X"</span>;
+
+    <span class="kw">const</span> score =
+        <span class="fn">minimax</span>(board, <span class="kw">true</span>);
+
+    board[move] = <span class="str">""</span>;
+    bestScore = Math.<span class="fn">min</span>(bestScore, score);
+}
+
+<span class="kw">return</span> bestScore;
+
+
+}</code></pre>
+
+
+        </div>
+
+    </section>
+
+    <section class="complexity">
+
+        <div class="complexity-card">
+            <span>Time Complexity</span>
+            <strong>O(b<sup>d</sup>)</strong>
+        </div>
+
+        <div class="complexity-card">
+            <span>Space Complexity</span>
+            <strong>O(d)</strong>
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    /*
+     * AI – Behind The State
+     * Minimax Tic-Tac-Toe
+     *
+     * X = Human
+     * O = AI
+     *
+     * The AI uses actual exhaustive Minimax search.
+     * Because Tic-Tac-Toe has a small finite state space,
+     * the AI can search the complete game tree.
+     */
+
+    const boardElement = document.getElementById("board");
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const gameMessage = document.getElementById("gameMessage");
+    const statusBadge = document.getElementById("statusBadge");
+    const resetBtn = document.getElementById("resetBtn");
+    const thinkingBtn = document.getElementById("thinkingBtn");
+    const thinkingBox = document.getElementById("thinkingBox");
+    const treeBtn = document.getElementById("treeBtn");
+    const treeArea = document.getElementById("treeArea");
+
+    const playerScoreElement = document.getElementById("playerScore");
+    const aiScoreElement = document.getElementById("aiScore");
+    const drawScoreElement = document.getElementById("drawScore");
+    const toast = document.getElementById("toast");
+
+    const WINNING_COMBINATIONS = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+
+    let board = Array(9).fill("");
+    let gameOver = false;
+    let aiThinking = false;
+    let lastAnalysis = [];
+    let lastAiMove = null;
+
+    let scores = {
+        player: 0,
+        ai: 0,
+        draw: 0
+    };
+
+    function checkWinner(currentBoard) {
+        for (const combination of WINNING_COMBINATIONS) {
+            const [a, b, c] = combination;
+
+            if (
+                currentBoard[a] !== "" &&
+                currentBoard[a] === currentBoard[b] &&
+                currentBoard[a] === currentBoard[c]
+            ) {
+                return {
+                    winner: currentBoard[a],
+                    combination
+                };
+            }
+        }
+
+        if (currentBoard.every(cell => cell !== "")) {
+            return {
+                winner: "draw",
+                combination: []
+            };
+        }
+
+        return null;
+    }
+
+    function getAvailableMoves(currentBoard) {
+        const moves = [];
+
+        for (let i = 0; i < currentBoard.length; i++) {
+            if (currentBoard[i] === "") {
+                moves.push(i);
+            }
+        }
+
+        return moves;
+    }
+
+    function terminalScore(result) {
+        if (!result) {
+            return null;
+        }
+
+        if (result.winner === "O") {
+            return 1;
+        }
+
+        if (result.winner === "X") {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    /*
+     * Actual recursive Minimax.
+     *
+     * The optional depth parameter is used only to prefer
+     * quicker wins and slower losses when multiple moves
+     * have the same basic outcome.
+     */
+    function minimax(currentBoard, maximizingPlayer, depth = 0) {
+        const result = checkWinner(currentBoard);
+
+        if (result !== null) {
+            const score = terminalScore(result);
+
+            if (score === 1) {
+                return 10 - depth;
+            }
+
+            if (score === -1) {
+                return depth - 10;
+            }
+
+            return 0;
+        }
+
+        const moves = getAvailableMoves(currentBoard);
+
+        if (maximizingPlayer) {
+            let bestScore = -Infinity;
+
+            for (const move of moves) {
+                currentBoard[move] = "O";
+
+                const score = minimax(
+                    currentBoard,
+                    false,
+                    depth + 1
+                );
+
+                currentBoard[move] = "";
+
+                bestScore = Math.max(bestScore, score);
+            }
+
+            return bestScore;
+        }
+
+        let bestScore = Infinity;
+
+        for (const move of moves) {
+            currentBoard[move] = "X";
+
+            const score = minimax(
+                currentBoard,
+                true,
+                depth + 1
+            );
+
+            currentBoard[move] = "";
+
+            bestScore = Math.min(bestScore, score);
+        }
+
+        return bestScore;
+    }
+
+    function findBestMove() {
+        const moves = getAvailableMoves(board);
+
+        let bestScore = -Infinity;
+        let bestMove = moves[0];
+        const analysis = [];
+
+        for (const move of moves) {
+            board[move] = "O";
+
+            const score = minimax(board, false, 0);
+
+            board[move] = "";
+
+            analysis.push({
+                move,
+                score
+            });
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+            }
+        }
+
+        return {
+            bestMove,
+            bestScore,
+            analysis
+        };
+    }
+
+    function cellName(index) {
+        const row = Math.floor(index / 3) + 1;
+        const column = (index % 3) + 1;
+
+        return `Row ${row}, Column ${column}`;
+    }
+
+    function formatScore(score) {
+        if (score > 0) {
+            return "+" + score;
+        }
+
+        return String(score);
+    }
+
+    function renderBoard() {
+        cells.forEach((cell, index) => {
+            const value = board[index];
+
+            cell.textContent = value;
+            cell.classList.remove("x", "o", "win");
+
+            if (value === "X") {
+                cell.classList.add("x");
+            }
+
+            if (value === "O") {
+                cell.classList.add("o");
+            }
+
+            cell.disabled =
+                gameOver ||
+                aiThinking ||
+                value !== "";
+        });
+    }
+
+    function highlightWinningCombination(combination) {
+        combination.forEach(index => {
+            cells[index].classList.add("win");
+        });
+    }
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        window.clearTimeout(showToast.timer);
+
+        showToast.timer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2400);
+    }
+
+    function updateScoreboard() {
+        playerScoreElement.textContent = scores.player;
+        aiScoreElement.textContent = scores.ai;
+        drawScoreElement.textContent = scores.draw;
+    }
+
+    function finishGame(result) {
+        gameOver = true;
+
+        if (result.winner === "X") {
+            scores.player++;
+            gameMessage.textContent = "🎉 You won! Nice move.";
+            setStatus("You won", "done");
+            showToast("You found a winning line! 🎉");
+        } else if (result.winner === "O") {
+            scores.ai++;
+            gameMessage.textContent = "🧠 The AI wins this round.";
+            setStatus("AI wins", "done");
+            showToast("Minimax found the winning path.");
+        } else {
+            scores.draw++;
+            gameMessage.textContent = "🤝 Draw! Neither side found a winning path.";
+            setStatus("Draw", "done");
+            showToast("Perfectly balanced game.");
+        }
+
+        highlightWinningCombination(result.combination);
+        updateScoreboard();
+        renderBoard();
+    }
+
+    function checkGameAfterMove() {
+        const result = checkWinner(board);
+
+        if (result) {
+            finishGame(result);
+            return true;
+        }
+
+        return false;
+    }
+
+    function humanMove(index) {
+        if (gameOver || aiThinking || board[index] !== "") {
+            return;
+        }
+
+        board[index] = "X";
+        renderBoard();
+
+        if (checkGameAfterMove()) {
+            return;
+        }
+
+        aiTurn();
+    }
+
+    function aiTurn() {
+        aiThinking = true;
+        setStatus("Thinking...", "thinking");
+        gameMessage.textContent = "The AI is evaluating possible futures...";
+        renderBoard();
+
+        /*
+         * A tiny delay makes the interaction feel natural.
+         * The actual move is still calculated by Minimax.
+         */
+        window.setTimeout(() => {
+            const result = findBestMove();
+
+            lastAnalysis = result.analysis;
+            lastAiMove = result.bestMove;
+
+            board[result.bestMove] = "O";
+
+            aiThinking = false;
+            renderBoard();
+
+            if (!checkGameAfterMove()) {
+                setStatus("Your turn", "");
+                gameMessage.textContent =
+                    "Your move. Can you outsmart the AI?";
+            }
+
+        }, 420);
+    }
+
+    function resetGame() {
+        board = Array(9).fill("");
+        gameOver = false;
+        aiThinking = false;
+        lastAnalysis = [];
+        lastAiMove = null;
+
+        setStatus("Ready");
+        gameMessage.textContent =
+            "Choose a square to make your move.";
+
+        thinkingBox.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🧠</span>
+                    <strong>Make a move first.</strong>
+                    <p>
+                        When the AI responds, reveal its thinking
+                        to see the moves it evaluated.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        treeArea.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🌳</span>
+                    <strong>Your decision tree will appear here.</strong>
+                    <p>
+                        Click "Show Example Tree" to see how
+                        Minimax thinks recursively.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        renderBoard();
+    }
+
+    function revealThinking() {
+        if (lastAnalysis.length === 0) {
+            showToast("Let the AI make a move first.");
+            return;
+        }
+
+        const sorted = [...lastAnalysis].sort(
+            (a, b) => b.score - a.score
+        );
+
+        const cards = sorted.map(item => {
+            const isBest = item.move === lastAiMove;
+
+            return `
+                <div class="move-card ${isBest ? "best" : ""}">
+                    <div class="move-name">
+                        ${isBest ? "⭐ " : ""}
+                        ${cellName(item.move)}
+                    </div>
+                    <div class="move-score">
+                        ${formatScore(item.score)}
+                    </div>
+                    <small>
+                        ${isBest ? "Selected by AI" : "Evaluated"}
+                    </small>
+                </div>
+            `;
+        }).join("");
+
+        const best = lastAnalysis.find(
+            item => item.move === lastAiMove
+        );
+
+        thinkingBox.innerHTML = `
+            <div class="move-analysis">
+                ${cards}
+            </div>
+
+            <div class="thinking-summary">
+                <strong>Why this move?</strong><br>
+                Minimax evaluated ${lastAnalysis.length}
+                available move${lastAnalysis.length === 1 ? "" : "s"}.
+                The AI selected <strong>${cellName(lastAiMove)}</strong>
+                because it produced the strongest available outcome
+                under optimal opponent play.
+                Its evaluation was <strong>${formatScore(best.score)}</strong>.
+            </div>
+        `;
+    }
+
+    function buildExampleTree() {
+        treeArea.innerHTML = `
+            <div class="tree">
+                <div class="tree-node root">
+                    <div class="symbol">Current State</div>
+                    <small>AI's turn</small>
+                </div>
+
+                <div class="connector"></div>
+
+                <div class="branches">
+
+                    <div class="branch">
+                        <div class="tree-node">
+                            <div class="symbol">Move A</div>
+                            <small>score: 0</small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node">
+                            <div class="symbol">Future</div>
+                            <small>Opponent responds</small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node">
+                            <div class="symbol">Draw</div>
+                            <small>utility = 0</small>
+                        </div>
+                    </div>
+
+                    <div class="branch">
+                        <div class="tree-node best">
+                            <div class="symbol">Move B ⭐</div>
+                            <small>score: +1</small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node best">
+                            <div class="symbol">Future</div>
+                            <small>Opponent responds</small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node best">
+                            <div class="symbol">Win</div>
+                            <small>utility = +1</small>
+                        </div>
+                    </div>
+
+                    <div class="branch">
+                        <div class="tree-node">
+                            <div class="symbol">Move C</div>
+                            <small>score: -1</small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node">
+                            <div class="symbol">Future</div>
+                            <small>Opponent responds</small>
+                        </div>
+
+                        <div class="connector"></div>
+
+                        <div class="tree-node">
+                            <div class="symbol">Loss</div>
+                            <small>utility = -1</small>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        `;
+
+        showToast("Game tree revealed 🌳");
+    }
+
+    cells.forEach(cell => {
+        cell.addEventListener("click", () => {
+            humanMove(Number(cell.dataset.index));
+        });
+    });
+
+    resetBtn.addEventListener("click", resetGame);
+    thinkingBtn.addEventListener("click", revealThinking);
+    treeBtn.addEventListener("click", buildExampleTree);
+
+    renderBoard();
+    updateScoreboard();
+</script>
+
+</body>
+</html>

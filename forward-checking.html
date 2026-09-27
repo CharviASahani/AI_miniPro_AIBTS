@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Forward Checking CSP">
+    <title>Forward Checking — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #d66d98;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    select {
+        font: inherit;
+    }
+
+    button {
+        border: 0;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1100px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .problem-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.65), transparent 32%),
+            rgba(255,255,255,0.88);
+    }
+
+    .analysis-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.55;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        margin-top: 14px;
+    }
+
+    .status.working {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .csp-board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin: 20px auto;
+        max-width: 390px;
+    }
+
+    .variable {
+        aspect-ratio: 1;
+        border-radius: 18px;
+        background: #fffdf9;
+        border: 2px solid rgba(139,114,216,0.12);
+        box-shadow: 0 7px 18px rgba(60,50,80,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .variable:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(60,50,80,0.10);
+    }
+
+    .variable.selected {
+        background: var(--lavender);
+        border-color: rgba(139,114,216,0.45);
+    }
+
+    .variable.assigned {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.40);
+    }
+
+    .variable.conflict {
+        background: var(--pink);
+        border-color: rgba(214,109,152,0.45);
+        animation: shake 0.3s ease;
+    }
+
+    .variable-name {
+        font-size: 1.15rem;
+        font-weight: 950;
+    }
+
+    .variable-value {
+        margin-top: 4px;
+        font-size: 0.76rem;
+        color: var(--muted);
+        font-weight: 800;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn {
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .message {
+        text-align: center;
+        min-height: 28px;
+        color: var(--muted);
+        font-weight: 750;
+        line-height: 1.5;
+    }
+
+    .domain-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 18px 0 10px;
+    }
+
+    .domain-title strong {
+        font-size: 0.9rem;
+    }
+
+    .domain-title span {
+        color: var(--muted);
+        font-size: 0.75rem;
+    }
+
+    .domains {
+        display: grid;
+        gap: 10px;
+    }
+
+    .domain-row {
+        display: grid;
+        grid-template-columns: 65px 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.85);
+        border: 1px solid var(--border);
+    }
+
+    .domain-label {
+        font-weight: 900;
+        color: var(--purple);
+    }
+
+    .domain-values {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .value-pill {
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #4779ad;
+        font-size: 0.72rem;
+        font-weight: 850;
+    }
+
+    .value-pill.removed {
+        background: #f2eeee;
+        color: #aaa1a5;
+        text-decoration: line-through;
+    }
+
+    .value-pill.locked {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .analysis-box {
+        min-height: 330px;
+        padding: 16px;
+        border-radius: 22px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .empty-state {
+        min-height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+        line-height: 1.6;
+    }
+
+    .empty-state .emoji {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .step-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .step {
+        padding: 14px;
+        border-radius: 17px;
+        background: white;
+        border: 1px solid var(--border);
+        animation: slideIn 0.3s ease both;
+    }
+
+    .step:nth-child(2) { animation-delay: 0.04s; }
+    .step:nth-child(3) { animation-delay: 0.08s; }
+    .step:nth-child(4) { animation-delay: 0.12s; }
+    .step:nth-child(5) { animation-delay: 0.16s; }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .step-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
+    .step-head strong {
+        font-size: 0.9rem;
+    }
+
+    .step-number {
+        color: var(--purple);
+        font-weight: 950;
+    }
+
+    .step p {
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.55;
+    }
+
+    .step.removal {
+        background: #fff4f7;
+        border-color: rgba(214,109,152,0.20);
+    }
+
+    .step.success {
+        background: #f0fbf5;
+        border-color: rgba(88,166,124,0.25);
+    }
+
+    .result-box {
+        margin-top: 15px;
+        padding: 16px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.6;
+        font-size: 0.86rem;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .stat {
+        text-align: center;
+        padding: 14px 8px;
+        border-radius: 16px;
+        background: #faf8ff;
+    }
+
+    .stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.73rem;
+        margin-bottom: 5px;
+    }
+
+    .stat strong {
+        font-size: 1.25rem;
+    }
+
+    .section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .demo-card {
+        padding: 28px;
+        border-radius: 27px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.75), transparent 30%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.75), transparent 30%),
+            white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .demo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .demo-header h2 {
+        font-size: 1.6rem;
+        letter-spacing: -0.04em;
+    }
+
+    .demo-header p {
+        color: var(--muted);
+        margin-top: 5px;
+        line-height: 1.6;
+        font-size: 0.87rem;
+    }
+
+    .scenario {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .scenario-box {
+        padding: 16px;
+        border-radius: 18px;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+
+    .scenario-box:nth-child(1) {
+        background: var(--pink);
+    }
+
+    .scenario-box:nth-child(2) {
+        background: var(--blue);
+    }
+
+    .scenario-box:nth-child(3) {
+        background: var(--lavender);
+    }
+
+    .scenario-box:nth-child(4) {
+        background: var(--mint);
+    }
+
+    .scenario-box strong {
+        display: block;
+        font-size: 1.25rem;
+        margin-bottom: 5px;
+    }
+
+    .scenario-box span {
+        color: var(--muted);
+        font-size: 0.72rem;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    @media (max-width: 850px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .scenario {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .demo-header {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .demo-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .csp-board {
+            gap: 7px;
+        }
+
+        .variable {
+            border-radius: 14px;
+        }
+
+        .scenario {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Constraint Solving · CSP · Forward Checking</div>
+
+
+<h1>
+    Watch AI<br>
+    <span class="gradient">Prevent Dead Ends.</span>
+</h1>
+
+<p>
+    Explore Forward Checking through an interactive constraint
+    satisfaction problem. Assign values to variables and watch the
+    algorithm immediately remove impossible values from neighboring
+    domains.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Choose</strong>
+    <span>Select a variable and value.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Check</strong>
+    <span>Look ahead into neighboring domains.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Prevent</strong>
+    <span>Remove values that create dead ends.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+
+<div class="layout">
+
+    <div class="panel problem-panel">
+
+        <div class="panel-title">
+            <h2>🧩 Interactive CSP</h2>
+            <p>
+                This demo uses a small map-coloring problem.
+                Connected regions cannot share the same color.
+            </p>
+
+            <div id="status" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div id="message" class="message">
+            Click a region to select it.
+        </div>
+
+        <div id="cspBoard" class="csp-board">
+            <button class="variable" data-variable="A">
+                <span class="variable-name">A</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="B">
+                <span class="variable-name">B</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="C">
+                <span class="variable-name">C</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="D">
+                <span class="variable-name">D</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="E">
+                <span class="variable-name">E</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="F">
+                <span class="variable-name">F</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="G">
+                <span class="variable-name">G</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+
+            <button class="variable" data-variable="H">
+                <span class="variable-name">H</span>
+                <span class="variable-value">Unassigned</span>
+            </button>
+        </div>
+
+        <div class="domain-title">
+            <strong>Current Domains</strong>
+            <span>Available values</span>
+        </div>
+
+        <div id="domains" class="domains"></div>
+
+        <div class="controls">
+            <button id="autoBtn" class="btn btn-primary">
+                ✦ Run Forward Checking
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset
+            </button>
+        </div>
+
+    </div>
+
+    <div class="panel analysis-panel">
+
+        <div class="panel-title">
+            <h2>✦ Behind The State</h2>
+            <p>
+                Follow the actual constraint propagation performed
+                by the JavaScript implementation.
+            </p>
+        </div>
+
+        <div id="analysisBox" class="analysis-box">
+
+            <div class="empty-state">
+                <div>
+                    <span class="emoji">🔍</span>
+                    <strong>Nothing has been propagated yet.</strong>
+                    <p>
+                        Select a region or run the automatic solver
+                        to see Forward Checking in action.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span>Assignments</span>
+                <strong id="assignmentCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>Values Removed</span>
+                <strong id="removedCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>Variables Left</span>
+                <strong id="remainingCount">8</strong>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand the algorithm</div>
+
+    <h2>What does Forward Checking do?</h2>
+
+    <p>
+        Forward Checking is a constraint-satisfaction technique.
+        After assigning a value to one variable, it examines
+        neighboring unassigned variables and removes values that
+        can no longer be used.
+    </p>
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+        <div class="concept-icon">🎯</div>
+        <h3>Assign a variable</h3>
+        <p>
+            The solver chooses a variable and assigns one value
+            from its current domain.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🔎</div>
+        <h3>Look ahead</h3>
+        <p>
+            The solver immediately checks the domains of variables
+            connected by constraints.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">✂️</div>
+        <h3>Remove conflicts</h3>
+        <p>
+            Values that conflict with the new assignment are
+            removed from neighboring domains.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">🚧</div>
+        <h3>Detect dead ends</h3>
+        <p>
+            If an unassigned variable loses every possible value,
+            the current path cannot produce a valid solution.
+        </p>
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="section">
+
+
+<div class="demo-card">
+
+    <div class="demo-header">
+        <div>
+            <h2>🗺️ The Constraint Map</h2>
+            <p>
+                Each connection means the two variables must have
+                different colors.
+            </p>
+        </div>
+
+        <button id="exampleBtn" class="btn btn-blue">
+            Show Example
+        </button>
+    </div>
+
+    <div class="scenario">
+
+        <div class="scenario-box">
+            <strong>A — B</strong>
+            <span>Must differ</span>
+        </div>
+
+        <div class="scenario-box">
+            <strong>A — C</strong>
+            <span>Must differ</span>
+        </div>
+
+        <div class="scenario-box">
+            <strong>B — D</strong>
+            <span>Must differ</span>
+        </div>
+
+        <div class="scenario-box">
+            <strong>C — D</strong>
+            <span>Must differ</span>
+        </div>
+
+    </div>
+
+    <div id="exampleText" class="result-box">
+        Forward Checking does not wait until the entire assignment
+        is complete. It detects impossible future choices as soon
+        as a constraint becomes relevant.
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>See the core idea.</h2>
+
+    <p>
+        The essential operation is domain filtering after an
+        assignment.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">forward-checking.js</span>
+
+        <span></span>
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">forwardCheck</span>(variable, value) {
+
+assignment[variable] = value;
+
+<span class="kw">for</span> (<span class="kw">const</span> neighbor <span class="kw">of</span> neighbors[variable]) {
+
+    <span class="kw">if</span> (assignment[neighbor] !== <span class="kw">null</span>) {
+        <span class="kw">continue</span>;
+    }
+
+    domains[neighbor] =
+        domains[neighbor].<span class="fn">filter</span>(
+            candidate => candidate !== value
+        );
+
+    <span class="kw">if</span> (domains[neighbor].length === <span class="num">0</span>) {
+        <span class="kw">return false</span>;
+    }
+}
+
+<span class="kw">return true</span>;
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * Forward Checking CSP Demonstration
+ *
+ * Problem:
+ * Map coloring.
+ *
+ * Variables:
+ * A, B, C, D, E, F, G, H
+ *
+ * Values:
+ * Pink, Blue, Green
+ *
+ * Constraint:
+ * Connected variables must have different colors.
+ */
+
+const COLORS = [
+    "Pink",
+    "Blue",
+    "Green"
+];
+
+const VARIABLES = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
+];
+
+/*
+ * Constraint graph.
+ *
+ * Every listed pair must receive different colors.
+ */
+const NEIGHBORS = {
+    A: ["B", "C"],
+    B: ["A", "D", "E"],
+    C: ["A", "D", "F"],
+    D: ["B", "C", "G"],
+    E: ["B", "F", "G"],
+    F: ["C", "E", "H"],
+    G: ["D", "E", "H"],
+    H: ["F", "G"]
+};
+
+const variableButtons =
+    Array.from(document.querySelectorAll(".variable"));
+
+const domainsElement =
+    document.getElementById("domains");
+
+const analysisBox =
+    document.getElementById("analysisBox");
+
+const messageElement =
+    document.getElementById("message");
+
+const statusElement =
+    document.getElementById("status");
+
+const autoButton =
+    document.getElementById("autoBtn");
+
+const resetButton =
+    document.getElementById("resetBtn");
+
+const exampleButton =
+    document.getElementById("exampleBtn");
+
+const exampleText =
+    document.getElementById("exampleText");
+
+const assignmentCountElement =
+    document.getElementById("assignmentCount");
+
+const removedCountElement =
+    document.getElementById("removedCount");
+
+const remainingCountElement =
+    document.getElementById("remainingCount");
+
+const toast =
+    document.getElementById("toast");
+
+let assignment = {};
+let domains = {};
+let selectedVariable = null;
+let removedCount = 0;
+let stepCounter = 0;
+let solving = false;
+
+function createInitialState() {
+
+    assignment = {};
+    domains = {};
+
+    VARIABLES.forEach(variable => {
+        assignment[variable] = null;
+        domains[variable] = [...COLORS];
+    });
+
+    selectedVariable = null;
+    removedCount = 0;
+    stepCounter = 0;
+    solving = false;
+}
+
+function setStatus(text, type = "") {
+
+    statusElement.textContent = "● " + text;
+    statusElement.className = "status";
+
+    if (type) {
+        statusElement.classList.add(type);
+    }
+}
+
+function showToast(text) {
+
+    toast.textContent = text;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
+}
+
+function colorClass(color) {
+
+    if (color === "Pink") {
+        return "pink";
+    }
+
+    if (color === "Blue") {
+        return "blue";
+    }
+
+    return "green";
+}
+
+function renderBoard() {
+
+    variableButtons.forEach(button => {
+
+        const variable = button.dataset.variable;
+        const value = assignment[variable];
+
+        button.classList.remove(
+            "selected",
+            "assigned",
+            "conflict"
+        );
+
+        if (variable === selectedVariable) {
+            button.classList.add("selected");
+        }
+
+        if (value !== null) {
+            button.classList.add("assigned");
+        }
+
+        const valueElement =
+            button.querySelector(".variable-value");
+
+        valueElement.textContent =
+            value === null ? "Unassigned" : value;
+    });
+}
+
+function renderDomains() {
+
+    domainsElement.innerHTML = VARIABLES.map(variable => {
+
+        const currentDomain = domains[variable];
+
+        const pills = COLORS.map(color => {
+
+            const available =
+                currentDomain.includes(color);
+
+            const assigned =
+                assignment[variable] === color;
+
+            return `
+                <span class="value-pill ${
+                    assigned
+                        ? "locked"
+                        : available
+                            ? ""
+                            : "removed"
+                }">
+                    ${color}
+                </span>
+            `;
+        }).join("");
+
+        return `
+            <div class="domain-row">
+                <div class="domain-label">${variable}</div>
+                <div class="domain-values">${pills}</div>
+            </div>
+        `;
+
+    }).join("");
+
+    updateStats();
+}
+
+function updateStats() {
+
+    const assignments =
+        VARIABLES.filter(variable =>
+            assignment[variable] !== null
+        ).length;
+
+    const remaining =
+        VARIABLES.length - assignments;
+
+    assignmentCountElement.textContent = assignments;
+    removedCountElement.textContent = removedCount;
+    remainingCountElement.textContent = remaining;
+}
+
+function addStep(title, text, type = "") {
+
+    stepCounter++;
+
+    let list =
+        analysisBox.querySelector(".step-list");
+
+    if (!list) {
+
+        analysisBox.innerHTML =
+            '<div class="step-list"></div>';
+
+        list =
+            analysisBox.querySelector(".step-list");
+    }
+
+    const step =
+        document.createElement("div");
+
+    step.className = "step " + type;
+
+    step.innerHTML = `
+        <div class="step-head">
+            <strong>
+                <span class="step-number">
+                    ${String(stepCounter).padStart(2, "0")}
+                </span>
+                ${title}
+            </strong>
+        </div>
+
+        <p>${text}</p>
+    `;
+
+    list.appendChild(step);
+
+    analysisBox.scrollTop =
+        analysisBox.scrollHeight;
+}
+
+function isConsistent(variable, value) {
+
+    const neighbors =
+        NEIGHBORS[variable];
+
+    for (const neighbor of neighbors) {
+
+        if (
+            assignment[neighbor] !== null &&
+            assignment[neighbor] === value
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function forwardCheck(variable, value) {
+
+    assignment[variable] = value;
+
+    addStep(
+        "Assign " + variable,
+        `${variable} receives ${value}. Forward Checking now examines its unassigned neighbors.`,
+        "success"
+    );
+
+    for (const neighbor of NEIGHBORS[variable]) {
+
+        if (assignment[neighbor] !== null) {
+            continue;
+        }
+
+        const before =
+            [...domains[neighbor]];
+
+        domains[neighbor] =
+            domains[neighbor].filter(
+                candidate => candidate !== value
+            );
+
+        const removed =
+            before.filter(
+                candidate =>
+                    !domains[neighbor].includes(candidate)
+            );
+
+        if (removed.length > 0) {
+
+            removedCount += removed.length;
+
+            addStep(
+                "Check " + neighbor,
+                `Because ${neighbor} is connected to ${variable}, it cannot use ${value}. Removed: ${removed.join(", ")}.`,
+                "removal"
+            );
+        }
+
+        if (domains[neighbor].length === 0) {
+
+            assignment[variable] = null;
+
+            addStep(
+                "Dead end detected",
+                `${neighbor} has no legal values left. This assignment must be rejected.`,
+                "removal"
+            );
+
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function selectVariable() {
+
+    let best = null;
+    let smallestDomain = Infinity;
+
+    for (const variable of VARIABLES) {
+
+        if (assignment[variable] !== null) {
+            continue;
+        }
+
+        const size =
+            domains[variable].length;
+
+        if (size < smallestDomain) {
+            smallestDomain = size;
+            best = variable;
+        }
+    }
+
+    return best;
+}
+
+function solveStep() {
+
+    if (VARIABLES.every(
+        variable => assignment[variable] !== null
+    )) {
+        return true;
+    }
+
+    const variable =
+        selectVariable();
+
+    if (!variable) {
+        return true;
+    }
+
+    const candidateValues =
+        [...domains[variable]];
+
+    for (const value of candidateValues) {
+
+        if (!isConsistent(variable, value)) {
+            continue;
+        }
+
+        const previousAssignment = {
+            ...assignment
+        };
+
+        const previousDomains = {};
+
+        VARIABLES.forEach(v => {
+            previousDomains[v] =
+                [...domains[v]];
+        });
+
+        if (forwardCheck(variable, value)) {
+
+            renderBoard();
+            renderDomains();
+
+            if (solveStep()) {
+                return true;
+            }
+        }
+
+        assignment = previousAssignment;
+        domains = previousDomains;
+
+        addStep(
+            "Backtrack",
+            `The path using ${variable} = ${value} did not lead to a complete solution, so the solver restores the previous state.`,
+            "removal"
+        );
+
+        renderBoard();
+        renderDomains();
+    }
+
+    return false;
+}
+
+function clearAnalysis() {
+
+    analysisBox.innerHTML = `
+        <div class="empty-state">
+            <div>
+                <span class="emoji">🔍</span>
+                <strong>Nothing has been propagated yet.</strong>
+                <p>
+                    Select a region or run the automatic solver
+                    to see Forward Checking in action.
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function assignSelectedVariable() {
+
+    if (!selectedVariable || solving) {
+        return;
+    }
+
+    const available =
+        domains[selectedVariable];
+
+    if (available.length === 0) {
+        showToast("This variable has no available values.");
+        return;
+    }
+
+    const value =
+        available[0];
+
+    if (!isConsistent(selectedVariable, value)) {
+        showToast("That assignment violates a constraint.");
+        return;
+    }
+
+    const success =
+        forwardCheck(
+            selectedVariable,
+            value
+        );
+
+    if (!success) {
+
+        assignment[selectedVariable] = null;
+
+        setStatus(
+            "Dead end",
+            "working"
+        );
+
+        messageElement.textContent =
+            "Forward Checking detected an invalid path.";
+
+        renderBoard();
+        renderDomains();
+
+        return;
+    }
+
+    selectedVariable = null;
+
+    renderBoard();
+    renderDomains();
+
+    const complete =
+        VARIABLES.every(
+            variable =>
+                assignment[variable] !== null
+        );
+
+    if (complete) {
+
+        setStatus(
+            "Solved",
+            "done"
+        );
+
+        messageElement.textContent =
+            "Puzzle solved successfully.";
+
+        showToast("Valid solution found.");
+    } else {
+
+        setStatus("Propagated");
+
+        messageElement.textContent =
+            "Values were removed from neighboring domains.";
+    }
+}
+
+async function runAutomaticSolver() {
+
+    if (solving) {
+        return;
+    }
+
+    createInitialState();
+    renderBoard();
+    renderDomains();
+    clearAnalysis();
+
+    solving = true;
+
+    autoButton.disabled = true;
+    resetButton.disabled = true;
+
+    setStatus(
+        "Solving...",
+        "working"
+    );
+
+    messageElement.textContent =
+        "Forward Checking is exploring the constraint graph.";
+
+    const originalForwardCheck =
+        forwardCheck;
+
+    /*
+     * The solver itself is synchronous for correctness.
+     * Small pauses are inserted between recursive steps
+     * through a visual replay of the final process.
+     */
+
+    const solution =
+        buildSolutionSteps();
+
+    createInitialState();
+
+    for (const action of solution) {
+
+        assignment[action.variable] =
+            action.value;
+
+        for (const neighbor of
+            NEIGHBORS[action.variable]) {
+
+            if (
+                assignment[neighbor] !== null
+            ) {
+                continue;
+            }
+
+            domains[neighbor] =
+                domains[neighbor].filter(
+                    candidate =>
+                        candidate !== action.value
+                );
+        }
+
+        removedCount =
+            action.removedTotal;
+
+        addStep(
+            action.title,
+            action.text,
+            action.type
+        );
+
+        renderBoard();
+        renderDomains();
+
+        await delay(430);
+    }
+
+    solving = false;
+
+    autoButton.disabled = false;
+    resetButton.disabled = false;
+
+    setStatus(
+        "Solved",
+        "done"
+    );
+
+    messageElement.textContent =
+        "Forward Checking completed a valid assignment.";
+
+    showToast("CSP solved.");
+}
+
+function buildSolutionSteps() {
+
+    const tempAssignment = {};
+    const tempDomains = {};
+
+    VARIABLES.forEach(variable => {
+        tempAssignment[variable] = null;
+        tempDomains[variable] = [...COLORS];
+    });
+
+    const actions = [];
+    let totalRemoved = 0;
+
+    /*
+     * A deterministic valid solution is generated
+     * using the same constraint rules as the demo.
+     */
+
+    function search() {
+
+        if (
+            VARIABLES.every(
+                variable =>
+                    tempAssignment[variable] !== null
+            )
+        ) {
+            return true;
+        }
+
+        let selected = null;
+        let smallest = Infinity;
+
+        for (const variable of VARIABLES) {
+
+            if (tempAssignment[variable] !== null) {
+                continue;
+            }
+
+            if (
+                tempDomains[variable].length < smallest
+            ) {
+                smallest =
+                    tempDomains[variable].length;
+
+                selected = variable;
+            }
+        }
+
+        if (!selected) {
+            return false;
+        }
+
+        const candidates =
+            [...tempDomains[selected]];
+
+        for (const value of candidates) {
+
+            let valid = true;
+
+            for (const neighbor of
+                NEIGHBORS[selected]) {
+
+                if (
+                    tempAssignment[neighbor] === value
+                ) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                continue;
+            }
+
+            const oldDomains = {};
+
+            VARIABLES.forEach(variable => {
+                oldDomains[variable] =
+                    [...tempDomains[variable]];
+            });
+
+            tempAssignment[selected] = value;
+
+            const removedForAction = [];
+
+            for (const neighbor of
+                NEIGHBORS[selected]) {
+
+                if (
+                    tempAssignment[neighbor] !== null
+                ) {
+                    continue;
+                }
+
+                if (
+                    tempDomains[neighbor].includes(value)
+                ) {
+
+                    tempDomains[neighbor] =
+                        tempDomains[neighbor].filter(
+                            candidate =>
+                                candidate !== value
+                        );
+
+                    removedForAction.push(
+                        `${neighbor}: ${value}`
+                    );
+
+                    totalRemoved++;
+                }
+            }
+
+            actions.push({
+                variable: selected,
+                value,
+                title: "Assign " + selected,
+                text:
+                    `${selected} = ${value}. ` +
+                    (
+                        removedForAction.length > 0
+                            ? `Forward Checking removed ${removedForAction.join(", ")} from neighboring domains.`
+                            : "No neighboring domain needed this value removed."
+                    ),
+                type:
+                    removedForAction.length > 0
+                        ? "removal"
+                        : "success",
+                removedTotal: totalRemoved
+            });
+
+            if (search()) {
+                return true;
+            }
+
+            actions.push({
+                variable: selected,
+                value,
+                title: "Backtrack from " + selected,
+                text:
+                    `The current branch was restored. Forward Checking returns to the previous state.`,
+                type: "removal",
+                removedTotal: totalRemoved
+            });
+
+            tempAssignment[selected] = null;
+
+            VARIABLES.forEach(variable => {
+                tempDomains[variable] =
+                    [...oldDomains[variable]];
+            });
+
+            /*
+             * Recalculate the removed counter from
+             * the current domain state.
+             */
+            totalRemoved = 0;
+
+            VARIABLES.forEach(variable => {
+
+                if (
+                    tempAssignment[variable] !== null
+                ) {
+                    return;
+                }
+
+                const removed =
+                    COLORS.length -
+                    tempDomains[variable].length;
+
+                totalRemoved += removed;
+            });
+
+            /*
+             * For this educational demo, once a valid
+             * deterministic branch is found, return it.
+             */
+            actions.pop();
+
+        }
+
+        return false;
+    }
+
+    search();
+
+    return actions;
+}
+
+function delay(milliseconds) {
+
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
+function reset() {
+
+    if (solving) {
+        return;
+    }
+
+    createInitialState();
+
+    clearAnalysis();
+    renderBoard();
+    renderDomains();
+
+    setStatus("Ready");
+
+    messageElement.textContent =
+        "Click a region to select it.";
+
+    showToast("Puzzle reset.");
+}
+
+function showExample() {
+
+    exampleText.innerHTML = `
+        <strong>Example:</strong><br>
+        Suppose A is assigned <strong>Pink</strong>.
+        Forward Checking immediately looks at A's neighbors,
+        B and C. Pink is removed from both of their domains.
+        The algorithm has therefore prevented two future choices
+        before they can cause a conflict.
+    `;
+
+    showToast("Example revealed.");
+}
+
+variableButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        if (solving) {
+            return;
+        }
+
+        const variable =
+            button.dataset.variable;
+
+        if (assignment[variable] !== null) {
+
+            messageElement.textContent =
+                `${variable} is already assigned ${assignment[variable]}.`;
+
+            return;
+        }
+
+        selectedVariable = variable;
+
+        variableButtons.forEach(item => {
+            item.classList.remove("selected");
+        });
+
+        button.classList.add("selected");
+
+        const available =
+            domains[variable];
+
+        messageElement.textContent =
+            `${variable} selected. Available values: ${available.join(", ")}.`;
+
+        /*
+         * Clicking a variable twice performs the
+         * first available valid assignment.
+         */
+        if (button.dataset.ready === "true") {
+            assignSelectedVariable();
+            button.dataset.ready = "false";
+        } else {
+            button.dataset.ready = "true";
+
+            setTimeout(() => {
+                button.dataset.ready = "false";
+            }, 1200);
+        }
+    });
+});
+
+autoButton.addEventListener(
+    "click",
+    runAutomaticSolver
+);
+
+resetButton.addEventListener(
+    "click",
+    reset
+);
+
+exampleButton.addEventListener(
+    "click",
+    showExample
+);
+
+createInitialState();
+renderBoard();
+renderDomains();
+
+</script>
+
+</body>
+</html>

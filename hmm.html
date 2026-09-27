@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Hidden Markov Model and Viterbi Decoder">
+    <title>Hidden Markov Model — AI Behind The State</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --cream: #fffaf2;
+            --pink: #ffdce8;
+            --pink-dark: #d86f96;
+            --lavender: #e9e1ff;
+            --purple: #8068cf;
+            --purple-dark: #624ea9;
+            --blue: #dceeff;
+            --blue-dark: #5c96d2;
+            --mint: #dff7eb;
+            --green: #55a77c;
+            --yellow: #fff0bf;
+            --yellow-dark: #c89d32;
+            --peach: #ffe3cf;
+            --orange: #df8e59;
+            --ink: #29263a;
+            --muted: #777386;
+            --white: #ffffff;
+            --border: rgba(55, 48, 80, 0.10);
+            --shadow: 0 20px 60px rgba(79, 66, 108, 0.11);
+            --shadow-soft: 0 10px 30px rgba(79, 66, 108, 0.07);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            color: var(--ink);
+            min-height: 100vh;
+
+            background:
+                radial-gradient(
+                    circle at 8% 4%,
+                    rgba(255, 220, 232, 0.72),
+                    transparent 25%
+                ),
+                radial-gradient(
+                    circle at 92% 8%,
+                    rgba(220, 238, 255, 0.76),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 50% 92%,
+                    rgba(223, 247, 235, 0.68),
+                    transparent 32%
+                ),
+                var(--cream);
+        }
+
+        button {
+            font: inherit;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 18px 6%;
+
+            background: rgba(255, 250, 242, 0.88);
+            backdrop-filter: blur(18px);
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .brand span {
+            color: var(--purple);
+        }
+
+        .back {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 750;
+            transition: 0.2s ease;
+        }
+
+        .back:hover {
+            color: var(--purple);
+            transform: translateX(-3px);
+        }
+
+        .hero {
+            width: min(1180px, 92%);
+            margin: 0 auto;
+            padding: 72px 0 46px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 8px 14px;
+
+            border-radius: 999px;
+
+            background: var(--lavender);
+            color: #6855ad;
+
+            font-size: 0.76rem;
+            font-weight: 900;
+
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+
+            margin-bottom: 18px;
+        }
+
+        .eyebrow-icon {
+            width: 18px;
+            height: 18px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 6px;
+
+            background: rgba(255,255,255,0.65);
+            color: var(--purple);
+
+            font-size: 0.72rem;
+            font-weight: 950;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 6.5rem);
+            line-height: 0.91;
+            letter-spacing: -0.075em;
+            font-weight: 950;
+            margin-bottom: 23px;
+        }
+
+        h1 .gradient {
+            background:
+                linear-gradient(
+                    100deg,
+                    #7964c5,
+                    #d66d98,
+                    #6099d8
+                );
+
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero p {
+            max-width: 730px;
+            margin: auto;
+
+            color: var(--muted);
+
+            font-size: 1.06rem;
+            line-height: 1.75;
+        }
+
+        .learning-path {
+            width: min(1000px, 92%);
+            margin: 0 auto 50px;
+
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .path-card {
+            padding: 18px;
+
+            border: 1px solid var(--border);
+            border-radius: 22px;
+
+            background: rgba(255,255,255,0.72);
+
+            box-shadow: var(--shadow-soft);
+        }
+
+        .path-card.active {
+            border-color: rgba(128,104,207,0.35);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f1edff,
+                    #ffffff
+                );
+        }
+
+        .path-number {
+            width: 32px;
+            height: 32px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: var(--lavender);
+            color: var(--purple);
+
+            font-size: 0.78rem;
+            font-weight: 950;
+
+            margin-bottom: 9px;
+        }
+
+        .path-card strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .path-card span:last-child {
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        .main-section {
+            width: min(1180px, 92%);
+            margin: 0 auto 80px;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 0.92fr 1.08fr;
+            gap: 22px;
+        }
+
+        .panel {
+            padding: 28px;
+
+            border-radius: 30px;
+
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,0.84);
+
+            box-shadow: var(--shadow);
+        }
+
+        .model-panel {
+            background:
+                radial-gradient(
+                    circle at 100% 0%,
+                    rgba(220,238,255,0.7),
+                    transparent 34%
+                ),
+                rgba(255,255,255,0.88);
+        }
+
+        .decoder-panel {
+            background:
+                radial-gradient(
+                    circle at 0% 100%,
+                    rgba(255,220,232,0.58),
+                    transparent 34%
+                ),
+                rgba(255,255,255,0.88);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+
+            margin-bottom: 22px;
+        }
+
+        .panel-title h2 {
+            font-size: 1.45rem;
+            letter-spacing: -0.045em;
+        }
+
+        .panel-title p {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.87rem;
+            line-height: 1.55;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            padding: 8px 12px;
+
+            border-radius: 999px;
+
+            background: var(--mint);
+            color: #39765a;
+
+            font-size: 0.74rem;
+            font-weight: 900;
+
+            white-space: nowrap;
+        }
+
+        .status.busy {
+            background: var(--yellow);
+            color: #85691e;
+        }
+
+        .status.done {
+            background: var(--lavender);
+            color: #6855ad;
+        }
+
+        .model-block {
+            margin-bottom: 18px;
+        }
+
+        .block-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 9px;
+        }
+
+        .block-label strong {
+            font-size: 0.82rem;
+        }
+
+        .block-label span {
+            color: var(--muted);
+            font-size: 0.73rem;
+        }
+
+        .matrix {
+            display: grid;
+            gap: 6px;
+        }
+
+        .matrix.transition {
+            grid-template-columns: 100px repeat(3, 1fr);
+        }
+
+        .matrix.emission {
+            grid-template-columns: 100px repeat(4, 1fr);
+        }
+
+        .matrix-cell {
+            min-height: 48px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background: #fffdf9;
+
+            border: 1px solid var(--border);
+
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .matrix-cell.header {
+            background: var(--lavender);
+            color: #6855ad;
+        }
+
+        .matrix-cell.row-header {
+            background: var(--blue);
+            color: #4779ad;
+        }
+
+        .matrix-cell.probability {
+            color: var(--ink);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .matrix-cell.probability.high {
+            background: var(--mint);
+            color: #39765a;
+        }
+
+        .matrix-cell.probability.medium {
+            background: #f8f2ff;
+            color: #735fba;
+        }
+
+        .matrix-cell.probability.low {
+            background: #fff4f5;
+            color: #a85d76;
+        }
+
+        .initial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .initial-card {
+            padding: 13px;
+            border-radius: 15px;
+
+            background: #faf8ff;
+
+            border: 1px solid var(--border);
+
+            text-align: center;
+        }
+
+        .initial-card strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 3px;
+        }
+
+        .initial-card span {
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .observation-area {
+            margin-top: 23px;
+            padding: 18px;
+
+            border-radius: 22px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,255,255,0.88),
+                    rgba(247,244,255,0.88)
+                );
+
+            border: 1px solid var(--border);
+        }
+
+        .observation-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 13px;
+        }
+
+        .observation-title strong {
+            font-size: 0.85rem;
+        }
+
+        .observation-title span {
+            color: var(--muted);
+            font-size: 0.73rem;
+        }
+
+        .observation-sequence {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .observation-chip {
+            border: 0;
+            padding: 9px 12px;
+
+            border-radius: 12px;
+
+            background: var(--blue);
+            color: #4779ad;
+
+            font-size: 0.76rem;
+            font-weight: 900;
+
+            cursor: pointer;
+
+            transition: 0.18s ease;
+        }
+
+        .observation-chip:hover {
+            transform: translateY(-2px);
+        }
+
+        .observation-chip.active {
+            background: var(--purple);
+            color: white;
+
+            box-shadow:
+                0 7px 17px rgba(128,104,207,0.22);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+
+            margin-top: 17px;
+        }
+
+        .btn {
+            border: 0;
+
+            padding: 12px 17px;
+
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            font-size: 0.82rem;
+            font-weight: 850;
+
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                opacity 0.18s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--purple);
+            color: white;
+
+            box-shadow:
+                0 8px 20px rgba(128,104,207,0.24);
+        }
+
+        .btn-secondary {
+            background: var(--pink);
+            color: #8b4862;
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: #4779ad;
+        }
+
+        .btn-green {
+            background: var(--mint);
+            color: #39765a;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .decoder-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+
+            margin-bottom: 18px;
+        }
+
+        .info-card {
+            padding: 13px;
+
+            border-radius: 16px;
+
+            background: rgba(255,255,255,0.8);
+
+            border: 1px solid var(--border);
+
+            text-align: center;
+        }
+
+        .info-card span {
+            display: block;
+
+            color: var(--muted);
+
+            font-size: 0.69rem;
+            margin-bottom: 5px;
+        }
+
+        .info-card strong {
+            font-size: 1rem;
+        }
+
+        .viterbi-box {
+            min-height: 365px;
+
+            padding: 17px;
+
+            border-radius: 23px;
+
+            background: #fbfaff;
+
+            border: 1px solid var(--border);
+
+            overflow: auto;
+        }
+
+        .empty-state {
+            min-height: 325px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            color: var(--muted);
+
+            padding: 30px;
+        }
+
+        .empty-icon {
+            width: 58px;
+            height: 58px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 12px;
+
+            border-radius: 19px;
+
+            background: var(--lavender);
+
+            color: var(--purple);
+
+            font-size: 1.5rem;
+            font-weight: 950;
+        }
+
+        .empty-state strong {
+            display: block;
+            color: var(--ink);
+            margin-bottom: 5px;
+        }
+
+        .empty-state p {
+            max-width: 350px;
+            line-height: 1.55;
+            font-size: 0.82rem;
+        }
+
+        .decode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .time-column {
+            padding: 12px;
+
+            border-radius: 18px;
+
+            background: white;
+
+            border: 1px solid var(--border);
+        }
+
+        .time-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 9px;
+        }
+
+        .time-title strong {
+            font-size: 0.78rem;
+        }
+
+        .time-title span {
+            color: var(--muted);
+            font-size: 0.67rem;
+        }
+
+        .state-score {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 9px 10px;
+
+            border-radius: 11px;
+
+            margin-top: 6px;
+
+            background: #faf8ff;
+
+            border: 1px solid transparent;
+        }
+
+        .state-score.active {
+            background: var(--yellow);
+            border-color: rgba(200,157,50,0.2);
+        }
+
+        .state-score.best {
+            background: var(--mint);
+            border-color: rgba(85,167,124,0.25);
+        }
+
+        .state-name {
+            font-size: 0.73rem;
+            font-weight: 850;
+        }
+
+        .state-value {
+            font-size: 0.69rem;
+            color: var(--muted);
+
+            font-variant-numeric: tabular-nums;
+        }
+
+        .decode-footer {
+            margin-top: 15px;
+
+            padding: 15px;
+
+            border-radius: 17px;
+
+            background: var(--blue);
+            color: #426e9e;
+
+            font-size: 0.82rem;
+            line-height: 1.6;
+        }
+
+        .decoded-path {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+
+            margin-top: 8px;
+        }
+
+        .path-state {
+            padding: 8px 12px;
+
+            border-radius: 11px;
+
+            background: white;
+            color: var(--purple);
+
+            font-size: 0.75rem;
+            font-weight: 900;
+
+            border: 1px solid rgba(128,104,207,0.14);
+        }
+
+        .arrow {
+            color: #7693b4;
+            font-weight: 900;
+        }
+
+        .section {
+            width: min(1000px, 92%);
+            margin: 0 auto 80px;
+        }
+
+        .section-heading {
+            text-align: center;
+            margin-bottom: 34px;
+        }
+
+        .section-heading .mini {
+            color: var(--purple);
+
+            font-size: 0.74rem;
+            font-weight: 900;
+
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+
+            margin-bottom: 9px;
+        }
+
+        .section-heading h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            letter-spacing: -0.06em;
+        }
+
+        .section-heading p {
+            max-width: 680px;
+            margin: 10px auto 0;
+
+            color: var(--muted);
+
+            line-height: 1.7;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .concept {
+            padding: 25px;
+
+            border-radius: 24px;
+
+            border: 1px solid var(--border);
+
+            background: rgba(255,255,255,0.76);
+        }
+
+        .concept:nth-child(1) {
+            background: #fff1f5;
+        }
+
+        .concept:nth-child(2) {
+            background: #eef7ff;
+        }
+
+        .concept:nth-child(3) {
+            background: #f2efff;
+        }
+
+        .concept:nth-child(4) {
+            background: #effaf4;
+        }
+
+        .concept-icon {
+            width: 44px;
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            background: rgba(255,255,255,0.8);
+
+            margin-bottom: 15px;
+
+            color: var(--purple);
+
+            font-size: 1.05rem;
+            font-weight: 950;
+        }
+
+        .concept h3 {
+            margin-bottom: 8px;
+            letter-spacing: -0.03em;
+        }
+
+        .concept p {
+            color: var(--muted);
+
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+
+        .architecture {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .architecture-card {
+            position: relative;
+
+            padding: 19px 14px;
+
+            border-radius: 20px;
+
+            background: white;
+
+            border: 1px solid var(--border);
+
+            text-align: center;
+
+            box-shadow: var(--shadow-soft);
+        }
+
+        .architecture-card:nth-child(1) {
+            background: #fff1f5;
+        }
+
+        .architecture-card:nth-child(2) {
+            background: #eef7ff;
+        }
+
+        .architecture-card:nth-child(3) {
+            background: #f2efff;
+        }
+
+        .architecture-card:nth-child(4) {
+            background: #effaf4;
+        }
+
+        .architecture-number {
+            width: 28px;
+            height: 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 9px;
+
+            border-radius: 50%;
+
+            background: rgba(255,255,255,0.8);
+
+            color: var(--purple);
+
+            font-size: 0.7rem;
+            font-weight: 950;
+        }
+
+        .architecture-card strong {
+            display: block;
+            font-size: 0.82rem;
+            margin-bottom: 4px;
+        }
+
+        .architecture-card span {
+            color: var(--muted);
+            font-size: 0.7rem;
+            line-height: 1.4;
+        }
+
+        .code-card {
+            overflow: hidden;
+
+            border-radius: 27px;
+
+            background: #29263a;
+
+            box-shadow:
+                0 20px 50px rgba(41,38,58,0.18);
+        }
+
+        .code-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 15px 19px;
+
+            background: #343047;
+
+            color: #d8d4e5;
+        }
+
+        .dots {
+            display: flex;
+            gap: 7px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot.red {
+            background: #ff9db6;
+        }
+
+        .dot.yellow {
+            background: #ffd98a;
+        }
+
+        .dot.green {
+            background: #9ee3bd;
+        }
+
+        .code-title {
+            font-size: 0.78rem;
+            opacity: 0.8;
+        }
+
+        pre {
+            overflow-x: auto;
+
+            padding: 25px;
+
+            color: #f1eef9;
+
+            font-family:
+                "SFMono-Regular",
+                Consolas,
+                "Liberation Mono",
+                monospace;
+
+            font-size: 0.81rem;
+            line-height: 1.75;
+        }
+
+        .kw {
+            color: #d6b9ff;
+        }
+
+        .fn {
+            color: #9fd8ff;
+        }
+
+        .num {
+            color: #ffd899;
+        }
+
+        .str {
+            color: #a9e6c5;
+        }
+
+        .comment {
+            color: #9993ad;
+        }
+
+        .complexity {
+            width: min(1000px, 92%);
+            margin: 0 auto 80px;
+
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .complexity-card {
+            padding: 23px;
+
+            border-radius: 23px;
+
+            background: rgba(255,255,255,0.8);
+
+            border: 1px solid var(--border);
+        }
+
+        .complexity-card span {
+            display: block;
+
+            color: var(--muted);
+
+            font-size: 0.78rem;
+
+            margin-bottom: 7px;
+        }
+
+        .complexity-card strong {
+            font-size: 1.4rem;
+        }
+
+        footer {
+            padding: 35px 6%;
+
+            border-top: 1px solid var(--border);
+
+            text-align: center;
+
+            color: var(--muted);
+
+            background: rgba(255,255,255,0.55);
+        }
+
+        footer strong {
+            color: var(--ink);
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 25px;
+
+            z-index: 200;
+
+            transform: translate(-50%, 120px);
+
+            padding: 13px 19px;
+
+            border-radius: 999px;
+
+            background: var(--ink);
+            color: white;
+
+            font-size: 0.84rem;
+            font-weight: 800;
+
+            box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translate(-50%, 0);
+        }
+
+        .pulse {
+            animation: pulse 0.6s ease;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.98);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .architecture {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .nav {
+                padding: 15px 5%;
+            }
+
+            .hero {
+                padding-top: 48px;
+            }
+
+            .learning-path {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                padding: 20px;
+                border-radius: 24px;
+            }
+
+            .matrix.transition {
+                grid-template-columns: 75px repeat(3, 1fr);
+            }
+
+            .matrix.emission {
+                grid-template-columns: 75px repeat(4, 1fr);
+            }
+
+            .matrix-cell {
+                min-height: 42px;
+                font-size: 0.67rem;
+            }
+
+            .decoder-info {
+                grid-template-columns: 1fr;
+            }
+
+            .decode-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .concept-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .architecture {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .complexity {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-title {
+                flex-direction: column;
+            }
+
+            .controls .btn {
+                flex: 1 1 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav">
+        <a class="brand" href="../index.html">
+            AI <span>–</span> Behind The State
+        </a>
+
+        <a class="back" href="../index.html">
+            ← Back to Explore
+        </a>
+    </nav>
+
+    <header class="hero">
+
+        <div class="eyebrow">
+            <span class="eyebrow-icon">H</span>
+            Probabilistic Models · Sequence Inference
+        </div>
+
+        <h1>
+            What is<br>
+            <span class="gradient">hidden?</span>
+        </h1>
+
+        <p>
+            Explore a real Hidden Markov Model and watch the Viterbi
+            algorithm recover the most likely hidden state sequence
+            from observations you can actually see.
+        </p>
+
+    </header>
+
+    <section class="learning-path" aria-label="Learning path">
+
+        <div class="path-card active">
+            <span class="path-number">01</span>
+            <strong>Observe</strong>
+            <span>Look at what the system produces.</span>
+        </div>
+
+        <div class="path-card">
+            <span class="path-number">02</span>
+            <strong>Decode</strong>
+            <span>Recover the hidden states.</span>
+        </div>
+
+        <div class="path-card">
+            <span class="path-number">03</span>
+            <strong>Understand</strong>
+            <span>See how probability drives inference.</span>
+        </div>
+
+    </section>
+
+    <main>
+
+        <section class="main-section">
+
+            <div class="workspace">
+
+                <!-- MODEL PANEL -->
+
+                <div class="panel model-panel">
+
+                    <div class="panel-title">
+
+                        <div>
+                            <h2>Probability Model</h2>
+
+                            <p>
+                                A small weather model with three hidden
+                                states and four possible observations.
+                            </p>
+                        </div>
+
+                        <div id="statusBadge" class="status">
+                            ● Ready
+                        </div>
+
+                    </div>
+
+                    <div class="model-block">
+
+                        <div class="block-label">
+                            <strong>Transition probabilities</strong>
+                            <span>P(next state | current state)</span>
+                        </div>
+
+                        <div class="matrix transition">
+
+                            <div class="matrix-cell header">
+                                From ↓ / To →
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Sunny
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Cloudy
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Rainy
+                            </div>
+
+                            <div class="matrix-cell row-header">
+                                Sunny
+                            </div>
+
+                            <div class="matrix-cell probability high">
+                                0.70
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.20
+                            </div>
+
+                            <div class="matrix-cell probability low">
+                                0.10
+                            </div>
+
+                            <div class="matrix-cell row-header">
+                                Cloudy
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.30
+                            </div>
+
+                            <div class="matrix-cell probability high">
+                                0.50
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.20
+                            </div>
+
+                            <div class="matrix-cell row-header">
+                                Rainy
+                            </div>
+
+                            <div class="matrix-cell probability low">
+                                0.20
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.30
+                            </div>
+
+                            <div class="matrix-cell probability high">
+                                0.50
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="model-block">
+
+                        <div class="block-label">
+                            <strong>Emission probabilities</strong>
+                            <span>P(observation | hidden state)</span>
+                        </div>
+
+                        <div class="matrix emission">
+
+                            <div class="matrix-cell header">
+                                State ↓
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Umbrella
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Coffee
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Walk
+                            </div>
+
+                            <div class="matrix-cell header">
+                                Library
+                            </div>
+
+                            <div class="matrix-cell row-header">
+                                Sunny
+                            </div>
+
+                            <div class="matrix-cell probability low">
+                                0.05
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.30
+                            </div>
+
+                            <div class="matrix-cell probability high">
+                                0.45
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.20
+                            </div>
+
+                            <div class="matrix-cell row-header">
+                                Cloudy
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.20
+                            </div>
+
+                            <div class="matrix-cell probability high">
+                                0.35
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.25
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.20
+                            </div>
+
+                            <div class="matrix-cell row-header">
+                                Rainy
+                            </div>
+
+                            <div class="matrix-cell probability high">
+                                0.60
+                            </div>
+
+                            <div class="matrix-cell probability low">
+                                0.15
+                            </div>
+
+                            <div class="matrix-cell low">
+                                0.05
+                            </div>
+
+                            <div class="matrix-cell probability medium">
+                                0.20
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="model-block">
+
+                        <div class="block-label">
+                            <strong>Initial state probabilities</strong>
+                            <span>P(state at t = 1)</span>
+                        </div>
+
+                        <div class="initial-grid">
+
+                            <div class="initial-card">
+                                <strong>0.50</strong>
+                                <span>Sunny</span>
+                            </div>
+
+                            <div class="initial-card">
+                                <strong>0.30</strong>
+                                <span>Cloudy</span>
+                            </div>
+
+                            <div class="initial-card">
+                                <strong>0.20</strong>
+                                <span>Rainy</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="observation-area">
+
+                        <div class="observation-title">
+                            <strong>Observation sequence</strong>
+                            <span id="sequenceLength">6 observations</span>
+                        </div>
+
+                        <div
+                            id="observationSequence"
+                            class="observation-sequence"
+                        ></div>
+
+                        <div class="controls">
+
+                            <button
+                                id="decodeBtn"
+                                class="btn btn-primary"
+                            >
+                                Run Viterbi Decode
+                            </button>
+
+                            <button
+                                id="randomBtn"
+                                class="btn btn-blue"
+                            >
+                                Generate Sequence
+                            </button>
+
+                            <button
+                                id="resetBtn"
+                                class="btn btn-secondary"
+                            >
+                                Reset
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- DECODER PANEL -->
+
+                <div class="panel decoder-panel">
+
+                    <div class="panel-title">
+
+                        <div>
+                            <h2>Viterbi Decoder</h2>
+
+                            <p>
+                                Dynamic programming finds the single most
+                                likely hidden-state path.
+                            </p>
+                        </div>
+
+                        <div
+                            id="decoderStatus"
+                            class="status"
+                        >
+                            ● Waiting
+                        </div>
+
+                    </div>
+
+                    <div class="decoder-info">
+
+                        <div class="info-card">
+                            <span>Algorithm</span>
+                            <strong>Viterbi</strong>
+                        </div>
+
+                        <div class="info-card">
+                            <span>States</span>
+                            <strong>3</strong>
+                        </div>
+
+                        <div class="info-card">
+                            <span>Observations</span>
+                            <strong id="observationCount">6</strong>
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="viterbiBox"
+                        class="viterbi-box"
+                    >
+
+                        <div class="empty-state">
+
+                            <div>
+
+                                <div class="empty-icon">
+                                    H
+                                </div>
+
+                                <strong>
+                                    Hidden states are waiting.
+                                </strong>
+
+                                <p>
+                                    Choose an observation sequence and
+                                    run Viterbi to calculate the most
+                                    probable hidden-state path.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- HOW IT WORKS -->
+
+        <section class="section">
+
+            <div class="section-heading">
+
+                <div class="mini">
+                    Behind the state
+                </div>
+
+                <h2>
+                    The hidden world has structure.
+                </h2>
+
+                <p>
+                    A Hidden Markov Model separates what we can observe
+                    from the underlying state that generated those
+                    observations.
+                </p>
+
+            </div>
+
+            <div class="concept-grid">
+
+                <article class="concept">
+
+                    <div class="concept-icon">
+                        H
+                    </div>
+
+                    <h3>
+                        Hidden states
+                    </h3>
+
+                    <p>
+                        The actual condition of the system is not directly
+                        visible. Here the hidden states are Sunny, Cloudy,
+                        and Rainy.
+                    </p>
+
+                </article>
+
+                <article class="concept">
+
+                    <div class="concept-icon">
+                        O
+                    </div>
+
+                    <h3>
+                        Observations
+                    </h3>
+
+                    <p>
+                        We observe signals produced by the hidden state,
+                        such as carrying an umbrella, drinking coffee,
+                        walking, or visiting a library.
+                    </p>
+
+                </article>
+
+                <article class="concept">
+
+                    <div class="concept-icon">
+                        →
+                    </div>
+
+                    <h3>
+                        Transitions
+                    </h3>
+
+                    <p>
+                        The transition matrix describes how likely one
+                        hidden state is to follow another hidden state.
+                    </p>
+
+                </article>
+
+                <article class="concept">
+
+                    <div class="concept-icon">
+                        P
+                    </div>
+
+                    <h3>
+                        Emissions
+                    </h3>
+
+                    <p>
+                        Emission probabilities describe how likely each
+                        observation is when the system is in a particular
+                        hidden state.
+                    </p>
+
+                </article>
+
+            </div>
+
+        </section>
+
+        <!-- PIPELINE -->
+
+        <section class="section">
+
+            <div class="section-heading">
+
+                <div class="mini">
+                    Viterbi pipeline
+                </div>
+
+                <h2>
+                    From observation to explanation.
+                </h2>
+
+                <p>
+                    Viterbi does not simply guess each state independently.
+                    It considers the entire sequence while preserving the
+                    best predecessor for every state.
+                </p>
+
+            </div>
+
+            <div class="architecture">
+
+                <div class="architecture-card">
+
+                    <div class="architecture-number">
+                        01
+                    </div>
+
+                    <strong>
+                        Initialize
+                    </strong>
+
+                    <span>
+                        Combine initial-state and emission probabilities.
+                    </span>
+
+                </div>
+
+                <div class="architecture-card">
+
+                    <div class="architecture-number">
+                        02
+                    </div>
+
+                    <strong>
+                        Recurrence
+                    </strong>
+
+                    <span>
+                        Select the strongest predecessor for each state.
+                    </span>
+
+                </div>
+
+                <div class="architecture-card">
+
+                    <div class="architecture-number">
+                        03
+                    </div>
+
+                    <strong>
+                        Backtrack
+                    </strong>
+
+                    <span>
+                        Follow stored predecessor pointers backwards.
+                    </span>
+
+                </div>
+
+                <div class="architecture-card">
+
+                    <div class="architecture-number">
+                        04
+                    </div>
+
+                    <strong>
+                        Decode
+                    </strong>
+
+                    <span>
+                        Reverse the path to reveal the hidden sequence.
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- CODE -->
+
+        <section class="section">
+
+            <div class="section-heading">
+
+                <div class="mini">
+                    Implementation
+                </div>
+
+                <h2>
+                    The algorithm behind the screen.
+                </h2>
+
+                <p>
+                    This is the core dynamic-programming recurrence used
+                    by the interactive decoder above.
+                </p>
+
+            </div>
+
+            <div class="code-card">
+
+                <div class="code-top">
+
+                    <div class="dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+
+                    <span class="code-title">
+                        viterbi.js
+                    </span>
+
+                    <span></span>
+
+                </div>
+
+                <pre><code><span class="kw">function</span> <span class="fn">viterbi</span>(observations) {
+
+    <span class="kw">const</span> dp = [];
+    <span class="kw">const</span> backpointer = [];
+
+    <span class="comment">// Initialization</span>
+
+    dp[<span class="num">0</span>] = {};
+
+    <span class="kw">for</span> (<span class="kw">const</span> state <span class="kw">of</span> states) {
+
+        dp[<span class="num">0</span>][state] =
+            initial[state] *
+            emission[state][observations[<span class="num">0</span>]];
+
+        backpointer[<span class="num">0</span>] = {};
+    }
+
+    <span class="comment">// Recurrence</span>
+
+    <span class="kw">for</span> (<span class="kw">let</span> t = <span class="num">1</span>;
+         t &lt; observations.length;
+         t++) {
+
+        dp[t] = {};
+        backpointer[t] = {};
+
+        <span class="kw">for</span> (<span class="kw">const</span> current <span class="kw">of</span> states) {
+
+            <span class="kw">let</span> bestProbability = -<span class="fn">Infinity</span>;
+            <span class="kw">let</span> bestPrevious = <span class="kw">null</span>;
+
+            <span class="kw">for</span> (<span class="kw">const</span> previous <span class="kw">of</span> states) {
+
+                <span class="kw">const</span> probability =
+                    dp[t - <span class="num">1</span>][previous] *
+                    transition[previous][current] *
+                    emission[current][observations[t]];
+
+                <span class="kw">if</span> (probability &gt; bestProbability) {
+
+                    bestProbability = probability;
+                    bestPrevious = previous;
+                }
+            }
+
+            dp[t][current] = bestProbability;
+            backpointer[t][current] = bestPrevious;
+        }
+    }
+
+    <span class="comment">// Backtracking</span>
+
+    <span class="kw">let</span> current = <span class="fn">argMax</span>(dp[observations.length - <span class="num">1</span>]);
+
+    <span class="kw">const</span> path = [current];
+
+    <span class="kw">for</span> (<span class="kw">let</span> t = observations.length - <span class="num">1</span>;
+         t &gt; <span class="num">0</span>;
+         t--) {
+
+        current = backpointer[t][current];
+        path.push(current);
+    }
+
+    <span class="kw">return</span> path.reverse();
+}</code></pre>
+
+            </div>
+
+        </section>
+
+        <!-- COMPLEXITY -->
+
+        <section class="complexity">
+
+            <div class="complexity-card">
+
+                <span>
+                    Time Complexity
+                </span>
+
+                <strong>
+                    O(T × N²)
+                </strong>
+
+            </div>
+
+            <div class="complexity-card">
+
+                <span>
+                    Space Complexity
+                </span>
+
+                <strong>
+                    O(T × N)
+                </strong>
+
+            </div>
+
+            <div class="complexity-card">
+
+                <span>
+                    Core Technique
+                </span>
+
+                <strong>
+                    Dynamic Programming
+                </strong>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+
+        <strong>
+            AI – Behind The State
+        </strong>
+
+        <br>
+
+        <span>
+            Where Algorithms Become Learning Experiences.
+        </span>
+
+    </footer>
+
+    <div
+        id="toast"
+        class="toast"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+    <script>
+        "use strict";
+
+        /*
+         * ============================================================
+         * HIDDEN MARKOV MODEL + VITERBI DECODER
+         * ============================================================
+         *
+         * This page uses a genuine Hidden Markov Model.
+         *
+         * Hidden states:
+         *     Sunny
+         *     Cloudy
+         *     Rainy
+         *
+         * Observations:
+         *     Umbrella
+         *     Coffee
+         *     Walk
+         *     Library
+         *
+         * The Viterbi algorithm finds:
+         *
+         *     argmax P(hidden states | observations)
+         *
+         * using dynamic programming and backpointers.
+         * ============================================================
+         */
+
+        const STATES = [
+            "Sunny",
+            "Cloudy",
+            "Rainy"
+        ];
+
+        const OBSERVATIONS = [
+            "Umbrella",
+            "Coffee",
+            "Walk",
+            "Library"
+        ];
+
+        const INITIAL = {
+            Sunny: 0.50,
+            Cloudy: 0.30,
+            Rainy: 0.20
+        };
+
+        const TRANSITION = {
+            Sunny: {
+                Sunny: 0.70,
+                Cloudy: 0.20,
+                Rainy: 0.10
+            },
+
+            Cloudy: {
+                Sunny: 0.30,
+                Cloudy: 0.50,
+                Rainy: 0.20
+            },
+
+            Rainy: {
+                Sunny: 0.20,
+                Cloudy: 0.30,
+                Rainy: 0.50
+            }
+        };
+
+        const EMISSION = {
+            Sunny: {
+                Umbrella: 0.05,
+                Coffee: 0.30,
+                Walk: 0.45,
+                Library: 0.20
+            },
+
+            Cloudy: {
+                Umbrella: 0.20,
+                Coffee: 0.35,
+                Walk: 0.25,
+                Library: 0.20
+            },
+
+            Rainy: {
+                Umbrella: 0.60,
+                Coffee: 0.15,
+                Walk: 0.05,
+                Library: 0.20
+            }
+        };
+
+        const DEFAULT_SEQUENCE = [
+            "Walk",
+            "Coffee",
+            "Umbrella",
+            "Umbrella",
+            "Library",
+            "Coffee"
+        ];
+
+        let observationSequence = [...DEFAULT_SEQUENCE];
+
+        let isDecoding = false;
+
+        const statusBadge =
+            document.getElementById("statusBadge");
+
+        const decoderStatus =
+            document.getElementById("decoderStatus");
+
+        const observationSequenceElement =
+            document.getElementById("observationSequence");
+
+        const sequenceLengthElement =
+            document.getElementById("sequenceLength");
+
+        const observationCountElement =
+            document.getElementById("observationCount");
+
+        const viterbiBox =
+            document.getElementById("viterbiBox");
+
+        const decodeBtn =
+            document.getElementById("decodeBtn");
+
+        const randomBtn =
+            document.getElementById("randomBtn");
+
+        const resetBtn =
+            document.getElementById("resetBtn");
+
+        const toast =
+            document.getElementById("toast");
+
+
+        /*
+         * ------------------------------------------------------------
+         * Utility functions
+         * ------------------------------------------------------------
+         */
+
+        function formatProbability(value) {
+
+            if (!Number.isFinite(value)) {
+                return "0.0000";
+            }
+
+            return value.toFixed(4);
+        }
+
+
+        function formatPercent(value) {
+
+            if (!Number.isFinite(value)) {
+                return "0.00%";
+            }
+
+            return (value * 100).toFixed(2) + "%";
+        }
+
+
+        function showToast(message) {
+
+            toast.textContent = message;
+            toast.classList.add("show");
+
+            window.clearTimeout(showToast.timer);
+
+            showToast.timer = window.setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2300);
+        }
+
+
+        function setStatus(message, type = "") {
+
+            statusBadge.textContent = "● " + message;
+
+            statusBadge.className = "status";
+
+            if (type) {
+                statusBadge.classList.add(type);
+            }
+        }
+
+
+        function setDecoderStatus(message, type = "") {
+
+            decoderStatus.textContent = "● " + message;
+
+            decoderStatus.className = "status";
+
+            if (type) {
+                decoderStatus.classList.add(type);
+            }
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Observation rendering
+         * ------------------------------------------------------------
+         */
+
+        function renderObservationSequence() {
+
+            observationSequenceElement.innerHTML = "";
+
+            observationSequence.forEach((observation, index) => {
+
+                const button =
+                    document.createElement("button");
+
+                button.type = "button";
+
+                button.className = "observation-chip";
+
+                button.textContent =
+                    (index + 1) + ". " + observation;
+
+                button.title =
+                    "Click to change observation " +
+                    (index + 1);
+
+                button.addEventListener("click", () => {
+
+                    if (isDecoding) {
+                        return;
+                    }
+
+                    cycleObservation(index);
+                });
+
+                observationSequenceElement.appendChild(button);
+            });
+
+            sequenceLengthElement.textContent =
+                observationSequence.length +
+                " observations";
+
+            observationCountElement.textContent =
+                observationSequence.length;
+        }
+
+
+        function cycleObservation(index) {
+
+            const current =
+                observationSequence[index];
+
+            const currentIndex =
+                OBSERVATIONS.indexOf(current);
+
+            const nextIndex =
+                (currentIndex + 1) % OBSERVATIONS.length;
+
+            observationSequence[index] =
+                OBSERVATIONS[nextIndex];
+
+            renderObservationSequence();
+
+            clearDecoder();
+
+            showToast(
+                "Observation " +
+                (index + 1) +
+                " changed."
+            );
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Genuine Viterbi implementation
+         * ------------------------------------------------------------
+         *
+         * delta[t][state]
+         *     = highest probability of any state path ending in
+         *       "state" at time t.
+         *
+         * psi[t][state]
+         *     = previous state that produced that maximum.
+         *
+         * Then we backtrack through psi to recover the path.
+         */
+
+        function viterbi(observations) {
+
+            if (
+                !Array.isArray(observations) ||
+                observations.length === 0
+            ) {
+                return {
+                    path: [],
+                    delta: [],
+                    psi: [],
+                    finalProbability: 0
+                };
+            }
+
+            const delta = [];
+            const psi = [];
+
+            /*
+             * Initialization.
+             */
+
+            delta[0] = {};
+            psi[0] = {};
+
+            for (const state of STATES) {
+
+                delta[0][state] =
+                    INITIAL[state] *
+                    EMISSION[state][observations[0]];
+
+                psi[0][state] = null;
+            }
+
+
+            /*
+             * Recurrence.
+             */
+
+            for (
+                let t = 1;
+                t < observations.length;
+                t++
+            ) {
+
+                delta[t] = {};
+                psi[t] = {};
+
+                for (const currentState of STATES) {
+
+                    let bestProbability = -1;
+                    let bestPreviousState = null;
+
+                    for (
+                        const previousState of STATES
+                    ) {
+
+                        const candidate =
+                            delta[t - 1][previousState] *
+                            TRANSITION[previousState][currentState] *
+                            EMISSION[currentState][observations[t]];
+
+                        if (
+                            candidate >
+                            bestProbability
+                        ) {
+                            bestProbability = candidate;
+                            bestPreviousState =
+                                previousState;
+                        }
+                    }
+
+                    delta[t][currentState] =
+                        bestProbability;
+
+                    psi[t][currentState] =
+                        bestPreviousState;
+                }
+            }
+
+
+            /*
+             * Termination.
+             */
+
+            const finalTime =
+                observations.length - 1;
+
+            let finalState = STATES[0];
+            let finalProbability =
+                delta[finalTime][finalState];
+
+            for (const state of STATES) {
+
+                if (
+                    delta[finalTime][state] >
+                    finalProbability
+                ) {
+                    finalProbability =
+                        delta[finalTime][state];
+
+                    finalState = state;
+                }
+            }
+
+
+            /*
+             * Backtracking.
+             */
+
+            const path = new Array(
+                observations.length
+            );
+
+            path[finalTime] = finalState;
+
+            for (
+                let t = finalTime;
+                t > 0;
+                t--
+            ) {
+
+                path[t - 1] =
+                    psi[t][path[t]];
+            }
+
+            return {
+                path,
+                delta,
+                psi,
+                finalProbability
+            };
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Find best state at a particular time.
+         * ------------------------------------------------------------
+         */
+
+        function bestStateAtTime(
+            deltaRow
+        ) {
+
+            let bestState = STATES[0];
+            let bestValue = deltaRow[bestState];
+
+            for (const state of STATES) {
+
+                if (
+                    deltaRow[state] >
+                    bestValue
+                ) {
+                    bestValue =
+                        deltaRow[state];
+
+                    bestState = state;
+                }
+            }
+
+            return bestState;
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Render Viterbi matrix
+         * ------------------------------------------------------------
+         */
+
+        function renderViterbiResult(result) {
+
+            const {
+                path,
+                delta,
+                psi,
+                finalProbability
+            } = result;
+
+            viterbiBox.innerHTML = "";
+
+            const grid =
+                document.createElement("div");
+
+            grid.className = "decode-grid";
+
+            for (
+                let t = 0;
+                t < observationSequence.length;
+                t++
+            ) {
+
+                const column =
+                    document.createElement("div");
+
+                column.className =
+                    "time-column pulse";
+
+                const title =
+                    document.createElement("div");
+
+                title.className =
+                    "time-title";
+
+                const timeStrong =
+                    document.createElement("strong");
+
+                timeStrong.textContent =
+                    "t = " + (t + 1);
+
+                const observationLabel =
+                    document.createElement("span");
+
+                observationLabel.textContent =
+                    observationSequence[t];
+
+                title.appendChild(timeStrong);
+                title.appendChild(observationLabel);
+
+                column.appendChild(title);
+
+
+                for (const state of STATES) {
+
+                    const stateRow =
+                        document.createElement("div");
+
+                    stateRow.className =
+                        "state-score";
+
+                    if (path[t] === state) {
+                        stateRow.classList.add("best");
+                    }
+
+                    const stateName =
+                        document.createElement("span");
+
+                    stateName.className =
+                        "state-name";
+
+                    stateName.textContent =
+                        state;
+
+                    const stateValue =
+                        document.createElement("span");
+
+                    stateValue.className =
+                        "state-value";
+
+                    stateValue.textContent =
+                        formatProbability(
+                            delta[t][state]
+                        );
+
+                    stateRow.appendChild(stateName);
+                    stateRow.appendChild(stateValue);
+
+                    column.appendChild(stateRow);
+                }
+
+                grid.appendChild(column);
+            }
+
+            viterbiBox.appendChild(grid);
+
+
+            /*
+             * Result summary.
+             */
+
+            const footer =
+                document.createElement("div");
+
+            footer.className =
+                "decode-footer";
+
+            const summaryTitle =
+                document.createElement("strong");
+
+            summaryTitle.textContent =
+                "Decoded hidden-state path";
+
+            footer.appendChild(summaryTitle);
+
+
+            const pathContainer =
+                document.createElement("div");
+
+            pathContainer.className =
+                "decoded-path";
+
+            path.forEach((state, index) => {
+
+                const stateElement =
+                    document.createElement("span");
+
+                stateElement.className =
+                    "path-state";
+
+                stateElement.textContent =
+                    state;
+
+                pathContainer.appendChild(
+                    stateElement
+                );
+
+                if (index < path.length - 1) {
+
+                    const arrow =
+                        document.createElement("span");
+
+                    arrow.className = "arrow";
+
+                    arrow.textContent = "→";
+
+                    pathContainer.appendChild(
+                        arrow
+                    );
+                }
+            });
+
+            footer.appendChild(pathContainer);
+
+
+            const probabilityText =
+                document.createElement("div");
+
+            probabilityText.style.marginTop =
+                "11px";
+
+            probabilityText.innerHTML =
+                "Final path probability: <strong>" +
+                formatProbability(finalProbability) +
+                "</strong> (" +
+                formatPercent(finalProbability) +
+                "). " +
+                "Each green state is the state selected by " +
+                "the optimal Viterbi path at that time.";
+
+            footer.appendChild(probabilityText);
+
+            viterbiBox.appendChild(footer);
+
+
+            /*
+             * Add predecessor information as a subtle
+             * explanatory detail.
+             */
+
+            const predecessorText =
+                document.createElement("div");
+
+            predecessorText.style.marginTop =
+                "8px";
+
+            predecessorText.style.opacity =
+                "0.8";
+
+            predecessorText.textContent =
+                "Backpointers stored: " +
+                Math.max(0, observationSequence.length - 1) +
+                " transition layers.";
+
+            footer.appendChild(
+                predecessorText
+            );
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Clear decoder
+         * ------------------------------------------------------------
+         */
+
+        function clearDecoder() {
+
+            setDecoderStatus("Waiting");
+
+            viterbiBox.innerHTML = `
+                <div class="empty-state">
+                    <div>
+                        <div class="empty-icon">H</div>
+                        <strong>
+                            Hidden states are waiting.
+                        </strong>
+                        <p>
+                            Choose an observation sequence and
+                            run Viterbi to calculate the most
+                            probable hidden-state path.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Run decoder
+         * ------------------------------------------------------------
+         *
+         * IMPORTANT:
+         * The algorithm itself runs synchronously and finishes
+         * immediately. A very short visual delay is added only
+         * for presentation.
+         *
+         * This avoids the previous "stuck on Decoding" problem.
+         */
+
+        function runDecoder() {
+
+            if (isDecoding) {
+                return;
+            }
+
+            isDecoding = true;
+
+            decodeBtn.disabled = true;
+            randomBtn.disabled = true;
+            resetBtn.disabled = true;
+
+            setStatus("Decoding...", "busy");
+            setDecoderStatus("Computing...", "busy");
+
+            viterbiBox.innerHTML = `
+                <div class="empty-state">
+                    <div>
+                        <div class="empty-icon">...</div>
+                        <strong>
+                            Running Viterbi...
+                        </strong>
+                        <p>
+                            Calculating the best predecessor
+                            for every hidden state.
+                        </p>
+                    </div>
+                </div>
+            `;
+
+
+            /*
+             * Calculate BEFORE the timeout.
+             *
+             * Therefore the algorithm can never remain
+             * unfinished because of an animation callback.
+             */
+
+            let result;
+
+            try {
+
+                result =
+                    viterbi(observationSequence);
+
+            } catch (error) {
+
+                console.error(
+                    "Viterbi error:",
+                    error
+                );
+
+                isDecoding = false;
+
+                decodeBtn.disabled = false;
+                randomBtn.disabled = false;
+                resetBtn.disabled = false;
+
+                setStatus("Error", "done");
+                setDecoderStatus("Error", "done");
+
+                viterbiBox.innerHTML = `
+                    <div class="empty-state">
+                        <div>
+                            <div class="empty-icon">!</div>
+                            <strong>
+                                Decoding failed.
+                            </strong>
+                            <p>
+                                Please reset the model and try again.
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            /*
+             * Small visual pause.
+             */
+
+            window.setTimeout(() => {
+
+                renderViterbiResult(result);
+
+                isDecoding = false;
+
+                decodeBtn.disabled = false;
+                randomBtn.disabled = false;
+                resetBtn.disabled = false;
+
+                setStatus(
+                    "Decoded",
+                    "done"
+                );
+
+                setDecoderStatus(
+                    "Path found",
+                    "done"
+                );
+
+                showToast(
+                    "Viterbi found the most likely hidden path."
+                );
+
+            }, 280);
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Generate a random observation sequence
+         * ------------------------------------------------------------
+         */
+
+        function weightedRandomObservation() {
+
+            /*
+             * Slightly realistic observation distribution.
+             */
+
+            const weights = [
+                0.25,
+                0.28,
+                0.27,
+                0.20
+            ];
+
+            const random =
+                Math.random();
+
+            let cumulative = 0;
+
+            for (
+                let i = 0;
+                i < weights.length;
+                i++
+            ) {
+
+                cumulative += weights[i];
+
+                if (random <= cumulative) {
+                    return OBSERVATIONS[i];
+                }
+            }
+
+            return OBSERVATIONS[
+                OBSERVATIONS.length - 1
+            ];
+        }
+
+
+        function generateSequence() {
+
+            if (isDecoding) {
+                return;
+            }
+
+            const length =
+                5 + Math.floor(Math.random() * 3);
+
+            observationSequence = [];
+
+            for (
+                let i = 0;
+                i < length;
+                i++
+            ) {
+
+                observationSequence.push(
+                    weightedRandomObservation()
+                );
+            }
+
+            renderObservationSequence();
+            clearDecoder();
+
+            setStatus("Ready");
+            showToast(
+                "A new observation sequence is ready."
+            );
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Reset
+         * ------------------------------------------------------------
+         */
+
+        function resetPage() {
+
+            if (isDecoding) {
+                return;
+            }
+
+            observationSequence =
+                [...DEFAULT_SEQUENCE];
+
+            renderObservationSequence();
+            clearDecoder();
+
+            setStatus("Ready");
+
+            showToast(
+                "HMM reset to the default sequence."
+            );
+        }
+
+
+        /*
+         * ------------------------------------------------------------
+         * Event listeners
+         * ------------------------------------------------------------
+         */
+
+        decodeBtn.addEventListener(
+            "click",
+            runDecoder
+        );
+
+        randomBtn.addEventListener(
+            "click",
+            generateSequence
+        );
+
+        resetBtn.addEventListener(
+            "click",
+            resetPage
+        );
+
+
+        /*
+         * ------------------------------------------------------------
+         * Initial page render
+         * ------------------------------------------------------------
+         */
+
+        renderObservationSequence();
+        clearDecoder();
+
+    </script>
+
+</body>
+</html>

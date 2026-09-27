@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive A* Pathfinding">
+    <title>A* Pathfinding — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255, 220, 232, 0.65), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220, 238, 255, 0.70), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223, 247, 235, 0.65), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 700px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139, 114, 216, 0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .visualizer-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .visualizer-layout {
+        display: grid;
+        grid-template-columns: 0.82fr 1.18fr;
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255, 220, 232, 0.60), transparent 35%),
+            rgba(255, 255, 255, 0.88);
+    }
+
+    .grid-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220, 238, 255, 0.65), transparent 32%),
+            rgba(255, 255, 255, 0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.55;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.thinking {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .instructions {
+        padding: 17px;
+        border-radius: 19px;
+        background: #fff6fa;
+        border: 1px solid rgba(216, 111, 150, 0.12);
+        margin-bottom: 20px;
+    }
+
+    .instructions strong {
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .instructions p {
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.6;
+    }
+
+    .mode-box {
+        padding: 17px;
+        border-radius: 19px;
+        background: #f5f1ff;
+        margin-bottom: 20px;
+    }
+
+    .mode-box strong {
+        display: block;
+        margin-bottom: 9px;
+    }
+
+    .mode-buttons {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 7px;
+    }
+
+    .mode-btn {
+        border: 0;
+        border-radius: 11px;
+        padding: 9px 5px;
+        cursor: pointer;
+        background: white;
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .mode-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .mode-btn.active {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 6px 15px rgba(139, 114, 216, 0.22);
+    }
+
+    .legend {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 9px;
+        margin-bottom: 20px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.75);
+        font-size: 0.76rem;
+        color: var(--muted);
+    }
+
+    .legend-dot {
+        width: 15px;
+        height: 15px;
+        border-radius: 5px;
+        flex-shrink: 0;
+    }
+
+    .legend-start {
+        background: #a8dff0;
+    }
+
+    .legend-end {
+        background: #ffb7ce;
+    }
+
+    .legend-wall {
+        background: #575269;
+    }
+
+    .legend-open {
+        background: #fff0bf;
+    }
+
+    .legend-path {
+        background: #a9e6c5;
+    }
+
+    .legend-visited {
+        background: #e9e1ff;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 17px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139, 114, 216, 0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .grid-wrapper {
+        display: flex;
+        justify-content: center;
+        margin: 5px auto 20px;
+    }
+
+    .grid {
+        width: min(600px, 100%);
+        display: grid;
+        grid-template-columns: repeat(15, 1fr);
+        gap: 3px;
+        padding: 7px;
+        border-radius: 20px;
+        background: #eeeaf8;
+        box-shadow: inset 0 0 0 1px rgba(55,48,80,0.06);
+    }
+
+    .node {
+        aspect-ratio: 1;
+        border: 0;
+        border-radius: 5px;
+        background: #fffdf9;
+        cursor: pointer;
+        transition:
+            background 0.16s ease,
+            transform 0.16s ease,
+            box-shadow 0.16s ease;
+        position: relative;
+    }
+
+    .node:hover:not(.wall):not(.start):not(.end):not(.path) {
+        transform: scale(1.12);
+        background: #fff1f6;
+        z-index: 2;
+    }
+
+    .node.start {
+        background: #a8dff0;
+        box-shadow: inset 0 0 0 2px rgba(72, 139, 163, 0.25);
+    }
+
+    .node.start::after {
+        content: "🚀";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: clamp(0.55rem, 2vw, 1rem);
+    }
+
+    .node.end {
+        background: #ffb7ce;
+        box-shadow: inset 0 0 0 2px rgba(201, 83, 124, 0.20);
+    }
+
+    .node.end::after {
+        content: "🎯";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: clamp(0.55rem, 2vw, 1rem);
+    }
+
+    .node.wall {
+        background: #575269;
+        cursor: pointer;
+        transform: none;
+    }
+
+    .node.visited {
+        background: #e9e1ff;
+        animation: visit 0.28s ease;
+    }
+
+    .node.open {
+        background: #fff0bf;
+    }
+
+    .node.path {
+        background: #a9e6c5;
+        box-shadow: 0 0 8px rgba(88,166,124,0.28);
+        animation: pathPop 0.25s ease;
+    }
+
+    @keyframes visit {
+        0% {
+            transform: scale(0.55);
+            opacity: 0.3;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes pathPop {
+        0% {
+            transform: scale(0.7);
+        }
+        70% {
+            transform: scale(1.12);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .grid-help {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 17px;
+    }
+
+    .stat {
+        padding: 12px;
+        border-radius: 15px;
+        background: #faf8ff;
+        text-align: center;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-size: 0.72rem;
+    }
+
+    .stat strong {
+        font-size: 1.1rem;
+    }
+
+    .behind-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .behind-card {
+        border-radius: 32px;
+        padding: 38px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.8), transparent 28%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.8), transparent 28%),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .behind-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        align-items: flex-end;
+        margin-bottom: 28px;
+    }
+
+    .behind-top h2 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        letter-spacing: -0.06em;
+    }
+
+    .behind-top p {
+        color: var(--muted);
+        max-width: 600px;
+        line-height: 1.7;
+        margin-top: 8px;
+    }
+
+    .state-display {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .state-card {
+        padding: 22px;
+        border-radius: 23px;
+        border: 1px solid var(--border);
+        background: #fbfaff;
+    }
+
+    .state-card:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .state-card:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .state-card:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .state-card:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .state-symbol {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .state-card h3 {
+        margin-bottom: 7px;
+        letter-spacing: -0.03em;
+    }
+
+    .state-card p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+    }
+
+    .formula {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 20px;
+        background: var(--ink);
+        color: #f5f1ff;
+        text-align: center;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(0.85rem, 2vw, 1.05rem);
+        line-height: 1.7;
+    }
+
+    .formula span {
+        color: #a9e6c5;
+    }
+
+    .algorithm-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 650px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card:nth-child(1) {
+        background: #eef7ff;
+    }
+
+    .complexity-card:nth-child(2) {
+        background: #f2efff;
+    }
+
+    .complexity-card:nth-child(3) {
+        background: #effaf4;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.35rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+        max-width: 90%;
+        text-align: center;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .visualizer-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .behind-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .behind-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .concept-grid,
+        .state-display {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .grid {
+            gap: 2px;
+            padding: 5px;
+        }
+
+        .node {
+            border-radius: 3px;
+        }
+
+        .behind-card {
+            padding: 24px 18px;
+        }
+
+        .legend {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Search · Pathfinding · A*</div>
+
+
+<h1>
+    Find the<br>
+    <span class="gradient">smartest path.</span>
+</h1>
+
+<p>
+    Build your own maze, choose a starting point and destination,
+    then watch A* search through the grid while balancing the
+    distance already travelled with an estimate of what remains.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Build</strong>
+    <span>Create walls and obstacles.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Search</strong>
+    <span>Watch A* explore the grid.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>See why each node matters.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="visualizer-section">
+
+    <div class="visualizer-layout">
+
+        <div class="panel control-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🧩 Build a Maze</h2>
+                    <p>Paint obstacles and send A* on a journey.</p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="instructions">
+                <strong>🎨 How to play</strong>
+                <p>
+                    Click empty cells to create walls.
+                    Click a wall again to remove it.
+                    Then press <strong>Find Path</strong>
+                </p>
+            </div>
+
+            <div class="mode-box">
+                <strong>🖱️ Editing mode</strong>
+
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="wall">
+                        🧱 Walls
+                    </button>
+
+                    <button class="mode-btn" data-mode="start">
+                        🚀 Start
+                    </button>
+
+                    <button class="mode-btn" data-mode="end">
+                        🎯 Goal
+                    </button>
+                </div>
+            </div>
+
+            <div class="legend">
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-start"></span>
+                    Start
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-end"></span>
+                    Goal
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-wall"></span>
+                    Wall
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-open"></span>
+                    Frontier
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-visited"></span>
+                    Explored
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot legend-path"></span>
+                    Final path
+                </div>
+
+            </div>
+
+            <div class="controls">
+
+                <button id="findBtn" class="btn btn-primary">
+                    ✦ Find Path
+                </button>
+
+                <button id="clearBtn" class="btn btn-secondary">
+                    ↻ Clear
+                </button>
+
+                <button id="mazeBtn" class="btn btn-blue">
+                    ✨ Random Maze
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="panel grid-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🗺️ Search Grid</h2>
+                    <p>
+                        A* uses <strong>f(n) = g(n) + h(n)</strong>
+                        to decide where to explore next.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid-wrapper">
+                <div id="grid" class="grid" aria-label="A star pathfinding grid"></div>
+            </div>
+
+            <div class="grid-help">
+                💡 Tip: Add walls to make the AI search around obstacles.
+            </div>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <small>Explored</small>
+                    <strong id="exploredCount">0</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Path Length</small>
+                    <strong id="pathLength">—</strong>
+                </div>
+
+                <div class="stat">
+                    <small>Score f(n)</small>
+                    <strong id="bestScore">—</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="behind-section">
+
+    <div class="behind-card">
+
+        <div class="behind-top">
+
+            <div>
+                <div class="eyebrow">Behind The State</div>
+
+                <h2>
+                    Why did A* choose
+                    <span style="color:#8b72d8;">that</span> node?
+                </h2>
+
+                <p>
+                    A* does not blindly explore every possible location.
+                    It combines the cost already travelled with a
+                    heuristic estimate of the remaining distance.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="state-display">
+
+            <article class="state-card">
+                <div class="state-symbol">👣</div>
+                <h3>g(n) — Cost so far</h3>
+                <p>
+                    How far the algorithm has already travelled
+                    from the starting point to the current node.
+                </p>
+            </article>
+
+            <article class="state-card">
+                <div class="state-symbol">🔮</div>
+                <h3>h(n) — Heuristic</h3>
+                <p>
+                    An estimate of how far the current node is
+                    from the goal. Here we use Manhattan distance.
+                </p>
+            </article>
+
+            <article class="state-card">
+                <div class="state-symbol">⭐</div>
+                <h3>f(n) — Total priority</h3>
+                <p>
+                    The two values are combined to decide which
+                    node should be explored next.
+                </p>
+            </article>
+
+            <article class="state-card">
+                <div class="state-symbol">🎯</div>
+                <h3>Goal reached</h3>
+                <p>
+                    Once the destination is reached, the algorithm
+                    follows the stored parent relationships backwards
+                    to reconstruct the final route.
+                </p>
+            </article>
+
+        </div>
+
+        <div class="formula">
+            <span>f(n)</span> = <span>g(n)</span> + <span>h(n)</span>
+            &nbsp;&nbsp;→&nbsp;&nbsp;
+            actual cost + estimated remaining cost
+        </div>
+
+    </div>
+
+</section>
+
+<section class="algorithm-section">
+
+    <div class="section-heading">
+
+        <div class="mini">Understand the algorithm</div>
+
+        <h2>How does A* think?</h2>
+
+        <p>
+            A* repeatedly chooses the most promising node from its
+            frontier, explores its neighbours, and updates their
+            estimated costs until it reaches the destination.
+        </p>
+
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+
+            <div class="concept-icon">🧭</div>
+
+            <h3>1. Start somewhere</h3>
+
+            <p>
+                A* begins at the selected start node and gives it
+                an initial cost of zero.
+            </p>
+
+        </article>
+
+        <article class="concept">
+
+            <div class="concept-icon">🔍</div>
+
+            <h3>2. Explore neighbours</h3>
+
+            <p>
+                The algorithm checks nearby walkable nodes and
+                calculates the cost of reaching each one.
+            </p>
+
+        </article>
+
+        <article class="concept">
+
+            <div class="concept-icon">⚖️</div>
+
+            <h3>3. Balance two costs</h3>
+
+            <p>
+                A* combines the travelled distance and heuristic
+                estimate using f(n) = g(n) + h(n).
+            </p>
+
+        </article>
+
+        <article class="concept">
+
+            <div class="concept-icon">🏁</div>
+
+            <h3>4. Reconstruct the path</h3>
+
+            <p>
+                After reaching the goal, A* follows parent links
+                backwards to reveal the route from start to finish.
+            </p>
+
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+
+        <div class="mini">Implementation</div>
+
+        <h2>See the idea behind A*.</h2>
+
+        <p>
+            This simplified implementation captures the central
+            decision made by A*: choose the node with the lowest
+            estimated total cost.
+        </p>
+
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">astar.js</span>
+
+            <span></span>
+
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">aStar</span>(start, goal) {
+
+<span class="kw">const</span> openSet = [start];
+
+start.g = <span class="num">0</span>;
+start.h = <span class="fn">heuristic</span>(start, goal);
+start.f = start.g + start.h;
+
+<span class="kw">while</span> (openSet.length &gt; <span class="num">0</span>) {
+
+    <span class="kw">const</span> current =
+        <span class="fn">lowestFScore</span>(openSet);
+
+    <span class="kw">if</span> (current === goal) {
+        <span class="kw">return</span> <span class="fn">reconstructPath</span>(current);
+    }
+
+    <span class="fn">remove</span>(openSet, current);
+
+    <span class="kw">for</span> (<span class="kw">const</span> neighbour
+        <span class="kw">of</span> <span class="fn">getNeighbours</span>(current)) {
+
+        <span class="kw">const</span> tentativeG =
+            current.g + <span class="num">1</span>;
+
+        <span class="kw">if</span> (tentativeG &lt; neighbour.g) {
+
+            neighbour.parent = current;
+            neighbour.g = tentativeG;
+            neighbour.h =
+                <span class="fn">heuristic</span>(neighbour, goal);
+
+            neighbour.f =
+                neighbour.g + neighbour.h;
+
+            <span class="kw">if</span> (!openSet.includes(neighbour)) {
+                openSet.push(neighbour);
+            }
+        }
+    }
+}
+
+<span class="kw">return</span> <span class="kw">null</span>;
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+<section class="complexity">
+
+    <div class="complexity-card">
+        <span>Pathfinding strategy</span>
+        <strong>Best-first + cost</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Heuristic used</span>
+        <strong>Manhattan</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Data required</span>
+        <strong>No training data</strong>
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    /*
+     * AI – Behind The State
+     * Interactive A* Pathfinding Visualizer
+     *
+     * No datasets.
+     * No neural network.
+     * No external libraries.
+     *
+     * The algorithm searches the actual grid created by
+     * the user using f(n) = g(n) + h(n).
+     */
+
+    const ROWS = 15;
+    const COLS = 15;
+
+    const gridElement = document.getElementById("grid");
+    const findBtn = document.getElementById("findBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const mazeBtn = document.getElementById("mazeBtn");
+    const statusBadge = document.getElementById("statusBadge");
+    const exploredCountElement = document.getElementById("exploredCount");
+    const pathLengthElement = document.getElementById("pathLength");
+    const bestScoreElement = document.getElementById("bestScore");
+    const toast = document.getElementById("toast");
+    const modeButtons = Array.from(document.querySelectorAll(".mode-btn"));
+
+    let start = {
+        row: 2,
+        col: 2
+    };
+
+    let goal = {
+        row: 12,
+        col: 12
+    };
+
+    let walls = new Set();
+    let currentMode = "wall";
+    let isRunning = false;
+
+    let nodes = [];
+
+    function key(row, col) {
+        return row + "," + col;
+    }
+
+    function isSamePosition(a, b) {
+        return a.row === b.row && a.col === b.col;
+    }
+
+    function isInside(row, col) {
+        return (
+            row >= 0 &&
+            row < ROWS &&
+            col >= 0 &&
+            col < COLS
+        );
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        window.clearTimeout(showToast.timer);
+
+        showToast.timer = window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+    }
+
+    function setStatus(text, type = "") {
+        statusBadge.textContent = "● " + text;
+        statusBadge.className = "status";
+
+        if (type) {
+            statusBadge.classList.add(type);
+        }
+    }
+
+    function createGrid() {
+        gridElement.innerHTML = "";
+        nodes = [];
+
+        for (let row = 0; row < ROWS; row++) {
+
+            nodes[row] = [];
+
+            for (let col = 0; col < COLS; col++) {
+
+                const button = document.createElement("button");
+
+                button.className = "node";
+                button.type = "button";
+                button.setAttribute(
+                    "aria-label",
+                    "Row " + (row + 1) + ", Column " + (col + 1)
+                );
+
+                button.dataset.row = row;
+                button.dataset.col = col;
+
+                button.addEventListener("click", () => {
+                    editCell(row, col);
+                });
+
+                nodes[row][col] = button;
+                gridElement.appendChild(button);
+            }
+        }
+
+        renderGrid();
+    }
+
+    function renderGrid() {
+
+        for (let row = 0; row < ROWS; row++) {
+
+            for (let col = 0; col < COLS; col++) {
+
+                const node = nodes[row][col];
+                const positionKey = key(row, col);
+
+                node.className = "node";
+
+                if (walls.has(positionKey)) {
+                    node.classList.add("wall");
+                }
+
+                if (isSamePosition(start, { row, col })) {
+                    node.classList.remove("wall");
+                    node.classList.add("start");
+                }
+
+                if (isSamePosition(goal, { row, col })) {
+                    node.classList.remove("wall");
+                    node.classList.add("end");
+                }
+            }
+        }
+    }
+
+    function editCell(row, col) {
+
+        if (isRunning) {
+            return;
+        }
+
+        const position = {
+            row,
+            col
+        };
+
+        if (currentMode === "start") {
+
+            if (isSamePosition(position, goal)) {
+                showToast("Start and goal need different cells.");
+                return;
+            }
+
+            walls.delete(key(row, col));
+            start = position;
+
+            renderGrid();
+
+            showToast("🚀 Start point moved.");
+
+            return;
+        }
+
+        if (currentMode === "end") {
+
+            if (isSamePosition(position, start)) {
+                showToast("Start and goal need different cells.");
+                return;
+            }
+
+            walls.delete(key(row, col));
+            goal = position;
+
+            renderGrid();
+
+            showToast("🎯 Goal point moved.");
+
+            return;
+        }
+
+        const positionKey = key(row, col);
+
+        if (
+            isSamePosition(position, start) ||
+            isSamePosition(position, goal)
+        ) {
+            showToast("Choose another cell for a wall.");
+            return;
+        }
+
+        if (walls.has(positionKey)) {
+            walls.delete(positionKey);
+        } else {
+            walls.add(positionKey);
+        }
+
+        renderGrid();
+    }
+
+    function clearSearchVisuals() {
+
+        for (let row = 0; row < ROWS; row++) {
+
+            for (let col = 0; col < COLS; col++) {
+
+                nodes[row][col].classList.remove(
+                    "visited",
+                    "open",
+                    "path"
+                );
+            }
+        }
+    }
+
+    function clearBoard() {
+
+        if (isRunning) {
+            return;
+        }
+
+        walls.clear();
+
+        start = {
+            row: 2,
+            col: 2
+        };
+
+        goal = {
+            row: 12,
+            col: 12
+        };
+
+        exploredCountElement.textContent = "0";
+        pathLengthElement.textContent = "—";
+        bestScoreElement.textContent = "—";
+
+        setStatus("Ready");
+
+        renderGrid();
+
+        showToast("🧼 Grid cleared.");
+    }
+
+    function randomMaze() {
+
+        if (isRunning) {
+            return;
+        }
+
+        walls.clear();
+
+        for (let row = 0; row < ROWS; row++) {
+
+            for (let col = 0; col < COLS; col++) {
+
+                if (
+                    Math.random() < 0.24 &&
+                    !isSamePosition(start, { row, col }) &&
+                    !isSamePosition(goal, { row, col })
+                ) {
+                    walls.add(key(row, col));
+                }
+            }
+        }
+
+        /*
+         * Keep a clear diagonal-style corridor so the random
+         * maze normally remains visually interesting and solvable.
+         */
+        for (let i = 0; i < Math.max(ROWS, COLS); i++) {
+
+            const row = Math.min(
+                ROWS - 1,
+                Math.round(
+                    start.row +
+                    (goal.row - start.row) * i / (ROWS - 1)
+                )
+            );
+
+            const col = Math.min(
+                COLS - 1,
+                Math.round(
+                    start.col +
+                    (goal.col - start.col) * i / (COLS - 1)
+                )
+            );
+
+            walls.delete(key(row, col));
+
+            if (isInside(row + 1, col)) {
+                walls.delete(key(row + 1, col));
+            }
+
+            if (isInside(row, col + 1)) {
+                walls.delete(key(row, col + 1));
+            }
+        }
+
+        clearSearchVisuals();
+
+        exploredCountElement.textContent = "0";
+        pathLengthElement.textContent = "—";
+        bestScoreElement.textContent = "—";
+
+        setStatus("Maze ready");
+
+        renderGrid();
+
+        showToast("✨ A new maze appeared!");
+    }
+
+    function getNeighbours(node) {
+
+        const directions = [
+            [-1, 0],
+            [1, 0],
+            [0, -1],
+            [0, 1]
+        ];
+
+        const result = [];
+
+        for (const direction of directions) {
+
+            const row = node.row + direction[0];
+            const col = node.col + direction[1];
+
+            if (!isInside(row, col)) {
+                continue;
+            }
+
+            if (walls.has(key(row, col))) {
+                continue;
+            }
+
+            result.push({
+                row,
+                col
+            });
+        }
+
+        return result;
+    }
+
+    function heuristic(a, b) {
+
+        return Math.abs(a.row - b.row) +
+               Math.abs(a.col - b.col);
+    }
+
+    function nodeKey(node) {
+        return key(node.row, node.col);
+    }
+
+    function lowestFScore(openSet, scores) {
+
+        let bestNode = openSet[0];
+
+        for (let i = 1; i < openSet.length; i++) {
+
+            const candidate = openSet[i];
+
+            if (
+                scores.get(nodeKey(candidate)).f <
+                scores.get(nodeKey(bestNode)).f
+            ) {
+                bestNode = candidate;
+            }
+        }
+
+        return bestNode;
+    }
+
+    function reconstructPath(cameFrom, current) {
+
+        const path = [current];
+        let currentKey = nodeKey(current);
+
+        while (cameFrom.has(currentKey)) {
+
+            const previous = cameFrom.get(currentKey);
+
+            path.push(previous);
+
+            currentKey = nodeKey(previous);
+        }
+
+        path.reverse();
+
+        return path;
+    }
+
+    async function delay(ms) {
+        return new Promise(resolve => {
+            window.setTimeout(resolve, ms);
+        });
+    }
+
+    async function runAStar() {
+
+        if (isRunning) {
+            return;
+        }
+
+        if (isSamePosition(start, goal)) {
+            showToast("Start and goal must be different.");
+            return;
+        }
+
+        isRunning = true;
+
+        findBtn.disabled = true;
+        clearBtn.disabled = true;
+        mazeBtn.disabled = true;
+
+        clearSearchVisuals();
+
+        exploredCountElement.textContent = "0";
+        pathLengthElement.textContent = "—";
+        bestScoreElement.textContent = "—";
+
+        setStatus("Searching...", "thinking");
+
+        const openSet = [start];
+
+        const cameFrom = new Map();
+
+        const scores = new Map();
+
+        const closedSet = new Set();
+
+        const startKey = nodeKey(start);
+
+        scores.set(startKey, {
+            g: 0,
+            h: heuristic(start, goal),
+            f: heuristic(start, goal)
+        });
+
+        let exploredCount = 0;
+        let foundGoal = false;
+        let finalPath = [];
+
+        while (openSet.length > 0) {
+
+            const current = lowestFScore(openSet, scores);
+            const currentKey = nodeKey(current);
+
+            if (isSamePosition(current, goal)) {
+
+                finalPath = reconstructPath(
+                    cameFrom,
+                    current
+                );
+
+                foundGoal = true;
+
+                break;
+            }
+
+            const openIndex = openSet.findIndex(
+                node => nodeKey(node) === currentKey
+            );
+
+            if (openIndex !== -1) {
+                openSet.splice(openIndex, 1);
+            }
+
+            closedSet.add(currentKey);
+
+            exploredCount++;
+
+            if (
+                !isSamePosition(current, start) &&
+                !isSamePosition(current, goal)
+            ) {
+                nodes[current.row][current.col]
+                    .classList.remove("open");
+
+                nodes[current.row][current.col]
+                    .classList.add("visited");
+            }
+
+            exploredCountElement.textContent = exploredCount;
+
+            const neighbours = getNeighbours(current);
+
+            for (const neighbour of neighbours) {
+
+                const neighbourKey = nodeKey(neighbour);
+
+                if (closedSet.has(neighbourKey)) {
+                    continue;
+                }
+
+                const currentScore = scores.get(currentKey);
+
+                const tentativeG =
+                    currentScore.g + 1;
+
+                const existingScore =
+                    scores.get(neighbourKey);
+
+                if (
+                    !existingScore ||
+                    tentativeG < existingScore.g
+                ) {
+
+                    cameFrom.set(
+                        neighbourKey,
+                        current
+                    );
+
+                    const h =
+                        heuristic(neighbour, goal);
+
+                    const f =
+                        tentativeG + h;
+
+                    scores.set(
+                        neighbourKey,
+                        {
+                            g: tentativeG,
+                            h,
+                            f
+                        }
+                    );
+
+                    const alreadyOpen =
+                        openSet.some(
+                            node => nodeKey(node) === neighbourKey
+                        );
+
+                    if (!alreadyOpen) {
+                        openSet.push(neighbour);
+                    }
+
+                    if (
+                        !isSamePosition(neighbour, start) &&
+                        !isSamePosition(neighbour, goal)
+                    ) {
+                        nodes[neighbour.row][neighbour.col]
+                            .classList.add("open");
+                    }
+                }
+            }
+
+            await delay(22);
+        }
+
+        if (foundGoal) {
+
+            setStatus("Path found", "done");
+
+            pathLengthElement.textContent =
+                String(Math.max(0, finalPath.length - 1));
+
+            const goalScore =
+                scores.get(nodeKey(goal));
+
+            if (goalScore) {
+                bestScoreElement.textContent =
+                    String(goalScore.f);
+            }
+
+            for (const node of finalPath) {
+
+                if (
+                    !isSamePosition(node, start) &&
+                    !isSamePosition(node, goal)
+                ) {
+
+                    nodes[node.row][node.col]
+                        .classList.remove(
+                            "visited",
+                            "open"
+                        );
+
+                    nodes[node.row][node.col]
+                        .classList.add("path");
+
+                    await delay(45);
+                }
+            }
+
+            showToast(
+                "🎉 A* found a path in " +
+                Math.max(0, finalPath.length - 1) +
+                " steps!"
+            );
+
+        } else {
+
+            setStatus("No path found", "done");
+
+            pathLengthElement.textContent = "None";
+            bestScoreElement.textContent = "—";
+
+            showToast(
+                "🌧️ A* explored the reachable area but found no path."
+            );
+        }
+
+        isRunning = false;
+
+        findBtn.disabled = false;
+        clearBtn.disabled = false;
+        mazeBtn.disabled = false;
+    }
+
+    modeButtons.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            if (isRunning) {
+                return;
+            }
+
+            currentMode = button.dataset.mode;
+
+            modeButtons.forEach(item => {
+                item.classList.remove("active");
+            });
+
+            button.classList.add("active");
+
+            if (currentMode === "wall") {
+                showToast("🧱 Wall mode selected.");
+            }
+
+            if (currentMode === "start") {
+                showToast("🚀 Click a cell to move the start.");
+            }
+
+            if (currentMode === "end") {
+                showToast("🎯 Click a cell to move the goal.");
+            }
+        });
+    });
+
+    findBtn.addEventListener("click", runAStar);
+
+    clearBtn.addEventListener("click", clearBoard);
+
+    mazeBtn.addEventListener("click", randomMaze);
+
+    createGrid();
+
+    setStatus("Ready");
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2254 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Fuzzy Logic Laboratory">
+    <title>Fuzzy Logic — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #d86f96;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --purple-dark: #6855ad;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #b68c2b;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 8% 5%, rgba(255, 220, 232, 0.70), transparent 25%),
+            radial-gradient(circle at 92% 8%, rgba(220, 238, 255, 0.75), transparent 28%),
+            radial-gradient(circle at 50% 92%, rgba(223, 247, 235, 0.70), transparent 32%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button {
+        border: 0;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: var(--purple-dark);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 740px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.82rem;
+    }
+
+    .section {
+        width: min(1180px, 92%);
+        margin: 0 auto 70px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .lab {
+        display: grid;
+        grid-template-columns: 0.78fr 1.22fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(233,225,255,0.75), transparent 35%),
+            rgba(255,255,255,0.90);
+    }
+
+    .results-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.60), transparent 35%),
+            rgba(255,255,255,0.90);
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-header h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-header p {
+        color: var(--muted);
+        font-size: 0.86rem;
+        margin-top: 5px;
+        line-height: 1.55;
+    }
+
+    .status {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.74rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .input-group {
+        margin-bottom: 23px;
+    }
+
+    .input-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .input-label strong {
+        font-size: 0.9rem;
+    }
+
+    .value-pill {
+        min-width: 48px;
+        text-align: center;
+        padding: 5px 9px;
+        border-radius: 10px;
+        background: var(--blue);
+        color: #4779ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        height: 8px;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        outline: none;
+        background: linear-gradient(
+            90deg,
+            #dceeff 0%,
+            #8dbce9 50%,
+            #8b72d8 100%
+        );
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: white;
+        border: 4px solid var(--purple);
+        box-shadow: 0 5px 14px rgba(80,65,120,0.20);
+        cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        background: white;
+        border: 4px solid var(--purple);
+        box-shadow: 0 5px 14px rgba(80,65,120,0.20);
+        cursor: pointer;
+    }
+
+    .range-description {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 0.7rem;
+        margin-top: 7px;
+    }
+
+    .preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .preset {
+        padding: 8px 11px;
+        border-radius: 11px;
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.74rem;
+        font-weight: 800;
+        transition: 0.18s ease;
+    }
+
+    .preset:hover {
+        transform: translateY(-2px);
+        border-color: rgba(139,114,216,0.30);
+        color: var(--purple-dark);
+    }
+
+    .rule-toggle {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 18px;
+        padding: 12px;
+        border-radius: 14px;
+        background: #fbfaff;
+        color: var(--muted);
+        font-size: 0.78rem;
+    }
+
+    .rule-toggle input {
+        accent-color: var(--purple);
+    }
+
+    .output-card {
+        padding: 22px;
+        border-radius: 24px;
+        background:
+            linear-gradient(135deg, rgba(233,225,255,0.70), rgba(220,238,255,0.62)),
+            white;
+        border: 1px solid rgba(139,114,216,0.15);
+        margin-bottom: 18px;
+    }
+
+    .output-label {
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .output-main {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 5px;
+    }
+
+    .output-main strong {
+        font-size: clamp(3rem, 7vw, 5rem);
+        line-height: 1;
+        letter-spacing: -0.08em;
+        color: var(--purple-dark);
+    }
+
+    .output-category {
+        padding: 9px 13px;
+        border-radius: 13px;
+        background: white;
+        color: var(--purple-dark);
+        font-weight: 900;
+        font-size: 0.78rem;
+    }
+
+    .membership-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .membership-card {
+        padding: 15px;
+        border-radius: 17px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.82);
+    }
+
+    .membership-card h3 {
+        font-size: 0.82rem;
+        margin-bottom: 9px;
+    }
+
+    .membership-value {
+        font-size: 1.4rem;
+        font-weight: 950;
+    }
+
+    .membership-bar {
+        height: 7px;
+        border-radius: 999px;
+        background: #eeeaf5;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .membership-fill {
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        transition: width 0.35s ease;
+    }
+
+    .cold .membership-fill {
+        background: #80b7e8;
+    }
+
+    .comfortable .membership-fill {
+        background: #8b72d8;
+    }
+
+    .hot .membership-fill {
+        background: #e99461;
+    }
+
+    .rule-section {
+        margin-top: 20px;
+    }
+
+    .subheading {
+        font-size: 0.86rem;
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    .rule-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .rule {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: #faf9fd;
+        border: 1px solid var(--border);
+        font-size: 0.77rem;
+        line-height: 1.5;
+        color: var(--muted);
+        transition: 0.2s ease;
+    }
+
+    .rule.active {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.28);
+        color: #39765a;
+        transform: translateX(3px);
+    }
+
+    .rule strong {
+        color: var(--ink);
+    }
+
+    .rule.active strong {
+        color: #39765a;
+    }
+
+    .inference-flow {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 22px;
+    }
+
+    .flow-step {
+        position: relative;
+        padding: 17px 13px;
+        border-radius: 18px;
+        text-align: center;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .flow-step:not(:last-child)::after {
+        content: "→";
+        position: absolute;
+        right: -14px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--cream);
+        color: var(--purple);
+        font-weight: 900;
+    }
+
+    .flow-icon {
+        font-size: 1.4rem;
+        margin-bottom: 7px;
+    }
+
+    .flow-step strong {
+        display: block;
+        font-size: 0.78rem;
+    }
+
+    .flow-step span {
+        color: var(--muted);
+        font-size: 0.68rem;
+    }
+
+    .chart-panel {
+        margin-top: 24px;
+        padding: 22px;
+        border-radius: 23px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+    }
+
+    .chart-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 14px;
+    }
+
+    .chart-title strong {
+        font-size: 0.9rem;
+    }
+
+    .chart-title span {
+        color: var(--muted);
+        font-size: 0.7rem;
+    }
+
+    canvas {
+        width: 100%;
+        height: 260px;
+        display: block;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.65);
+    }
+
+    .rule-engine {
+        margin-top: 24px;
+        padding: 25px;
+        border-radius: 27px;
+        background:
+            radial-gradient(circle at 100% 0%, rgba(255,240,191,0.65), transparent 28%),
+            white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .rule-engine-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .rule-engine-header h2 {
+        font-size: 1.5rem;
+        letter-spacing: -0.04em;
+    }
+
+    .rule-engine-header p {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.82rem;
+    }
+
+    .rule-table {
+        display: grid;
+        gap: 8px;
+    }
+
+    .rule-row {
+        display: grid;
+        grid-template-columns: 70px 1fr 100px 100px;
+        gap: 12px;
+        align-items: center;
+        padding: 13px 15px;
+        border-radius: 15px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        font-size: 0.76rem;
+    }
+
+    .rule-number {
+        width: 36px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: var(--lavender);
+        color: var(--purple-dark);
+        font-weight: 900;
+    }
+
+    .rule-strength {
+        text-align: right;
+        font-weight: 950;
+    }
+
+    .rule-result {
+        padding: 6px 9px;
+        border-radius: 9px;
+        text-align: center;
+        background: var(--mint);
+        color: #39765a;
+        font-weight: 850;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red { background: #ff9db6; }
+    .dot.yellow { background: #ffd98a; }
+    .dot.green { background: #9ee3bd; }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.82rem;
+    }
+
+    .kw { color: #d6b9ff; }
+    .fn { color: #9fd8ff; }
+    .num { color: #ffd899; }
+    .comment { color: #9993ad; }
+    .str { color: #a9e6c5; }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.35rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .lab {
+            grid-template-columns: 1fr;
+        }
+
+        .learning-path {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .inference-flow {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .flow-step:nth-child(2)::after {
+            display: none;
+        }
+
+        .rule-row {
+            grid-template-columns: 55px 1fr 80px 90px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .rule-engine {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .membership-grid,
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .inference-flow {
+            grid-template-columns: 1fr;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: "↓";
+            right: 50%;
+            top: auto;
+            bottom: -18px;
+            transform: translateX(50%);
+        }
+
+        .rule-row {
+            grid-template-columns: 45px 1fr;
+        }
+
+        .rule-strength,
+        .rule-result {
+            grid-column: 2;
+            text-align: left;
+        }
+
+        .output-main {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        canvas {
+            height: 220px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Reasoning · Uncertainty · Fuzzy Systems</div>
+
+
+<h1>
+    Teach AI to think<br>
+</h1>
+
+<p>
+    Explore a real Mamdani-style fuzzy inference system.
+    Adjust temperature and humidity, watch membership degrees
+    change, see fuzzy rules fire, and observe the final
+    defuzzified output in real time.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Fuzzy logic learning path">
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Input</strong>
+        <span>Give the system real values.</span>
+    </div>
+
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Fuzzify</strong>
+    <span>Convert values into degrees.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Infer</strong>
+    <span>Fire fuzzy IF–THEN rules.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">04</span>
+    <strong>Defuzzify</strong>
+    <span>Produce one crisp decision.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="section">
+
+
+<div class="section-heading">
+    <div class="mini">Interactive laboratory</div>
+    <h2>Build a fuzzy decision.</h2>
+    <p>
+        This laboratory controls a hypothetical cooling fan.
+        The system does not force inputs into rigid categories.
+        Instead, each input can belong to multiple fuzzy sets
+        with different membership strengths.
+    </p>
+</div>
+
+<div class="lab">
+
+    <div class="panel control-panel">
+
+        <div class="panel-header">
+            <div>
+                <h2>🎛️ Sensor Inputs</h2>
+                <p>Move the controls and watch the inference engine react.</p>
+            </div>
+            <div class="status" id="status">● Live</div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-label">
+                <strong>Temperature</strong>
+                <span class="value-pill" id="temperatureValue">25°C</span>
+            </div>
+
+            <input
+                id="temperature"
+                type="range"
+                min="0"
+                max="40"
+                step="0.1"
+                value="25"
+                aria-label="Temperature"
+            >
+
+            <div class="range-description">
+                <span>0°C · Cold</span>
+                <span>40°C · Hot</span>
+            </div>
+
+            <div class="preset-row">
+                <button class="preset" data-temp="8" data-humidity="35">❄️ Cool Room</button>
+                <button class="preset" data-temp="22" data-humidity="45">🌤️ Comfortable</button>
+                <button class="preset" data-temp="32" data-humidity="70">☀️ Warm & Humid</button>
+                <button class="preset" data-temp="38" data-humidity="85">🔥 Extreme</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-label">
+                <strong>Humidity</strong>
+                <span class="value-pill" id="humidityValue">50%</span>
+            </div>
+
+            <input
+                id="humidity"
+                type="range"
+                min="0"
+                max="100"
+                step="0.1"
+                value="50"
+                aria-label="Humidity"
+            >
+
+            <div class="range-description">
+                <span>0% · Dry</span>
+                <span>100% · Humid</span>
+            </div>
+        </div>
+
+        <label class="rule-toggle">
+            <input type="checkbox" id="showInactive" checked>
+            Show inactive rules in the rule engine
+        </label>
+
+    </div>
+
+    <div class="panel results-panel">
+
+        <div class="panel-header">
+            <div>
+                <h2>🧠 Fuzzy Inference Engine</h2>
+                <p>Every stage is calculated from the current sensor values.</p>
+            </div>
+        </div>
+
+        <div class="output-card">
+            <div class="output-label">Defuzzified Fan Speed</div>
+
+            <div class="output-main">
+                <strong id="fanOutput">50%</strong>
+                <span class="output-category" id="fanCategory">
+                    Moderate
+                </span>
+            </div>
+        </div>
+
+        <div class="membership-grid">
+
+            <div class="membership-card cold">
+                <h3>Temperature · Cold</h3>
+                <div class="membership-value" id="tempCold">0.00</div>
+                <div class="membership-bar">
+                    <div class="membership-fill" id="tempColdBar"></div>
+                </div>
+            </div>
+
+            <div class="membership-card comfortable">
+                <h3>Temperature · Comfortable</h3>
+                <div class="membership-value" id="tempComfortable">0.00</div>
+                <div class="membership-bar">
+                    <div class="membership-fill" id="tempComfortableBar"></div>
+                </div>
+            </div>
+
+            <div class="membership-card hot">
+                <h3>Temperature · Hot</h3>
+                <div class="membership-value" id="tempHot">0.00</div>
+                <div class="membership-bar">
+                    <div class="membership-fill" id="tempHotBar"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="membership-grid">
+
+            <div class="membership-card cold">
+                <h3>Humidity · Dry</h3>
+                <div class="membership-value" id="humidityDry">0.00</div>
+                <div class="membership-bar">
+                    <div class="membership-fill" id="humidityDryBar"></div>
+                </div>
+            </div>
+
+            <div class="membership-card comfortable">
+                <h3>Humidity · Normal</h3>
+                <div class="membership-value" id="humidityNormal">0.00</div>
+                <div class="membership-bar">
+                    <div class="membership-fill" id="humidityNormalBar"></div>
+                </div>
+            </div>
+
+            <div class="membership-card hot">
+                <h3>Humidity · Humid</h3>
+                <div class="membership-value" id="humidityHumid">0.00</div>
+                <div class="membership-bar">
+                    <div class="membership-fill" id="humidityHumidBar"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="rule-section">
+            <div class="subheading">Active fuzzy rules</div>
+            <div class="rule-list" id="activeRules"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="inference-flow">
+
+    <div class="flow-step">
+        <div class="flow-icon">📥</div>
+        <strong>Fuzzification</strong>
+        <span>Crisp → membership degrees</span>
+    </div>
+
+    <div class="flow-step">
+        <div class="flow-icon">⚖️</div>
+        <strong>Rule Evaluation</strong>
+        <span>AND uses minimum</span>
+    </div>
+
+    <div class="flow-step">
+        <div class="flow-icon">🧩</div>
+        <strong>Aggregation</strong>
+        <span>Combine rule outputs</span>
+    </div>
+
+    <div class="flow-step">
+        <div class="flow-icon">🎯</div>
+        <strong>Defuzzification</strong>
+        <span>Centroid → crisp output</span>
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="section">
+
+
+<div class="chart-panel">
+    <div class="chart-title">
+        <strong>Temperature Membership Functions</strong>
+        <span>Current temperature shown as a vertical marker</span>
+    </div>
+
+    <canvas id="temperatureChart" width="1000" height="260"></canvas>
+</div>
+
+<div class="chart-panel">
+    <div class="chart-title">
+        <strong>Fan Output Membership Functions</strong>
+        <span>Aggregated fuzzy output after rule evaluation</span>
+    </div>
+
+    <canvas id="outputChart" width="1000" height="260"></canvas>
+</div>
+
+
+</section>
+
+<section class="section">
+
+
+<div class="rule-engine">
+
+    <div class="rule-engine-header">
+        <h2>Rule Evaluation Engine</h2>
+        <p>
+            Mamdani inference using min for antecedent conjunction
+            and max for aggregation.
+        </p>
+    </div>
+
+    <div class="rule-table" id="ruleTable"></div>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+    <h2>The mathematics behind the magic.</h2>
+    <p>
+        The core implementation below uses triangular and trapezoidal
+        membership functions, Mamdani-style rule evaluation and
+        centroid defuzzification.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">fuzzy-logic.js</span>
+
+        <span></span>
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">triangle</span>(x, a, b, c) {
+<span class="kw">if</span> (x &lt;= a || x &gt;= c) <span class="kw">return</span> <span class="num">0</span>;
+<span class="kw">if</span> (x === b) <span class="kw">return</span> <span class="num">1</span>;
+
+<span class="kw">if</span> (x &lt; b) {
+    <span class="kw">return</span> (x - a) / (b - a);
+}
+
+<span class="kw">return</span> (c - x) / (c - b);
+
+
+}
+
+<span class="kw">function</span> <span class="fn">trapezoid</span>(x, a, b, c, d) { <span class="kw">if</span> (x <= a || x >= d) <span class="kw">return</span> <span class="num">0</span>; <span class="kw">if</span> (x >= b && x <= c) <span class="kw">return</span> <span class="num">1</span>;
+
+
+<span class="kw">if</span> (x &lt; b) {
+    <span class="kw">return</span> (x - a) / (b - a);
+}
+
+<span class="kw">return</span> (d - x) / (d - c);
+
+
+}
+
+<span class="comment">// Mamdani AND operator</span> <span class="kw">const</span> strength =
+Math.<span class="fn">min</span>(temperatureMembership, humidityMembership);
+
+<span class="comment">// Centroid defuzzification</span> <span class="kw">const</span> crispOutput =
+numerator / denominator;</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Fuzzification</span>
+    <strong>O(n)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Rule Evaluation</span>
+    <strong>O(r)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Centroid Sampling</span>
+    <strong>O(k · r)</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * Fuzzy Logic Laboratory
+ *
+ * System:
+ *   Inputs:
+ *      Temperature: 0–40 °C
+ *      Humidity:    0–100 %
+ *
+ *   Output:
+ *      Fan Speed: 0–100 %
+ *
+ * Inference:
+ *      Mamdani-style fuzzy inference
+ *      AND  = minimum
+ *      OR   = maximum through aggregation
+ *      Implication = clipping
+ *      Aggregation = maximum
+ *      Defuzzification = centroid
+ */
+
+const temperatureInput = document.getElementById("temperature");
+const humidityInput = document.getElementById("humidity");
+
+const temperatureValue = document.getElementById("temperatureValue");
+const humidityValue = document.getElementById("humidityValue");
+
+const fanOutput = document.getElementById("fanOutput");
+const fanCategory = document.getElementById("fanCategory");
+
+const activeRulesElement = document.getElementById("activeRules");
+const ruleTable = document.getElementById("ruleTable");
+
+const showInactive = document.getElementById("showInactive");
+
+const toast = document.getElementById("toast");
+
+const temperatureChart = document.getElementById("temperatureChart");
+const outputChart = document.getElementById("outputChart");
+
+const temperatureCtx = temperatureChart.getContext("2d");
+const outputCtx = outputChart.getContext("2d");
+
+/* ---------------------------------------------------------
+   Membership functions
+--------------------------------------------------------- */
+
+function triangle(x, a, b, c) {
+    if (x <= a || x >= c) {
+        return 0;
+    }
+
+    if (x === b) {
+        return 1;
+    }
+
+    if (x < b) {
+        return (x - a) / (b - a);
+    }
+
+    return (c - x) / (c - b);
+}
+
+function leftShoulder(x, a, b) {
+    if (x <= a) {
+        return 1;
+    }
+
+    if (x >= b) {
+        return 0;
+    }
+
+    return (b - x) / (b - a);
+}
+
+function rightShoulder(x, a, b) {
+    if (x <= a) {
+        return 0;
+    }
+
+    if (x >= b) {
+        return 1;
+    }
+
+    return (x - a) / (b - a);
+}
+
+/* ---------------------------------------------------------
+   Fuzzy sets
+--------------------------------------------------------- */
+
+const temperatureSets = {
+    cold: x => leftShoulder(x, 8, 18),
+    comfortable: x => triangle(x, 12, 21, 30),
+    hot: x => rightShoulder(x, 25, 35)
+};
+
+const humiditySets = {
+    dry: x => leftShoulder(x, 25, 45),
+    normal: x => triangle(x, 30, 50, 70),
+    humid: x => rightShoulder(x, 55, 80)
+};
+
+const outputSets = {
+    low: x => leftShoulder(x, 20, 45),
+    moderate: x => triangle(x, 30, 55, 80),
+    high: x => rightShoulder(x, 65, 90)
+};
+
+/* ---------------------------------------------------------
+   Fuzzy rule base
+--------------------------------------------------------- */
+
+const rules = [
+    {
+        id: 1,
+        text: "IF temperature is Cold AND humidity is Dry THEN fan is Low",
+        temperature: "cold",
+        humidity: "dry",
+        output: "low"
+    },
+    {
+        id: 2,
+        text: "IF temperature is Cold AND humidity is Normal THEN fan is Low",
+        temperature: "cold",
+        humidity: "normal",
+        output: "low"
+    },
+    {
+        id: 3,
+        text: "IF temperature is Cold AND humidity is Humid THEN fan is Moderate",
+        temperature: "cold",
+        humidity: "humid",
+        output: "moderate"
+    },
+    {
+        id: 4,
+        text: "IF temperature is Comfortable AND humidity is Dry THEN fan is Low",
+        temperature: "comfortable",
+        humidity: "dry",
+        output: "low"
+    },
+    {
+        id: 5,
+        text: "IF temperature is Comfortable AND humidity is Normal THEN fan is Moderate",
+        temperature: "comfortable",
+        humidity: "normal",
+        output: "moderate"
+    },
+    {
+        id: 6,
+        text: "IF temperature is Comfortable AND humidity is Humid THEN fan is High",
+        temperature: "comfortable",
+        humidity: "humid",
+        output: "high"
+    },
+    {
+        id: 7,
+        text: "IF temperature is Hot AND humidity is Dry THEN fan is High",
+        temperature: "hot",
+        humidity: "dry",
+        output: "high"
+    },
+    {
+        id: 8,
+        text: "IF temperature is Hot AND humidity is Normal THEN fan is High",
+        temperature: "hot",
+        humidity: "normal",
+        output: "high"
+    },
+    {
+        id: 9,
+        text: "IF temperature is Hot AND humidity is Humid THEN fan is High",
+        temperature: "hot",
+        humidity: "humid",
+        output: "high"
+    }
+];
+
+/* ---------------------------------------------------------
+   Utility functions
+--------------------------------------------------------- */
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function formatDegree(value) {
+    return value.toFixed(2);
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
+}
+
+/* ---------------------------------------------------------
+   Fuzzification
+--------------------------------------------------------- */
+
+function fuzzify(temperature, humidity) {
+    return {
+        temperature: {
+            cold: temperatureSets.cold(temperature),
+            comfortable: temperatureSets.comfortable(temperature),
+            hot: temperatureSets.hot(temperature)
+        },
+
+        humidity: {
+            dry: humiditySets.dry(humidity),
+            normal: humiditySets.normal(humidity),
+            humid: humiditySets.humid(humidity)
+        }
+    };
+}
+
+/* ---------------------------------------------------------
+   Rule evaluation
+--------------------------------------------------------- */
+
+function evaluateRules(memberships) {
+    return rules.map(rule => {
+        const temperatureDegree =
+            memberships.temperature[rule.temperature];
+
+        const humidityDegree =
+            memberships.humidity[rule.humidity];
+
+        /*
+         * Mamdani AND:
+         * μ(A AND B) = min(μA, μB)
+         */
+        const strength = Math.min(
+            temperatureDegree,
+            humidityDegree
+        );
+
+        return {
+            ...rule,
+            temperatureDegree,
+            humidityDegree,
+            strength
+        };
+    });
+}
+
+/* ---------------------------------------------------------
+   Aggregation + centroid defuzzification
+--------------------------------------------------------- */
+
+function defuzzify(evaluatedRules) {
+    const step = 0.5;
+
+    let numerator = 0;
+    let denominator = 0;
+
+    const aggregated = [];
+
+    for (let output = 0; output <= 100; output += step) {
+
+        let membership = 0;
+
+        for (const rule of evaluatedRules) {
+
+            /*
+             * Mamdani implication:
+             * clip consequent at rule firing strength.
+             */
+            const consequent =
+                outputSets[rule.output](output);
+
+            const clipped =
+                Math.min(rule.strength, consequent);
+
+            /*
+             * Max aggregation across rules.
+             */
+            membership = Math.max(
+                membership,
+                clipped
+            );
+        }
+
+        aggregated.push({
+            output,
+            membership
+        });
+
+        numerator += output * membership;
+        denominator += membership;
+    }
+
+    if (denominator === 0) {
+        return {
+            value: 0,
+            aggregated
+        };
+    }
+
+    return {
+        value: numerator / denominator,
+        aggregated
+    };
+}
+
+/* ---------------------------------------------------------
+   Output category
+--------------------------------------------------------- */
+
+function getOutputCategory(value) {
+    if (value < 35) {
+        return "Low";
+    }
+
+    if (value < 70) {
+        return "Moderate";
+    }
+
+    return "High";
+}
+
+/* ---------------------------------------------------------
+   Membership UI
+--------------------------------------------------------- */
+
+function updateMembershipCard(id, value) {
+    const element = document.getElementById(id);
+    const bar = document.getElementById(id + "Bar");
+
+    element.textContent = formatDegree(value);
+    bar.style.width = `${value * 100}%`;
+}
+
+function renderMemberships(memberships) {
+    updateMembershipCard(
+        "tempCold",
+        memberships.temperature.cold
+    );
+
+    updateMembershipCard(
+        "tempComfortable",
+        memberships.temperature.comfortable
+    );
+
+    updateMembershipCard(
+        "tempHot",
+        memberships.temperature.hot
+    );
+
+    updateMembershipCard(
+        "humidityDry",
+        memberships.humidity.dry
+    );
+
+    updateMembershipCard(
+        "humidityNormal",
+        memberships.humidity.normal
+    );
+
+    updateMembershipCard(
+        "humidityHumid",
+        memberships.humidity.humid
+    );
+}
+
+/* ---------------------------------------------------------
+   Active rule display
+--------------------------------------------------------- */
+
+function renderActiveRules(evaluatedRules) {
+
+    const active = evaluatedRules
+        .filter(rule => rule.strength > 0)
+        .sort((a, b) => b.strength - a.strength);
+
+    if (active.length === 0) {
+        activeRulesElement.innerHTML = `
+            <div class="rule">
+                No rule is currently firing.
+            </div>
+        `;
+        return;
+    }
+
+    activeRulesElement.innerHTML = active
+        .slice(0, 5)
+        .map(rule => `
+            <div class="rule active">
+                <strong>Rule ${rule.id}</strong>
+                fires with strength
+                <strong>${formatDegree(rule.strength)}</strong>.
+                Output: <strong>${rule.output}</strong>.
+            </div>
+        `)
+        .join("");
+}
+
+/* ---------------------------------------------------------
+   Complete rule engine table
+--------------------------------------------------------- */
+
+function renderRuleTable(evaluatedRules) {
+
+    const rows = evaluatedRules
+        .filter(rule =>
+            showInactive.checked || rule.strength > 0
+        );
+
+    ruleTable.innerHTML = rows.map(rule => {
+
+        const percentage =
+            Math.round(rule.strength * 100);
+
+        return `
+            <div class="rule-row"
+                 style="${rule.strength === 0 ? "opacity:0.48;" : ""}">
+
+                <div class="rule-number">
+                    R${rule.id}
+                </div>
+
+                <div>
+                    ${rule.text}
+                </div>
+
+                <div class="rule-strength">
+                    ${formatDegree(rule.strength)}
+                </div>
+
+                <div class="rule-result">
+                    ${percentage}% · ${rule.output}
+                </div>
+
+            </div>
+        `;
+    }).join("");
+}
+
+/* ---------------------------------------------------------
+   Canvas helpers
+--------------------------------------------------------- */
+
+function setupCanvas(canvas, ctx) {
+
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+
+    ctx.setTransform(
+        ratio,
+        0,
+        0,
+        ratio,
+        0,
+        0
+    );
+
+    return {
+        width: rect.width,
+        height: rect.height
+    };
+}
+
+function drawGrid(ctx, width, height, padding) {
+
+    ctx.strokeStyle = "rgba(55,48,80,0.08)";
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 4; i++) {
+
+        const y =
+            padding.top +
+            (height - padding.top - padding.bottom) *
+            (i / 4);
+
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+    }
+
+    for (let i = 0; i <= 4; i++) {
+
+        const x =
+            padding.left +
+            (width - padding.left - padding.right) *
+            (i / 4);
+
+        ctx.beginPath();
+        ctx.moveTo(x, padding.top);
+        ctx.lineTo(x, height - padding.bottom);
+        ctx.stroke();
+    }
+}
+
+function drawAxes(ctx, width, height, padding, maxX) {
+
+    ctx.strokeStyle = "rgba(55,48,80,0.22)";
+    ctx.lineWidth = 1.2;
+
+    ctx.beginPath();
+    ctx.moveTo(padding.left, height - padding.bottom);
+    ctx.lineTo(width - padding.right, height - padding.bottom);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(padding.left, padding.top);
+    ctx.lineTo(padding.left, height - padding.bottom);
+    ctx.stroke();
+
+    ctx.fillStyle = "#777386";
+    ctx.font = "11px Inter, sans-serif";
+
+    for (let i = 0; i <= 4; i++) {
+
+        const value = (maxX / 4) * i;
+
+        const x =
+            padding.left +
+            (width - padding.left - padding.right) *
+            (i / 4);
+
+        ctx.fillText(
+            String(Math.round(value)),
+            x - 8,
+            height - 12
+        );
+    }
+
+    ctx.fillText("0", 7, height - padding.bottom + 4);
+    ctx.fillText("1", 10, padding.top + 4);
+}
+
+/* ---------------------------------------------------------
+   Temperature graph
+--------------------------------------------------------- */
+
+function drawTemperatureChart(currentTemperature) {
+
+    const size =
+        setupCanvas(
+            temperatureChart,
+            temperatureCtx
+        );
+
+    const width = size.width;
+    const height = size.height;
+
+    const padding = {
+        left: 35,
+        right: 20,
+        top: 20,
+        bottom: 30
+    };
+
+    temperatureCtx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+    drawGrid(
+        temperatureCtx,
+        width,
+        height,
+        padding
+    );
+
+    drawAxes(
+        temperatureCtx,
+        width,
+        height,
+        padding,
+        40
+    );
+
+    const colors = {
+        cold: "#80b7e8",
+        comfortable: "#8b72d8",
+        hot: "#e99461"
+    };
+
+    const names = [
+        ["cold", "Cold"],
+        ["comfortable", "Comfortable"],
+        ["hot", "Hot"]
+    ];
+
+    for (const [key, name] of names) {
+
+        temperatureCtx.beginPath();
+
+        for (let x = 0; x <= 40; x += 0.25) {
+
+            const membership =
+                temperatureSets[key](x);
+
+            const px =
+                padding.left +
+                (x / 40) *
+                (width - padding.left - padding.right);
+
+            const py =
+                height -
+                padding.bottom -
+                membership *
+                (height - padding.top - padding.bottom);
+
+            if (x === 0) {
+                temperatureCtx.moveTo(px, py);
+            } else {
+                temperatureCtx.lineTo(px, py);
+            }
+        }
+
+        temperatureCtx.strokeStyle = colors[key];
+        temperatureCtx.lineWidth = 3;
+        temperatureCtx.stroke();
+
+        const legendX =
+            padding.left +
+            names.findIndex(item => item[0] === key) * 120;
+
+        temperatureCtx.fillStyle = colors[key];
+        temperatureCtx.fillRect(
+            legendX,
+            4,
+            22,
+            4
+        );
+
+        temperatureCtx.fillStyle = "#777386";
+        temperatureCtx.font = "11px Inter, sans-serif";
+        temperatureCtx.fillText(
+            name,
+            legendX + 28,
+            9
+        );
+    }
+
+    const markerX =
+        padding.left +
+        (currentTemperature / 40) *
+        (width - padding.left - padding.right);
+
+    temperatureCtx.strokeStyle = "#29263a";
+    temperatureCtx.lineWidth = 2;
+    temperatureCtx.setLineDash([5, 5]);
+
+    temperatureCtx.beginPath();
+    temperatureCtx.moveTo(markerX, padding.top);
+    temperatureCtx.lineTo(
+        markerX,
+        height - padding.bottom
+    );
+    temperatureCtx.stroke();
+
+    temperatureCtx.setLineDash([]);
+
+    temperatureCtx.fillStyle = "#29263a";
+    temperatureCtx.font = "bold 11px Inter, sans-serif";
+    temperatureCtx.fillText(
+        `${currentTemperature.toFixed(1)}°C`,
+        Math.min(markerX + 7, width - 55),
+        padding.top + 13
+    );
+}
+
+/* ---------------------------------------------------------
+   Output graph
+--------------------------------------------------------- */
+
+function drawOutputChart(aggregated) {
+
+    const size =
+        setupCanvas(
+            outputChart,
+            outputCtx
+        );
+
+    const width = size.width;
+    const height = size.height;
+
+    const padding = {
+        left: 35,
+        right: 20,
+        top: 20,
+        bottom: 30
+    };
+
+    outputCtx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+    drawGrid(
+        outputCtx,
+        width,
+        height,
+        padding
+    );
+
+    drawAxes(
+        outputCtx,
+        width,
+        height,
+        padding,
+        100
+    );
+
+    /*
+     * Draw individual output membership functions.
+     */
+
+    const colors = {
+        low: "#80b7e8",
+        moderate: "#8b72d8",
+        high: "#e99461"
+    };
+
+    for (const [key, color] of Object.entries(colors)) {
+
+        outputCtx.beginPath();
+
+        for (let x = 0; x <= 100; x += 0.5) {
+
+            const membership =
+                outputSets[key](x);
+
+            const px =
+                padding.left +
+                (x / 100) *
+                (width - padding.left - padding.right);
+
+            const py =
+                height -
+                padding.bottom -
+                membership *
+                (height - padding.top - padding.bottom);
+
+            if (x === 0) {
+                outputCtx.moveTo(px, py);
+            } else {
+                outputCtx.lineTo(px, py);
+            }
+        }
+
+        outputCtx.strokeStyle = color;
+        outputCtx.lineWidth = 2;
+        outputCtx.globalAlpha = 0.65;
+        outputCtx.stroke();
+        outputCtx.globalAlpha = 1;
+    }
+
+    /*
+     * Draw aggregated fuzzy output.
+     */
+
+    outputCtx.beginPath();
+
+    aggregated.forEach((point, index) => {
+
+        const px =
+            padding.left +
+            (point.output / 100) *
+            (width - padding.left - padding.right);
+
+        const py =
+            height -
+            padding.bottom -
+            point.membership *
+            (height - padding.top - padding.bottom);
+
+        if (index === 0) {
+            outputCtx.moveTo(px, py);
+        } else {
+            outputCtx.lineTo(px, py);
+        }
+    });
+
+    outputCtx.strokeStyle = "#39765a";
+    outputCtx.lineWidth = 4;
+    outputCtx.stroke();
+
+    /*
+     * Fill aggregated region.
+     */
+
+    outputCtx.lineTo(
+        width - padding.right,
+        height - padding.bottom
+    );
+
+    outputCtx.lineTo(
+        padding.left,
+        height - padding.bottom
+    );
+
+    outputCtx.closePath();
+
+    outputCtx.fillStyle = "rgba(88,166,124,0.13)";
+    outputCtx.fill();
+
+    /*
+     * Legend.
+     */
+
+    const legend = [
+        ["#80b7e8", "Low"],
+        ["#8b72d8", "Moderate"],
+        ["#e99461", "High"],
+        ["#39765a", "Aggregated"]
+    ];
+
+    legend.forEach((item, index) => {
+
+        const x = padding.left + index * 115;
+
+        outputCtx.fillStyle = item[0];
+        outputCtx.fillRect(x, 4, 22, 4);
+
+        outputCtx.fillStyle = "#777386";
+        outputCtx.font = "11px Inter, sans-serif";
+        outputCtx.fillText(
+            item[1],
+            x + 28,
+            9
+        );
+    });
+}
+
+/* ---------------------------------------------------------
+   Main update cycle
+--------------------------------------------------------- */
+
+function updateSystem() {
+
+    const temperature =
+        Number(temperatureInput.value);
+
+    const humidity =
+        Number(humidityInput.value);
+
+    temperatureValue.textContent =
+        `${temperature.toFixed(1)}°C`;
+
+    humidityValue.textContent =
+        `${humidity.toFixed(1)}%`;
+
+    /*
+     * 1. Fuzzification
+     */
+
+    const memberships =
+        fuzzify(
+            temperature,
+            humidity
+        );
+
+    renderMemberships(memberships);
+
+    /*
+     * 2. Rule evaluation
+     */
+
+    const evaluatedRules =
+        evaluateRules(memberships);
+
+    renderActiveRules(evaluatedRules);
+    renderRuleTable(evaluatedRules);
+
+    /*
+     * 3. Aggregation
+     * 4. Defuzzification
+     */
+
+    const result =
+        defuzzify(evaluatedRules);
+
+    const roundedOutput =
+        Math.round(result.value);
+
+    fanOutput.textContent =
+        `${roundedOutput}%`;
+
+    fanCategory.textContent =
+        getOutputCategory(result.value);
+
+    /*
+     * Visualizations
+     */
+
+    drawTemperatureChart(
+        temperature
+    );
+
+    drawOutputChart(
+        result.aggregated
+    );
+}
+
+/* ---------------------------------------------------------
+   Presets
+--------------------------------------------------------- */
+
+document.querySelectorAll(".preset").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        temperatureInput.value =
+            button.dataset.temp;
+
+        humidityInput.value =
+            button.dataset.humidity;
+
+        updateSystem();
+
+        showToast(
+            "Scenario loaded and fuzzy system recalculated."
+        );
+    });
+});
+
+/* ---------------------------------------------------------
+   Events
+--------------------------------------------------------- */
+
+temperatureInput.addEventListener(
+    "input",
+    updateSystem
+);
+
+humidityInput.addEventListener(
+    "input",
+    updateSystem
+);
+
+showInactive.addEventListener(
+    "change",
+    updateSystem
+);
+
+window.addEventListener(
+    "resize",
+    updateSystem
+);
+
+/* ---------------------------------------------------------
+   Initial render
+--------------------------------------------------------- */
+
+updateSystem();
+
+</script>
+
+</body>
+</html>

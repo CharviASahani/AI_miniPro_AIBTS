@@ -1,0 +1,2494 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive SARSA Reinforcement Learning">
+    <title>SARSA — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #d86f96;
+        --lavender: #e9e1ff;
+        --purple: #8068d2;
+        --purple-dark: #6550b4;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #c99d35;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 8% 5%, rgba(255, 220, 232, 0.70), transparent 25%),
+            radial-gradient(circle at 92% 8%, rgba(220, 238, 255, 0.72), transparent 28%),
+            radial-gradient(circle at 48% 95%, rgba(223, 247, 235, 0.68), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    select,
+    input {
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3.2rem, 8vw, 7rem);
+        line-height: 0.90;
+        letter-spacing: -0.08em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(
+            100deg,
+            #7964c5,
+            #d66d98,
+            #6099d8
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.06rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 8px 30px rgba(70, 60, 100, 0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139, 114, 216, 0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span:last-child {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: auto;
+        padding-bottom: 80px;
+    }
+
+    .dashboard {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .environment-panel {
+        background:
+            radial-gradient(
+                circle at 100% 0%,
+                rgba(220, 238, 255, 0.72),
+                transparent 34%
+            ),
+            rgba(255, 255, 255, 0.88);
+    }
+
+    .panel-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-heading h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-heading p {
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.5;
+        margin-top: 5px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.75rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.learning {
+        background: var(--yellow);
+        color: #85691f;
+    }
+
+    .status.success {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .grid-wrap {
+        width: min(560px, 100%);
+        margin: 10px auto 24px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 7px;
+        aspect-ratio: 8 / 5;
+        padding: 8px;
+        border-radius: 25px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(233, 225, 255, 0.85),
+                rgba(220, 238, 255, 0.85)
+            );
+        box-shadow:
+            inset 0 0 0 1px rgba(80, 65, 120, 0.08),
+            0 15px 35px rgba(70, 60, 100, 0.08);
+    }
+
+    .grid-cell {
+        position: relative;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(55, 48, 80, 0.07);
+        overflow: hidden;
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease,
+            background 0.18s ease;
+    }
+
+    .grid-cell.wall {
+        background: #cfc8df;
+        box-shadow: inset 0 0 0 1px rgba(80, 70, 100, 0.10);
+    }
+
+    .grid-cell.start {
+        background: var(--mint);
+    }
+
+    .grid-cell.goal {
+        background: var(--yellow);
+    }
+
+    .grid-cell.agent {
+        background: linear-gradient(135deg, #e9e1ff, #ffdce8);
+        box-shadow:
+            inset 0 0 0 2px rgba(128, 104, 210, 0.28),
+            0 7px 16px rgba(128, 104, 210, 0.15);
+        transform: scale(1.04);
+    }
+
+    .grid-cell.current {
+        box-shadow:
+            inset 0 0 0 3px rgba(96, 153, 216, 0.30),
+            0 7px 16px rgba(96, 153, 216, 0.10);
+    }
+
+    .cell-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(0.75rem, 2vw, 1.25rem);
+        font-weight: 950;
+    }
+
+    .grid-cell.wall .cell-label {
+        color: #817990;
+    }
+
+    .grid-cell.start .cell-label {
+        color: #39765a;
+    }
+
+    .grid-cell.goal .cell-label {
+        color: #8b6b20;
+    }
+
+    .grid-cell.agent .cell-label {
+        color: #6855ad;
+    }
+
+    .environment-info {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .info-card {
+        padding: 12px;
+        border-radius: 15px;
+        background: #faf8ff;
+        text-align: center;
+    }
+
+    .info-card small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.70rem;
+        margin-bottom: 4px;
+    }
+
+    .info-card strong {
+        font-size: 1rem;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 9px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 17px;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(128, 104, 210, 0.24);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .control-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin: 15px 0;
+    }
+
+    .select-box {
+        padding: 12px;
+        border-radius: 15px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+    }
+
+    .select-box label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.70rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .select-box select {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--ink);
+        font-weight: 850;
+    }
+
+    .state-panel {
+        background:
+            radial-gradient(
+                circle at 0% 100%,
+                rgba(255, 220, 232, 0.62),
+                transparent 36%
+            ),
+            rgba(255, 255, 255, 0.88);
+    }
+
+    .learning-state {
+        padding: 17px;
+        border-radius: 21px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        margin-bottom: 15px;
+    }
+
+    .state-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .state-title strong {
+        font-size: 0.95rem;
+    }
+
+    .state-chip {
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.68rem;
+        font-weight: 900;
+    }
+
+    .transition {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .transition-box {
+        padding: 12px 7px;
+        border-radius: 14px;
+        text-align: center;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .transition-box small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.65rem;
+        margin-bottom: 4px;
+    }
+
+    .transition-box strong {
+        font-size: 0.85rem;
+    }
+
+    .arrow {
+        color: var(--purple);
+        font-weight: 950;
+    }
+
+    .formula {
+        padding: 18px;
+        border-radius: 21px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(233, 225, 255, 0.75),
+                rgba(220, 238, 255, 0.70)
+            );
+        margin-bottom: 15px;
+    }
+
+    .formula-label {
+        color: #6855ad;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.68rem;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .formula-main {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(0.72rem, 2vw, 0.92rem);
+        font-weight: 850;
+        line-height: 1.7;
+        overflow-x: auto;
+    }
+
+    .formula-main .accent {
+        color: var(--purple-dark);
+    }
+
+    .formula-main .green {
+        color: #39765a;
+    }
+
+    .formula-main .pink {
+        color: #a65076;
+    }
+
+    .calculation {
+        padding: 17px;
+        border-radius: 21px;
+        background: white;
+        border: 1px solid var(--border);
+        margin-bottom: 15px;
+    }
+
+    .calculation h3 {
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+    }
+
+    .calculation-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px dashed rgba(55, 48, 80, 0.09);
+        font-size: 0.78rem;
+    }
+
+    .calculation-line:last-child {
+        border-bottom: 0;
+    }
+
+    .calculation-line span:first-child {
+        color: var(--muted);
+    }
+
+    .calculation-line strong {
+        text-align: right;
+    }
+
+    .reward-positive {
+        color: var(--green);
+    }
+
+    .reward-negative {
+        color: #c25d80;
+    }
+
+    .reward-neutral {
+        color: var(--blue-dark);
+    }
+
+    .policy-box {
+        padding: 15px;
+        border-radius: 19px;
+        background: var(--mint);
+        color: #39765a;
+        line-height: 1.6;
+        font-size: 0.79rem;
+    }
+
+    .policy-box strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .stats-section {
+        margin-top: 24px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .stat {
+        padding: 18px;
+        border-radius: 22px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.80);
+        box-shadow: 0 8px 25px rgba(70,60,100,0.05);
+    }
+
+    .stat:nth-child(1) {
+        background: #f1edff;
+    }
+
+    .stat:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .stat:nth-child(3) {
+        background: #effaf4;
+    }
+
+    .stat:nth-child(4) {
+        background: #fff1f5;
+    }
+
+    .stat small {
+        color: var(--muted);
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.74rem;
+    }
+
+    .stat strong {
+        font-size: 1.45rem;
+        letter-spacing: -0.03em;
+    }
+
+    .q-section {
+        margin-top: 24px;
+        padding: 30px;
+        border-radius: 30px;
+        background:
+            radial-gradient(
+                circle at 100% 0%,
+                rgba(233, 225, 255, 0.75),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 0% 100%,
+                rgba(255, 220, 232, 0.65),
+                transparent 30%
+            ),
+            rgba(255,255,255,0.88);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.72rem;
+        margin-bottom: 8px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 9px auto 0;
+        color: var(--muted);
+        line-height: 1.65;
+    }
+
+    .qtable-wrap {
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+
+    .qtable {
+        min-width: 760px;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 5px;
+    }
+
+    .qtable th {
+        padding: 10px 7px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 900;
+    }
+
+    .qtable td {
+        width: 12.5%;
+        height: 76px;
+        padding: 7px;
+        border-radius: 14px;
+        background: white;
+        border: 1px solid rgba(55,48,80,0.07);
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .q-state {
+        display: block;
+        font-weight: 900;
+        font-size: 0.70rem;
+        color: var(--muted);
+    }
+
+    .q-value {
+        display: block;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.78rem;
+        font-weight: 900;
+        margin-top: 4px;
+    }
+
+    .q-actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3px;
+        margin-top: 7px;
+    }
+
+    .q-action {
+        padding: 3px 1px;
+        border-radius: 6px;
+        font-size: 0.55rem;
+        font-weight: 900;
+        background: #f5f2fb;
+        color: #817990;
+    }
+
+    .q-action.best {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .q-action.positive {
+        color: #4c86b9;
+        background: #eef7ff;
+    }
+
+    .q-action.negative {
+        color: #a65076;
+        background: #fff1f5;
+    }
+
+    .legend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 18px;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.72rem;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .legend-dot.green {
+        background: var(--green);
+    }
+
+    .legend-dot.blue {
+        background: var(--blue-dark);
+    }
+
+    .legend-dot.pink {
+        background: var(--pink-dark);
+    }
+
+    .concept-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 43px;
+        height: 43px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.82);
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.90rem;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas,
+            "Liberation Mono", monospace;
+        font-size: 0.79rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    .footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        z-index: 200;
+        transform: translate(-50%, 120px);
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.84rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+        max-width: calc(100% - 30px);
+        text-align: center;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 950px) {
+        .dashboard {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 700px) {
+        .learning-path,
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .environment-info {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .control-row {
+            grid-template-columns: 1fr;
+        }
+
+        .transition {
+            grid-template-columns: 1fr;
+        }
+
+        .arrow {
+            transform: rotate(90deg);
+            justify-self: center;
+        }
+
+        .panel,
+        .q-section {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .grid {
+            gap: 4px;
+            padding: 5px;
+        }
+
+        .grid-cell {
+            border-radius: 8px;
+        }
+
+        .panel-heading {
+            flex-direction: column;
+        }
+
+        .q-section {
+            padding: 18px 12px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">
+        AI <span>–</span> Behind The State
+    </a>
+
+
+<a class="back" href="../index.html">
+    ← Back to Explore
+</a>
+
+
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">
+        Reinforcement Learning · On-Policy Control · SARSA
+    </div>
+
+
+<h1>
+    Watch AI<br>
+    <span class="gradient">Learn by Doing.</span>
+</h1>
+
+<p>
+    Train an agent with SARSA and watch every state, action,
+    reward and Q-value update happen in real time.
+    The agent does not receive a precomputed path — it learns
+    through repeated interaction with its environment.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Interact</strong>
+    <span>The agent explores its environment.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Update</strong>
+    <span>SARSA learns from actual transitions.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>Inspect the Q-table and learning rule.</span>
+</div>
+
+
+</section>
+
+<main class="main-section">
+
+
+<section class="dashboard">
+
+    <div class="panel environment-panel">
+
+        <div class="panel-heading">
+            <div>
+                <h2>🧭 Learning Environment</h2>
+                <p>
+                    Guide the agent toward the goal while
+                    avoiding walls and costly movement.
+                </p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div class="grid-wrap">
+            <div id="grid" class="grid" aria-label="SARSA environment"></div>
+        </div>
+
+        <div class="environment-info">
+
+            <div class="info-card">
+                <small>Episode</small>
+                <strong id="episodeValue">0</strong>
+            </div>
+
+            <div class="info-card">
+                <small>Step</small>
+                <strong id="stepValue">0</strong>
+            </div>
+
+            <div class="info-card">
+                <small>Reward</small>
+                <strong id="rewardValue">0</strong>
+            </div>
+
+            <div class="info-card">
+                <small>State</small>
+                <strong id="stateValue">S0</strong>
+            </div>
+
+        </div>
+
+        <div class="control-row">
+
+            <div class="select-box">
+                <label for="speedSelect">Learning Speed</label>
+                <select id="speedSelect">
+                    <option value="250">Slow</option>
+                    <option value="100" selected>Normal</option>
+                    <option value="35">Fast</option>
+                    <option value="5">Turbo</option>
+                </select>
+            </div>
+
+            <div class="select-box">
+                <label for="epsilonSelect">Exploration ε</label>
+                <select id="epsilonSelect">
+                    <option value="0.05">0.05</option>
+                    <option value="0.10" selected>0.10</option>
+                    <option value="0.20">0.20</option>
+                    <option value="0.30">0.30</option>
+                </select>
+            </div>
+
+            <div class="select-box">
+                <label for="alphaSelect">Learning α</label>
+                <select id="alphaSelect">
+                    <option value="0.05">0.05</option>
+                    <option value="0.10" selected>0.10</option>
+                    <option value="0.20">0.20</option>
+                    <option value="0.50">0.50</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="controls">
+            <button id="stepBtn" class="btn btn-blue">
+                ▶ One Step
+            </button>
+
+            <button id="episodeBtn" class="btn btn-primary">
+                ✦ Run Episode
+            </button>
+
+            <button id="trainBtn" class="btn btn-green">
+                ⚡ Train 100
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ Reset Learning
+            </button>
+        </div>
+
+    </div>
+
+    <div class="panel state-panel">
+
+        <div class="panel-heading">
+            <div>
+                <h2>✦ Behind The State</h2>
+                <p>
+                    SARSA updates the value of the action it
+                    actually selected next.
+                </p>
+            </div>
+        </div>
+
+        <div class="learning-state">
+
+            <div class="state-title">
+                <strong>Live Transition</strong>
+                <span id="transitionChip" class="state-chip">
+                    Waiting
+                </span>
+            </div>
+
+            <div class="transition">
+
+                <div class="transition-box">
+                    <small>STATE S</small>
+                    <strong id="transitionState">S0</strong>
+                </div>
+
+                <span class="arrow">→</span>
+
+                <div class="transition-box">
+                    <small>ACTION A</small>
+                    <strong id="transitionAction">—</strong>
+                </div>
+
+                <span class="arrow">→</span>
+
+                <div class="transition-box">
+                    <small>STATE S'</small>
+                    <strong id="transitionNextState">—</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="formula">
+
+            <div class="formula-label">
+                SARSA Update Rule
+            </div>
+
+            <div class="formula-main">
+                Q(s,a) ← Q(s,a) +
+                <span class="accent">α</span>
+                [
+                <span class="green">r</span> +
+                γ Q(s',a') − Q(s,a)
+                ]
+            </div>
+
+        </div>
+
+        <div class="calculation">
+
+            <h3>Latest Calculation</h3>
+
+            <div class="calculation-line">
+                <span>Current Q(s,a)</span>
+                <strong id="calcCurrent">0.000</strong>
+            </div>
+
+            <div class="calculation-line">
+                <span>Reward r</span>
+                <strong id="calcReward">0</strong>
+            </div>
+
+            <div class="calculation-line">
+                <span>Next Q(s',a')</span>
+                <strong id="calcNext">0.000</strong>
+            </div>
+
+            <div class="calculation-line">
+                <span>Discount γ</span>
+                <strong id="calcGamma">0.90</strong>
+            </div>
+
+            <div class="calculation-line">
+                <span>Learning α</span>
+                <strong id="calcAlpha">0.10</strong>
+            </div>
+
+            <div class="calculation-line">
+                <span>TD Target</span>
+                <strong id="calcTarget">0.000</strong>
+            </div>
+
+            <div class="calculation-line">
+                <span>New Q(s,a)</span>
+                <strong id="calcNew">0.000</strong>
+            </div>
+
+        </div>
+
+        <div class="policy-box">
+
+            <strong id="policyTitle">
+                Waiting for the first transition
+            </strong>
+
+            <span id="policyText">
+                Press "One Step" or "Run Episode" to create
+                a real SARSA transition and inspect its update.
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="stats-section">
+
+    <div class="stats-grid">
+
+        <div class="stat">
+            <small>Total Episodes</small>
+            <strong id="totalEpisodes">0</strong>
+        </div>
+
+        <div class="stat">
+            <small>Successful Episodes</small>
+            <strong id="successEpisodes">0</strong>
+        </div>
+
+        <div class="stat">
+            <small>Success Rate</small>
+            <strong id="successRate">0%</strong>
+        </div>
+
+        <div class="stat">
+            <small>Best Reward</small>
+            <strong id="bestReward">—</strong>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="q-section">
+
+    <div class="section-heading">
+        <div class="mini">Live Knowledge</div>
+
+        <h2>The Q-Table</h2>
+
+        <p>
+            Each state stores an estimated value for every possible
+            action. As the agent experiences the environment,
+            these values are gradually updated by SARSA.
+        </p>
+    </div>
+
+    <div class="qtable-wrap">
+        <table class="qtable">
+            <thead>
+                <tr>
+                    <th>State</th>
+                    <th>↑</th>
+                    <th>→</th>
+                    <th>↓</th>
+                    <th>←</th>
+                </tr>
+            </thead>
+
+            <tbody id="qTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <span class="legend-dot green"></span>
+            Best action
+        </div>
+
+        <div class="legend-item">
+            <span class="legend-dot blue"></span>
+            Positive value
+        </div>
+
+        <div class="legend-item">
+            <span class="legend-dot pink"></span>
+            Negative value
+        </div>
+    </div>
+
+</section>
+
+
+</main>
+
+<section class="concept-section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand SARSA</div>
+
+    <h2>Why is it called SARSA?</h2>
+
+    <p>
+        The name comes directly from the five elements involved
+        in one learning transition.
+    </p>
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+        <div class="concept-icon">S</div>
+        <h3>State</h3>
+        <p>
+            The agent observes where it currently is in the
+            environment. This is the state used to select an action.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">A</div>
+        <h3>Action</h3>
+        <p>
+            The agent chooses an action using its current policy,
+            balancing exploration with exploitation.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">R</div>
+        <h3>Reward</h3>
+        <p>
+            The environment returns a reward after the action.
+            This tells the agent whether the transition was useful.
+        </p>
+    </article>
+
+    <article class="concept">
+        <div class="concept-icon">S′</div>
+        <h3>Next State + Action</h3>
+        <p>
+            SARSA then observes the next state and selects the next
+            action. That actual next action is used in the update.
+        </p>
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>The core SARSA update.</h2>
+
+    <p>
+        Unlike a purely decorative visualization, this page uses
+        the same update rule shown below to modify the live Q-table.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">sarsa.js · core update</span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">sarsaUpdate</span>(
+state,
+action,
+reward,
+nextState,
+nextAction
+
+
+) { <span class="kw">const</span> currentQ =
+Q[state][action];
+
+
+<span class="kw">const</span> nextQ =
+    Q[nextState][nextAction];
+
+<span class="kw">const</span> target =
+    reward + gamma * nextQ;
+
+Q[state][action] =
+    currentQ +
+    alpha * (target - currentQ);
+
+<span class="kw">return</span> Q[state][action];
+
+
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<footer class="footer">
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * SARSA Reinforcement Learning
+ *
+ * This implementation uses genuine tabular SARSA:
+ *
+ * S  = current state
+ * A  = action selected from current policy
+ * R  = reward received
+ * S' = next state
+ * A' = next action selected from the same policy
+ *
+ * Q(S,A) <- Q(S,A) +
+ *           alpha * [R + gamma * Q(S',A') - Q(S,A)]
+ *
+ * The environment is an 8 x 5 grid.
+ * The agent starts at S0 and must reach the goal.
+ */
+
+const ROWS = 5;
+const COLS = 8;
+
+const ACTIONS = [
+    { name: "UP", symbol: "↑", dr: -1, dc: 0 },
+    { name: "RIGHT", symbol: "→", dr: 0, dc: 1 },
+    { name: "DOWN", symbol: "↓", dr: 1, dc: 0 },
+    { name: "LEFT", symbol: "←", dr: 0, dc: -1 }
+];
+
+const START_STATE = 0;
+const GOAL_STATE = 39;
+
+const WALLS = new Set([
+    10, 11,
+    18,
+    19,
+    20,
+    26, 27,
+    34
+]);
+
+const STEP_REWARD = -0.04;
+const WALL_REWARD = -0.75;
+const GOAL_REWARD = 10;
+const GAMMA = 0.90;
+const MAX_STEPS = 100;
+
+const gridElement = document.getElementById("grid");
+const statusBadge = document.getElementById("statusBadge");
+
+const episodeValue = document.getElementById("episodeValue");
+const stepValue = document.getElementById("stepValue");
+const rewardValue = document.getElementById("rewardValue");
+const stateValue = document.getElementById("stateValue");
+
+const speedSelect = document.getElementById("speedSelect");
+const epsilonSelect = document.getElementById("epsilonSelect");
+const alphaSelect = document.getElementById("alphaSelect");
+
+const stepBtn = document.getElementById("stepBtn");
+const episodeBtn = document.getElementById("episodeBtn");
+const trainBtn = document.getElementById("trainBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const transitionChip = document.getElementById("transitionChip");
+const transitionState = document.getElementById("transitionState");
+const transitionAction = document.getElementById("transitionAction");
+const transitionNextState = document.getElementById("transitionNextState");
+
+const calcCurrent = document.getElementById("calcCurrent");
+const calcReward = document.getElementById("calcReward");
+const calcNext = document.getElementById("calcNext");
+const calcGamma = document.getElementById("calcGamma");
+const calcAlpha = document.getElementById("calcAlpha");
+const calcTarget = document.getElementById("calcTarget");
+const calcNew = document.getElementById("calcNew");
+
+const policyTitle = document.getElementById("policyTitle");
+const policyText = document.getElementById("policyText");
+
+const totalEpisodes = document.getElementById("totalEpisodes");
+const successEpisodes = document.getElementById("successEpisodes");
+const successRate = document.getElementById("successRate");
+const bestReward = document.getElementById("bestReward");
+
+const qTableBody = document.getElementById("qTableBody");
+const toast = document.getElementById("toast");
+
+let Q = createQTable();
+
+let currentState = START_STATE;
+let currentAction = null;
+
+let episode = 0;
+let stepCount = 0;
+let episodeReward = 0;
+
+let successfulEpisodes = 0;
+let bestEpisodeReward = null;
+
+let learning = false;
+let animationTimer = null;
+
+let latestTransition = {
+    state: START_STATE,
+    action: null,
+    reward: 0,
+    nextState: null,
+    nextAction: null,
+    oldQ: 0,
+    nextQ: 0,
+    target: 0,
+    newQ: 0
+};
+
+function createQTable() {
+    return Array.from(
+        { length: ROWS * COLS },
+        () => Array(ACTIONS.length).fill(0)
+    );
+}
+
+function stateRow(state) {
+    return Math.floor(state / COLS);
+}
+
+function stateCol(state) {
+    return state % COLS;
+}
+
+function stateName(state) {
+    return "S" + state;
+}
+
+function isWall(state) {
+    return WALLS.has(state);
+}
+
+function isTerminal(state) {
+    return state === GOAL_STATE;
+}
+
+function validState(row, col) {
+    return (
+        row >= 0 &&
+        row < ROWS &&
+        col >= 0 &&
+        col < COLS
+    );
+}
+
+function transition(state, actionIndex) {
+    const action = ACTIONS[actionIndex];
+
+    const row = stateRow(state);
+    const col = stateCol(state);
+
+    const nextRow = row + action.dr;
+    const nextCol = col + action.dc;
+
+    if (!validState(nextRow, nextCol)) {
+        return {
+            nextState: state,
+            reward: WALL_REWARD
+        };
+    }
+
+    const nextState =
+        nextRow * COLS + nextCol;
+
+    if (isWall(nextState)) {
+        return {
+            nextState: state,
+            reward: WALL_REWARD
+        };
+    }
+
+    if (nextState === GOAL_STATE) {
+        return {
+            nextState,
+            reward: GOAL_REWARD
+        };
+    }
+
+    return {
+        nextState,
+        reward: STEP_REWARD
+    };
+}
+
+function getLegalActions(state) {
+    const actions = [];
+
+    for (let action = 0; action < ACTIONS.length; action++) {
+        const result = transition(state, action);
+
+        /*
+         * Actions that hit a wall/boundary are still technically
+         * available in this environment. They receive a penalty
+         * and leave the agent in the same state.
+         */
+        if (result) {
+            actions.push(action);
+        }
+    }
+
+    return actions;
+}
+
+function getBestAction(state) {
+    const legalActions = getLegalActions(state);
+
+    let bestValue = -Infinity;
+    let bestActions = [];
+
+    for (const action of legalActions) {
+        const value = Q[state][action];
+
+        if (value > bestValue + 1e-12) {
+            bestValue = value;
+            bestActions = [action];
+        } else if (Math.abs(value - bestValue) < 1e-12) {
+            bestActions.push(action);
+        }
+    }
+
+    if (bestActions.length === 0) {
+        return 0;
+    }
+
+    return bestActions[
+        Math.floor(Math.random() * bestActions.length)
+    ];
+}
+
+function chooseAction(state) {
+    const epsilon = Number(epsilonSelect.value);
+    const legalActions = getLegalActions(state);
+
+    if (
+        Math.random() < epsilon
+    ) {
+        return legalActions[
+            Math.floor(Math.random() * legalActions.length)
+        ];
+    }
+
+    return getBestAction(state);
+}
+
+function resetEnvironment() {
+    currentState = START_STATE;
+    currentAction = chooseAction(currentState);
+
+    stepCount = 0;
+    episodeReward = 0;
+
+    updateEnvironmentUI();
+}
+
+function startNewEpisode(countEpisode = true) {
+    if (countEpisode) {
+        episode++;
+    }
+
+    currentState = START_STATE;
+    currentAction = chooseAction(currentState);
+
+    stepCount = 0;
+    episodeReward = 0;
+
+    updateEnvironmentUI();
+}
+
+function performSarsaStep() {
+    if (isTerminal(currentState)) {
+        startNewEpisode(true);
+    }
+
+    if (currentAction === null) {
+        currentAction = chooseAction(currentState);
+    }
+
+    const state = currentState;
+    const action = currentAction;
+
+    const oldQ = Q[state][action];
+
+    const result = transition(
+        state,
+        action
+    );
+
+    const nextState = result.nextState;
+    const reward = result.reward;
+
+    let nextAction = null;
+    let nextQ = 0;
+
+    if (!isTerminal(nextState)) {
+        nextAction = chooseAction(nextState);
+        nextQ = Q[nextState][nextAction];
+    }
+
+    const alpha = Number(alphaSelect.value);
+
+    const target =
+        reward +
+        GAMMA * nextQ;
+
+    const newQ =
+        oldQ +
+        alpha * (target - oldQ);
+
+    Q[state][action] = newQ;
+
+    currentState = nextState;
+    currentAction = nextAction;
+
+    stepCount++;
+    episodeReward += reward;
+
+    latestTransition = {
+        state,
+        action,
+        reward,
+        nextState,
+        nextAction,
+        oldQ,
+        nextQ,
+        target,
+        newQ
+    };
+
+    updateEnvironmentUI();
+    updateTransitionUI();
+    updateQTable();
+
+    if (
+        isTerminal(nextState) ||
+        stepCount >= MAX_STEPS
+    ) {
+        finishEpisode(
+            isTerminal(nextState)
+        );
+        return true;
+    }
+
+    return false;
+}
+
+function finishEpisode(success) {
+    if (success) {
+        successfulEpisodes++;
+        showToast(
+            "Goal reached — SARSA completed the episode."
+        );
+    }
+
+    if (
+        bestEpisodeReward === null ||
+        episodeReward > bestEpisodeReward
+    ) {
+        bestEpisodeReward = episodeReward;
+    }
+
+    updateStats();
+
+    setStatus(
+        success ? "Episode Complete" : "Episode Limit",
+        success ? "success" : "learning"
+    );
+
+    if (success) {
+        policyTitle.textContent =
+            "The agent reached the goal.";
+
+        policyText.textContent =
+            "The transition produced a terminal reward of " +
+            GOAL_REWARD +
+            ". The terminal state has no future action value.";
+    } else {
+        policyTitle.textContent =
+            "Episode stopped.";
+
+        policyText.textContent =
+            "The maximum step limit was reached before the goal.";
+    }
+
+    currentAction = null;
+}
+
+function runSingleEpisode() {
+    if (learning) {
+        return;
+    }
+
+    learning = true;
+
+    episode++;
+
+    startNewEpisode(false);
+
+    setStatus(
+        "Learning...",
+        "learning"
+    );
+
+    const speed = Number(speedSelect.value);
+
+    const runStep = () => {
+        if (!learning) {
+            return;
+        }
+
+        const finished = performSarsaStep();
+
+        if (finished) {
+            learning = false;
+            updateButtons();
+            return;
+        }
+
+        animationTimer = window.setTimeout(
+            runStep,
+            speed
+        );
+    };
+
+    updateButtons();
+    runStep();
+}
+
+function trainManyEpisodes() {
+    if (learning) {
+        return;
+    }
+
+    learning = true;
+
+    const episodesToTrain = 100;
+    let completed = 0;
+
+    setStatus(
+        "Training...",
+        "learning"
+    );
+
+    updateButtons();
+
+    function trainBatch() {
+        if (!learning) {
+            return;
+        }
+
+        for (let i = 0; i < 5; i++) {
+            if (completed >= episodesToTrain) {
+                break;
+            }
+
+            episode++;
+
+            currentState = START_STATE;
+            currentAction = chooseAction(currentState);
+            stepCount = 0;
+            episodeReward = 0;
+
+            let finished = false;
+
+            while (!finished && stepCount < MAX_STEPS) {
+                finished = performSarsaStep();
+            }
+
+            completed++;
+        }
+
+        updateEnvironmentUI();
+        updateTransitionUI();
+        updateQTable();
+        updateStats();
+
+        if (completed >= episodesToTrain) {
+            learning = false;
+
+            setStatus(
+                "Training Complete",
+                "success"
+            );
+
+            showToast(
+                "100 episodes trained successfully."
+            );
+
+            updateButtons();
+            return;
+        }
+
+        animationTimer = window.setTimeout(
+            trainBatch,
+            10
+        );
+    }
+
+    trainBatch();
+}
+
+function resetLearning() {
+    if (animationTimer) {
+        window.clearTimeout(animationTimer);
+        animationTimer = null;
+    }
+
+    learning = false;
+
+    Q = createQTable();
+
+    episode = 0;
+    stepCount = 0;
+    episodeReward = 0;
+    successfulEpisodes = 0;
+    bestEpisodeReward = null;
+
+    currentState = START_STATE;
+    currentAction = chooseAction(currentState);
+
+    latestTransition = {
+        state: START_STATE,
+        action: null,
+        reward: 0,
+        nextState: null,
+        nextAction: null,
+        oldQ: 0,
+        nextQ: 0,
+        target: 0,
+        newQ: 0
+    };
+
+    setStatus(
+        "Ready",
+        ""
+    );
+
+    transitionChip.textContent = "Waiting";
+
+    policyTitle.textContent =
+        "Waiting for the first transition";
+
+    policyText.textContent =
+        'Press "One Step" or "Run Episode" to create a real SARSA transition and inspect its update.';
+
+    updateEnvironmentUI();
+    updateTransitionUI();
+    updateQTable();
+    updateStats();
+    updateButtons();
+
+    showToast(
+        "Q-table cleared. Learning restarted."
+    );
+}
+
+function setStatus(text, type = "") {
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    window.clearTimeout(showToast.timer);
+
+    showToast.timer = window.setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2400);
+}
+
+function updateEnvironmentUI() {
+    episodeValue.textContent = episode;
+    stepValue.textContent = stepCount;
+    rewardValue.textContent =
+        episodeReward.toFixed(2);
+    stateValue.textContent =
+        stateName(currentState);
+
+    renderGrid();
+}
+
+function renderGrid() {
+    gridElement.innerHTML = "";
+
+    for (
+        let state = 0;
+        state < ROWS * COLS;
+        state++
+    ) {
+        const cell = document.createElement("div");
+
+        cell.className = "grid-cell";
+
+        if (isWall(state)) {
+            cell.classList.add("wall");
+        }
+
+        if (state === START_STATE) {
+            cell.classList.add("start");
+        }
+
+        if (state === GOAL_STATE) {
+            cell.classList.add("goal");
+        }
+
+        if (state === currentState) {
+            cell.classList.add("agent");
+            cell.classList.add("current");
+        }
+
+        const label = document.createElement("span");
+        label.className = "cell-label";
+
+        if (state === currentState) {
+            label.textContent = "●";
+        } else if (isWall(state)) {
+            label.textContent = "▪";
+        } else if (state === START_STATE) {
+            label.textContent = "S";
+        } else if (state === GOAL_STATE) {
+            label.textContent = "G";
+        } else {
+            label.textContent = state;
+        }
+
+        cell.appendChild(label);
+        gridElement.appendChild(cell);
+    }
+}
+
+function updateTransitionUI() {
+    const data = latestTransition;
+
+    transitionState.textContent =
+        stateName(data.state);
+
+    transitionAction.textContent =
+        data.action === null
+            ? "—"
+            : ACTIONS[data.action].symbol +
+              " " +
+              ACTIONS[data.action].name;
+
+    transitionNextState.textContent =
+        data.nextState === null
+            ? "—"
+            : stateName(data.nextState);
+
+    if (data.action === null) {
+        transitionChip.textContent = "Waiting";
+    } else {
+        transitionChip.textContent =
+            "S → A → R → S′ → A′";
+    }
+
+    calcCurrent.textContent =
+        data.oldQ.toFixed(3);
+
+    calcReward.textContent =
+        data.reward.toFixed(2);
+
+    calcNext.textContent =
+        data.nextQ.toFixed(3);
+
+    calcGamma.textContent =
+        GAMMA.toFixed(2);
+
+    calcAlpha.textContent =
+        Number(alphaSelect.value).toFixed(2);
+
+    calcTarget.textContent =
+        data.target.toFixed(3);
+
+    calcNew.textContent =
+        data.newQ.toFixed(3);
+}
+
+function updateStats() {
+    totalEpisodes.textContent = episode;
+
+    successEpisodes.textContent =
+        successfulEpisodes;
+
+    const rate =
+        episode === 0
+            ? 0
+            : Math.round(
+                (successfulEpisodes / episode) * 100
+            );
+
+    successRate.textContent =
+        rate + "%";
+
+    bestReward.textContent =
+        bestEpisodeReward === null
+            ? "—"
+            : bestEpisodeReward.toFixed(2);
+}
+
+function valueClass(value) {
+    if (value > 0.01) {
+        return "positive";
+    }
+
+    if (value < -0.01) {
+        return "negative";
+    }
+
+    return "";
+}
+
+function updateQTable() {
+    qTableBody.innerHTML = "";
+
+    for (
+        let state = 0;
+        state < ROWS * COLS;
+        state++
+    ) {
+        if (isWall(state)) {
+            continue;
+        }
+
+        const row = document.createElement("tr");
+
+        const stateHeader = document.createElement("th");
+
+        stateHeader.textContent =
+            stateName(state);
+
+        row.appendChild(stateHeader);
+
+        const bestAction =
+            getBestAction(state);
+
+        for (
+            let action = 0;
+            action < ACTIONS.length;
+            action++
+        ) {
+            const cell =
+                document.createElement("td");
+
+            const stateLabel =
+                document.createElement("span");
+
+            stateLabel.className = "q-state";
+            stateLabel.textContent =
+                stateName(state);
+
+            const value =
+                document.createElement("span");
+
+            value.className =
+                "q-value";
+
+            value.textContent =
+                Q[state][action].toFixed(2);
+
+            cell.appendChild(stateLabel);
+            cell.appendChild(value);
+
+            const actions =
+                document.createElement("div");
+
+            actions.className =
+                "q-actions";
+
+            for (
+                let a = 0;
+                a < ACTIONS.length;
+                a++
+            ) {
+                const actionLabel =
+                    document.createElement("span");
+
+                actionLabel.className =
+                    "q-action";
+
+                if (a === bestAction) {
+                    actionLabel.classList.add("best");
+                } else {
+                    const q =
+                        Q[state][a];
+
+                    const cls =
+                        valueClass(q);
+
+                    if (cls) {
+                        actionLabel.classList.add(cls);
+                    }
+                }
+
+                actionLabel.textContent =
+                    ACTIONS[a].symbol;
+
+                actions.appendChild(
+                    actionLabel
+                );
+            }
+
+            cell.appendChild(actions);
+
+            if (state === currentState) {
+                cell.style.boxShadow =
+                    "inset 0 0 0 2px rgba(128,104,210,0.35)";
+            }
+
+            row.appendChild(cell);
+        }
+
+        qTableBody.appendChild(row);
+    }
+}
+
+function updateButtons() {
+    stepBtn.disabled = learning;
+    episodeBtn.disabled = learning;
+    trainBtn.disabled = learning;
+    resetBtn.disabled = false;
+}
+
+stepBtn.addEventListener(
+    "click",
+    () => {
+        if (learning) {
+            return;
+        }
+
+        setStatus(
+            "Learning Step",
+            "learning"
+        );
+
+        const finished =
+            performSarsaStep();
+
+        if (!finished) {
+            setStatus(
+                "Agent Learning",
+                "learning"
+            );
+
+            policyTitle.textContent =
+                "SARSA updated the current action.";
+
+            policyText.textContent =
+                "The agent used the next action selected by its current policy. That Q-value became part of the TD target.";
+        }
+    }
+);
+
+episodeBtn.addEventListener(
+    "click",
+    runSingleEpisode
+);
+
+trainBtn.addEventListener(
+    "click",
+    trainManyEpisodes
+);
+
+resetBtn.addEventListener(
+    "click",
+    resetLearning
+);
+
+alphaSelect.addEventListener(
+    "change",
+    updateTransitionUI
+);
+
+epsilonSelect.addEventListener(
+    "change",
+    () => {
+        if (!learning) {
+            currentAction =
+                chooseAction(currentState);
+
+            updateTransitionUI();
+        }
+    }
+);
+
+resetEnvironment();
+updateTransitionUI();
+updateQTable();
+updateStats();
+updateButtons();
+</script>
+
+</body>
+</html>

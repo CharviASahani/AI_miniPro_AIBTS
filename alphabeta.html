@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Alpha-Beta Pruning Visualizer">
+    <title>Alpha-Beta Pruning — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #d86f96;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --purple-dark: #6855ad;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #a47d21;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --red-soft: #ffe1e1;
+        --red: #d96b73;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 8% 4%, rgba(255, 220, 232, 0.70), transparent 25%),
+            radial-gradient(circle at 92% 8%, rgba(220, 238, 255, 0.72), transparent 28%),
+            radial-gradient(circle at 50% 95%, rgba(223, 247, 235, 0.70), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255, 250, 242, 0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: var(--purple-dark);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(
+            100deg,
+            #7964c5,
+            #d66d98,
+            #6099d8
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70,60,100,0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .workspace {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .control-panel {
+        background:
+            radial-gradient(
+                circle at 100% 0%,
+                rgba(220,238,255,0.70),
+                transparent 35%
+            ),
+            rgba(255,255,255,0.88);
+    }
+
+    .visual-panel {
+        background:
+            radial-gradient(
+                circle at 0% 100%,
+                rgba(255,220,232,0.60),
+                transparent 35%
+            ),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.6;
+        margin-top: 6px;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        margin-bottom: 18px;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: var(--yellow-dark);
+    }
+
+    .status.complete {
+        background: var(--lavender);
+        color: var(--purple-dark);
+    }
+
+    .status.pruned {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .control-group {
+        margin-bottom: 18px;
+    }
+
+    .control-group label {
+        display: block;
+        font-weight: 850;
+        margin-bottom: 9px;
+    }
+
+    .select-wrap {
+        position: relative;
+    }
+
+    select {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: #fffdf9;
+        color: var(--ink);
+        padding: 13px 15px;
+        border-radius: 15px;
+        outline: none;
+        cursor: pointer;
+    }
+
+    select:focus {
+        border-color: rgba(139,114,216,0.45);
+        box-shadow: 0 0 0 4px rgba(139,114,216,0.08);
+    }
+
+    .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 22px;
+    }
+
+    .stat {
+        padding: 14px 10px;
+        border-radius: 17px;
+        text-align: center;
+        background: #faf8ff;
+    }
+
+    .stat:nth-child(2) {
+        background: #fff4f7;
+    }
+
+    .stat:nth-child(3) {
+        background: #eef8ff;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        margin-bottom: 5px;
+    }
+
+    .stat strong {
+        font-size: 1.35rem;
+    }
+
+    .progress-wrap {
+        margin-top: 22px;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--muted);
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 999px;
+        background: #eeeaf5;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #8b72d8, #d86f96, #6099d8);
+        transition: width 0.35s ease;
+    }
+
+    .tree-container {
+        min-height: 430px;
+        padding: 18px;
+        border-radius: 23px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        overflow: auto;
+    }
+
+    .tree {
+        min-width: 760px;
+        min-height: 380px;
+        position: relative;
+        padding: 20px;
+    }
+
+    .tree-title {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        margin-bottom: 18px;
+    }
+
+    .levels {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        align-items: center;
+    }
+
+    .level {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .node {
+        min-width: 125px;
+        padding: 13px 12px;
+        border-radius: 17px;
+        background: white;
+        border: 2px solid #ded8f5;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(80,70,110,0.07);
+        transition: 0.3s ease;
+    }
+
+    .node.active {
+        border-color: var(--purple);
+        background: var(--lavender);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(139,114,216,0.17);
+    }
+
+    .node.evaluated {
+        border-color: #a7d8bc;
+        background: var(--mint);
+    }
+
+    .node.pruned {
+        border-color: #e9a6b9;
+        background: var(--pink);
+        opacity: 0.75;
+    }
+
+    .node-value {
+        font-size: 1.15rem;
+        font-weight: 950;
+    }
+
+    .node-label {
+        color: var(--muted);
+        font-size: 0.70rem;
+        margin-top: 4px;
+    }
+
+    .node-bound {
+        display: inline-block;
+        margin-top: 7px;
+        padding: 4px 7px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.8);
+        color: var(--purple-dark);
+        font-size: 0.66rem;
+        font-weight: 850;
+    }
+
+    .message {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.6;
+        font-size: 0.86rem;
+    }
+
+    .timeline-section {
+        margin-top: 24px;
+    }
+
+    .timeline-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .timeline-title h3 {
+        font-size: 1.05rem;
+    }
+
+    .step-count {
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .timeline {
+        max-height: 250px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .event {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 11px 12px;
+        border-radius: 14px;
+        margin-bottom: 8px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .event-icon {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--lavender);
+    }
+
+    .event.prune .event-icon {
+        background: var(--pink);
+    }
+
+    .event.evaluate .event-icon {
+        background: var(--mint);
+    }
+
+    .event strong {
+        display: block;
+        font-size: 0.82rem;
+        margin-bottom: 3px;
+    }
+
+    .event p {
+        color: var(--muted);
+        font-size: 0.74rem;
+        line-height: 1.45;
+    }
+
+    .section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .demo-card {
+        border-radius: 30px;
+        padding: 32px;
+        background:
+            radial-gradient(
+                circle at 90% 10%,
+                rgba(233,225,255,0.8),
+                transparent 28%
+            ),
+            radial-gradient(
+                circle at 10% 90%,
+                rgba(255,220,232,0.8),
+                transparent 28%
+            ),
+            #ffffff;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .demo-box {
+        padding: 20px 15px;
+        border-radius: 19px;
+        text-align: center;
+        background: #faf8ff;
+        border: 1px solid var(--border);
+    }
+
+    .demo-box:nth-child(2) {
+        background: #fff2f6;
+    }
+
+    .demo-box:nth-child(3) {
+        background: #eef8ff;
+    }
+
+    .demo-box:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .demo-box .big {
+        font-size: 1.7rem;
+        font-weight: 950;
+        margin-bottom: 6px;
+    }
+
+    .demo-box small {
+        color: var(--muted);
+        line-height: 1.4;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas,
+            "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+        text-align: center;
+        max-width: 90%;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .workspace {
+            grid-template-columns: 1fr;
+        }
+
+        .demo-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .demo-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .demo-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .tree-container {
+            min-height: 390px;
+            padding: 10px;
+        }
+
+        .tree {
+            min-width: 650px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+
+<nav class="nav">
+    <a class="brand" href="../index.html">
+        AI <span>–</span> Behind The State
+    </a>
+
+    <a class="back" href="../index.html">
+        ← Back to Explore
+    </a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">
+        Search · Optimization · Alpha-Beta
+    </div>
+
+    <h1>
+        Watch AI<br>
+        <span class="gradient">skip the useless.</span>
+    </h1>
+
+    <p>
+        Explore Alpha-Beta Pruning through an interactive game-tree
+        search. Watch the algorithm evaluate branches, update its
+        bounds, and safely prune states that cannot change the answer.
+    </p>
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+    <div class="path-card active">
+        <span class="path-number">01</span>
+        <strong>Run</strong>
+        <span>Start the search.</span>
+    </div>
+
+    <div class="path-card">
+        <span class="path-number">02</span>
+        <strong>Watch</strong>
+        <span>See branches get evaluated.</span>
+    </div>
+
+    <div class="path-card">
+        <span class="path-number">03</span>
+        <strong>Understand</strong>
+        <span>Learn why pruning is safe.</span>
+    </div>
+
+</section>
+
+<main>
+
+    <section class="main-section">
+
+        <div class="workspace">
+
+            <div class="panel control-panel">
+
+                <div class="panel-title">
+                    <h2>🌳 Search Playground</h2>
+
+                    <p>
+                        Choose a tree and let Alpha-Beta search it
+                        step by step.
+                    </p>
+                </div>
+
+                <div id="status" class="status">
+                    ● Ready
+                </div>
+
+                <div class="control-group">
+                    <label for="treeSelect">
+                        Choose a search tree
+                    </label>
+
+                    <select id="treeSelect">
+                        <option value="balanced">
+                            Balanced Tree
+                        </option>
+
+                        <option value="pruning">
+                            Pruning Challenge
+                        </option>
+
+                        <option value="deep">
+                            Deep Search
+                        </option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="speedSelect">
+                        Animation speed
+                    </label>
+
+                    <select id="speedSelect">
+                        <option value="700">
+                            Relaxed
+                        </option>
+
+                        <option value="420" selected>
+                            Normal
+                        </option>
+
+                        <option value="180">
+                            Fast
+                        </option>
+                    </select>
+                </div>
+
+                <div class="buttons">
+                    <button id="startBtn" class="btn btn-primary">
+                        ▶ Start Search
+                    </button>
+
+                    <button id="stepBtn" class="btn btn-blue">
+                        → Next Step
+                    </button>
+
+                    <button id="resetBtn" class="btn btn-secondary">
+                        ↻ Reset
+                    </button>
+                </div>
+
+                <div class="stats">
+
+                    <div class="stat">
+                        <small>Nodes Visited</small>
+                        <strong id="visitedCount">0</strong>
+                    </div>
+
+                    <div class="stat">
+                        <small>Nodes Pruned</small>
+                        <strong id="prunedCount">0</strong>
+                    </div>
+
+                    <div class="stat">
+                        <small>Best Value</small>
+                        <strong id="bestValue">—</strong>
+                    </div>
+
+                </div>
+
+                <div class="progress-wrap">
+
+                    <div class="progress-header">
+                        <span>Search progress</span>
+                        <span id="progressText">0%</span>
+                    </div>
+
+                    <div class="progress">
+                        <div
+                            id="progressBar"
+                            class="progress-bar"
+                        ></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="panel visual-panel">
+
+                <div class="panel-title">
+                    <h2>✦ Behind The State</h2>
+
+                    <p>
+                        Green nodes were evaluated. Pink nodes were
+                        safely skipped because of an Alpha-Beta cutoff.
+                    </p>
+                </div>
+
+                <div id="treeContainer" class="tree-container">
+                    <div class="tree">
+
+                        <div class="tree-title">
+                            Press "Start Search" to begin exploring
+                            the game tree.
+                        </div>
+
+                        <div class="levels">
+
+                            <div class="level">
+                                <div class="node active">
+                                    <div class="node-value">
+                                        MAX
+                                    </div>
+
+                                    <div class="node-label">
+                                        Root
+                                    </div>
+
+                                    <div class="node-bound">
+                                        α = −∞ · β = +∞
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="level">
+                                <div class="node">
+                                    <div class="node-value">
+                                        ?
+                                    </div>
+
+                                    <div class="node-label">
+                                        Waiting
+                                    </div>
+                                </div>
+
+                                <div class="node">
+                                    <div class="node-value">
+                                        ?
+                                    </div>
+
+                                    <div class="node-label">
+                                        Waiting
+                                    </div>
+                                </div>
+
+                                <div class="node">
+                                    <div class="node-value">
+                                        ?
+                                    </div>
+
+                                    <div class="node-label">
+                                        Waiting
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="message" class="message">
+                    💡 Alpha-Beta Pruning does not change the final
+                    Minimax answer. It simply avoids exploring branches
+                    that can no longer affect that answer.
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="timeline-section">
+
+            <div class="timeline-title">
+                <h3>🧭 Search Timeline</h3>
+
+                <span id="stepCount" class="step-count">
+                    0 events
+                </span>
+            </div>
+
+            <div id="timeline" class="timeline">
+
+                <div class="event">
+                    <div class="event-icon">✨</div>
+
+                    <div>
+                        <strong>Ready to explore</strong>
+
+                        <p>
+                            Start the algorithm to see each
+                            evaluation and pruning decision.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <div class="mini">
+                Understand the idea
+            </div>
+
+            <h2>
+                Why can AI skip a branch?
+            </h2>
+
+            <p>
+                Alpha-Beta Pruning works alongside Minimax. Once the
+                algorithm already knows enough about a position, some
+                remaining branches cannot possibly improve the result.
+                Those branches can be ignored.
+            </p>
+
+        </div>
+
+        <div class="concept-grid">
+
+            <article class="concept">
+
+                <div class="concept-icon">
+                    🔺
+                </div>
+
+                <h3>
+                    Alpha
+                </h3>
+
+                <p>
+                    Alpha represents the best value that the maximizing
+                    player can guarantee so far.
+                </p>
+
+            </article>
+
+            <article class="concept">
+
+                <div class="concept-icon">
+                    🔻
+                </div>
+
+                <h3>
+                    Beta
+                </h3>
+
+                <p>
+                    Beta represents the best value that the minimizing
+                    player can guarantee so far.
+                </p>
+
+            </article>
+
+            <article class="concept">
+
+                <div class="concept-icon">
+                    ✂️
+                </div>
+
+                <h3>
+                    Cutoff
+                </h3>
+
+                <p>
+                    When alpha becomes greater than or equal to beta,
+                    the remaining siblings do not need to be explored.
+                </p>
+
+            </article>
+
+            <article class="concept">
+
+                <div class="concept-icon">
+                    ⚡
+                </div>
+
+                <h3>
+                    Same answer, less work
+                </h3>
+
+                <p>
+                    Correct Alpha-Beta Pruning produces the same
+                    Minimax result while potentially examining fewer
+                    nodes.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
+
+    <section class="section">
+
+        <div class="demo-card">
+
+            <div class="section-heading" style="margin-bottom:0;">
+
+                <div class="mini">
+                    The big idea
+                </div>
+
+                <h2>
+                    Minimax + pruning = smarter search
+                </h2>
+
+                <p>
+                    Imagine searching a huge game tree. You do not
+                    necessarily need to inspect every leaf to know
+                    which move is best.
+                </p>
+
+            </div>
+
+            <div class="demo-grid">
+
+                <div class="demo-box">
+                    <div class="big">🔎</div>
+                    <small>
+                        Explore possible future states.
+                    </small>
+                </div>
+
+                <div class="demo-box">
+                    <div class="big">🔺</div>
+                    <small>
+                        Track the maximizing boundary.
+                    </small>
+                </div>
+
+                <div class="demo-box">
+                    <div class="big">🔻</div>
+                    <small>
+                        Track the minimizing boundary.
+                    </small>
+                </div>
+
+                <div class="demo-box">
+                    <div class="big">✂️</div>
+                    <small>
+                        Skip branches that cannot matter.
+                    </small>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <div class="mini">
+                Implementation
+            </div>
+
+            <h2>
+                The pruning rule
+            </h2>
+
+            <p>
+                This is the core idea behind Alpha-Beta search.
+            </p>
+
+        </div>
+
+        <div class="code-card">
+
+            <div class="code-top">
+
+                <div class="dots">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+
+                <span class="code-title">
+                    alphabeta.js
+                </span>
+
+                <span></span>
+
+            </div>
+
+            <pre><code><span class="kw">function</span> <span class="fn">alphaBeta</span>(
+node,
+depth,
+alpha,
+beta,
+maximizingPlayer
+
+
+) { <span class="kw">if</span> (depth === <span class="num">0</span> || node.isTerminal) { <span class="kw">return</span> node.value;
+}
+
+
+<span class="kw">if</span> (maximizingPlayer) {
+    <span class="kw">let</span> value = -Infinity;
+
+    <span class="kw">for</span> (<span class="kw">const</span> child <span class="kw">of</span> node.children) {
+        value = Math.<span class="fn">max</span>(
+            value,
+            <span class="fn">alphaBeta</span>(
+                child,
+                depth - <span class="num">1</span>,
+                alpha,
+                beta,
+                <span class="kw">false</span>
+            )
+        );
+
+        alpha = Math.<span class="fn">max</span>(alpha, value);
+
+        <span class="kw">if</span> (alpha &gt;= beta) {
+            <span class="comment">// Remaining branches are unnecessary.</span>
+            <span class="kw">break</span>;
+        }
+    }
+
+    <span class="kw">return</span> value;
+}
+
+<span class="kw">let</span> value = Infinity;
+
+<span class="kw">for</span> (<span class="kw">const</span> child <span class="kw">of</span> node.children) {
+    value = Math.<span class="fn">min</span>(
+        value,
+        <span class="fn">alphaBeta</span>(
+            child,
+            depth - <span class="num">1</span>,
+            alpha,
+            beta,
+            <span class="kw">true</span>
+        )
+    );
+
+    beta = Math.<span class="fn">min</span>(beta, value);
+
+    <span class="kw">if</span> (alpha &gt;= beta) {
+        <span class="comment">// Remaining branches are unnecessary.</span>
+        <span class="kw">break</span>;
+    }
+}
+
+<span class="kw">return</span> value;
+
+
+}</code></pre>
+
+
+        </div>
+
+    </section>
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <div class="mini">
+                Complexity
+            </div>
+
+            <h2>
+                How much work can it save?
+            </h2>
+
+            <p>
+                The exact number of visited nodes depends heavily on
+                the ordering of moves and the structure of the tree.
+            </p>
+
+        </div>
+
+        <div class="complexity">
+
+            <div class="complexity-card">
+                <span>
+                    Minimax worst-case
+                </span>
+
+                <strong>
+                    O(b<sup>d</sup>)
+                </strong>
+            </div>
+
+            <div class="complexity-card">
+                <span>
+                    Alpha-Beta best-case
+                </span>
+
+                <strong>
+                    O(b<sup>d/2</sup>)
+                </strong>
+            </div>
+
+            <div class="complexity-card">
+                <span>
+                    Extra search memory
+                </span>
+
+                <strong>
+                    O(d)
+                </strong>
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    <strong>
+        AI – Behind The State
+    </strong>
+
+    <br>
+
+    <span>
+        Where Algorithms Become Learning Experiences.
+    </span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    "use strict";
+
+    const statusElement = document.getElementById("status");
+    const treeSelect = document.getElementById("treeSelect");
+    const speedSelect = document.getElementById("speedSelect");
+    const startBtn = document.getElementById("startBtn");
+    const stepBtn = document.getElementById("stepBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const visitedCount = document.getElementById("visitedCount");
+    const prunedCount = document.getElementById("prunedCount");
+    const bestValue = document.getElementById("bestValue");
+
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    const treeContainer = document.getElementById("treeContainer");
+    const message = document.getElementById("message");
+
+    const timeline = document.getElementById("timeline");
+    const stepCount = document.getElementById("stepCount");
+    const toast = document.getElementById("toast");
+
+    let tree = null;
+    let events = [];
+    let eventIndex = 0;
+    let running = false;
+    let timer = null;
+
+    let stats = {
+        visited: 0,
+        pruned: 0,
+        result: null
+    };
+
+    function showToast(text) {
+        toast.textContent = text;
+        toast.classList.add("show");
+
+        clearTimeout(showToast.timer);
+
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2300);
+    }
+
+    function createNode(name, value, children = []) {
+        return {
+            name,
+            value,
+            children,
+            state: "waiting",
+            alpha: "-∞",
+            beta: "+∞"
+        };
+    }
+
+    function buildBalancedTree() {
+        const a = createNode("A", 3);
+        const b = createNode("B", 5);
+        const c = createNode("C", 2);
+
+        const d = createNode("D", 9);
+        const e = createNode("E", 1);
+        const f = createNode("F", 7);
+
+        const g = createNode("G", 4);
+        const h = createNode("H", 6);
+        const i = createNode("I", 8);
+
+        const left = createNode("MIN", null, [a, b, c]);
+        const middle = createNode("MIN", null, [d, e, f]);
+        const right = createNode("MIN", null, [g, h, i]);
+
+        return createNode(
+            "MAX",
+            null,
+            [left, middle, right]
+        );
+    }
+
+    function buildPruningTree() {
+        const a = createNode("A", 3);
+        const b = createNode("B", 5);
+        const c = createNode("C", 9);
+
+        const d = createNode("D", 1);
+        const e = createNode("E", 2);
+        const f = createNode("F", 8);
+
+        const g = createNode("G", 4);
+        const h = createNode("H", 6);
+        const i = createNode("I", 7);
+
+        const left = createNode("MIN", null, [a, b, c]);
+        const middle = createNode("MIN", null, [d, e, f]);
+        const right = createNode("MIN", null, [g, h, i]);
+
+        return createNode(
+            "MAX",
+            null,
+            [left, middle, right]
+        );
+    }
+
+    function buildDeepTree() {
+        const n1 = createNode("A", 4);
+        const n2 = createNode("B", 7);
+        const n3 = createNode("C", 2);
+        const n4 = createNode("D", 9);
+
+        const n5 = createNode("E", 5);
+        const n6 = createNode("F", 1);
+        const n7 = createNode("G", 8);
+        const n8 = createNode("H", 6);
+
+        const n9 = createNode("I", 3);
+        const n10 = createNode("J", 7);
+        const n11 = createNode("K", 2);
+        const n12 = createNode("L", 5);
+
+        const m1 = createNode("MIN", null, [n1, n2]);
+        const m2 = createNode("MIN", null, [n3, n4]);
+
+        const m3 = createNode("MIN", null, [n5, n6]);
+        const m4 = createNode("MIN", null, [n7, n8]);
+
+        const m5 = createNode("MIN", null, [n9, n10]);
+        const m6 = createNode("MIN", null, [n11, n12]);
+
+        const max1 = createNode("MAX", null, [m1, m2]);
+        const max2 = createNode("MAX", null, [m3, m4]);
+        const max3 = createNode("MAX", null, [m5, m6]);
+
+        const rootLeft = createNode(
+            "MIN",
+            null,
+            [max1, max2]
+        );
+
+        const rootRight = createNode(
+            "MIN",
+            null,
+            [max3]
+        );
+
+        return createNode(
+            "MAX",
+            null,
+            [rootLeft, rootRight]
+        );
+    }
+
+    function buildSelectedTree() {
+        if (treeSelect.value === "pruning") {
+            return buildPruningTree();
+        }
+
+        if (treeSelect.value === "deep") {
+            return buildDeepTree();
+        }
+
+        return buildBalancedTree();
+    }
+
+    function collectNodes(node, list = []) {
+        list.push(node);
+
+        for (const child of node.children) {
+            collectNodes(child, list);
+        }
+
+        return list;
+    }
+
+    function createEvent(type, node, text) {
+        events.push({
+            type,
+            node,
+            text
+        });
+    }
+
+    function runAlphaBeta(node, depth, alpha, beta, maximizing) {
+        node.alpha = alpha === -Infinity ? "-∞" : alpha;
+        node.beta = beta === Infinity ? "+∞" : beta;
+
+        if (node.children.length === 0) {
+            node.state = "evaluated";
+
+            stats.visited++;
+
+            createEvent(
+                "evaluate",
+                node,
+                `Leaf ${node.name} was evaluated with value ${node.value}.`
+            );
+
+            return node.value;
+        }
+
+        node.state = "active";
+
+        createEvent(
+            "visit",
+            node,
+            `${maximizing ? "MAX" : "MIN"} node ${node.name} is exploring its children.`
+        );
+
+        let value = maximizing
+            ? -Infinity
+            : Infinity;
+
+        for (let i = 0; i < node.children.length; i++) {
+            const child = node.children[i];
+
+            const result = runAlphaBeta(
+                child,
+                depth + 1,
+                alpha,
+                beta,
+                !maximizing
+            );
+
+            value = maximizing
+                ? Math.max(value, result)
+                : Math.min(value, result);
+
+            if (maximizing) {
+                alpha = Math.max(alpha, value);
+            } else {
+                beta = Math.min(beta, value);
+            }
+
+            node.alpha =
+                alpha === -Infinity ? "-∞" : alpha;
+
+            node.beta =
+                beta === Infinity ? "+∞" : beta;
+
+            createEvent(
+                "bound",
+                node,
+                `${node.name} updated its bounds: α = ${node.alpha}, β = ${node.beta}.`
+            );
+
+            if (alpha >= beta) {
+                for (
+                    let remaining = i + 1;
+                    remaining < node.children.length;
+                    remaining++
+                ) {
+                    const skipped = node.children[remaining];
+
+                    markEntireSubtreePruned(skipped);
+
+                    stats.pruned += countNodes(
+                        skipped
+                    );
+
+                    createEvent(
+                        "prune",
+                        skipped,
+                        `Pruned ${skipped.name} because α ≥ β. This branch cannot change the final decision.`
+                    );
+                }
+
+                break;
+            }
+        }
+
+        node.value = value;
+        node.state = "evaluated";
+
+        createEvent(
+            "evaluate",
+            node,
+            `${node.name} completed with value ${value}.`
+        );
+
+        return value;
+    }
+
+    function countNodes(node) {
+        let count = 1;
+
+        for (const child of node.children) {
+            count += countNodes(child);
+        }
+
+        return count;
+    }
+
+    function markEntireSubtreePruned(node) {
+        node.state = "pruned";
+
+        for (const child of node.children) {
+            markEntireSubtreePruned(child);
+        }
+    }
+
+    function prepareSearch() {
+        clearTimeout(timer);
+
+        tree = buildSelectedTree();
+        events = [];
+        eventIndex = 0;
+        running = false;
+
+        stats = {
+            visited: 0,
+            pruned: 0,
+            result: null
+        };
+
+        resetStatsDisplay();
+        renderTree();
+        renderTimeline();
+
+        setStatus("Ready", "");
+    }
+
+    function startSearch() {
+        clearTimeout(timer);
+
+        tree = buildSelectedTree();
+        events = [];
+        eventIndex = 0;
+
+        stats = {
+            visited: 0,
+            pruned: 0,
+            result: null
+        };
+
+        running = true;
+
+        setStatus("Preparing search...", "running");
+
+        resetStatsDisplay();
+        renderTree();
+        renderTimeline();
+
+        /*
+         * Generate the actual Alpha-Beta search events first.
+         * The interface then reveals them one by one.
+         */
+        runAlphaBeta(
+            tree,
+            0,
+            -Infinity,
+            Infinity,
+            true
+        );
+
+        /*
+         * Reset node states so the visualizer can replay
+         * the generated search from the beginning.
+         */
+        resetNodeStates(tree);
+
+        stats.visited = 0;
+        stats.pruned = 0;
+        stats.result = tree.value;
+
+        eventIndex = 0;
+
+        renderTree();
+        renderTimeline();
+
+        playNext();
+    }
+
+    function resetNodeStates(node) {
+        node.state = "waiting";
+
+        for (const child of node.children) {
+            resetNodeStates(child);
+        }
+    }
+
+    function playNext() {
+        if (!running) {
+            return;
+        }
+
+        if (eventIndex >= events.length) {
+            running = false;
+
+            setStatus("Search complete", "complete");
+
+            message.innerHTML =
+                "🎉 Search complete! Alpha-Beta found the same " +
+                "Minimax result while safely skipping branches " +
+                "that could not affect the decision.";
+
+            showToast("Alpha-Beta search complete ✨");
+
+            return;
+        }
+
+        revealEvent(events[eventIndex]);
+
+        eventIndex++;
+
+        const progress =
+            Math.round(
+                (eventIndex / events.length) * 100
+            );
+
+        progressBar.style.width = progress + "%";
+        progressText.textContent = progress + "%";
+
+        timer = setTimeout(
+            playNext,
+            Number(speedSelect.value)
+        );
+    }
+
+    function nextStep() {
+        clearTimeout(timer);
+
+        if (!tree || events.length === 0) {
+            tree = buildSelectedTree();
+            events = [];
+            eventIndex = 0;
+
+            stats = {
+                visited: 0,
+                pruned: 0,
+                result: null
+            };
+
+            runAlphaBeta(
+                tree,
+                0,
+                -Infinity,
+                Infinity,
+                true
+            );
+
+            resetNodeStates(tree);
+
+            stats.visited = 0;
+            stats.pruned = 0;
+            stats.result = tree.value;
+
+            renderTree();
+            renderTimeline();
+        }
+
+        if (eventIndex < events.length) {
+            revealEvent(events[eventIndex]);
+            eventIndex++;
+
+            const progress =
+                Math.round(
+                    (eventIndex / events.length) * 100
+                );
+
+            progressBar.style.width = progress + "%";
+            progressText.textContent = progress + "%";
+        }
+
+        if (eventIndex >= events.length) {
+            setStatus("Search complete", "complete");
+
+            message.innerHTML =
+                "🎉 The search has finished. The final result is " +
+                `<strong>${tree.value}</strong>.`;
+        } else {
+            setStatus("Stepping through search", "running");
+        }
+    }
+
+    function revealEvent(event) {
+        const node = event.node;
+
+        if (event.type === "visit") {
+            node.state = "active";
+        }
+
+        if (event.type === "evaluate") {
+            node.state = "evaluated";
+
+            if (node.children.length === 0) {
+                stats.visited++;
+            }
+        }
+
+        if (event.type === "prune") {
+            markEntireSubtreePruned(node);
+        }
+
+        if (event.type === "bound") {
+            node.state = "active";
+        }
+
+        renderTree();
+        addTimelineEvent(event);
+
+        visitedCount.textContent = stats.visited;
+        prunedCount.textContent = countPrunedVisibleNodes();
+        bestValue.textContent =
+            eventIndex >= events.length
+                ? tree.value
+                : "…";
+
+        if (event.type === "prune") {
+            setStatus("Branch pruned", "pruned");
+
+            message.innerHTML =
+                "✂️ <strong>Pruning happened!</strong> " +
+                event.text;
+        } else if (event.type === "evaluate") {
+            message.innerHTML =
+                "🔎 " + event.text;
+        } else {
+            message.innerHTML =
+                "🧠 " + event.text;
+        }
+    }
+
+    function countPrunedVisibleNodes() {
+        if (!tree) {
+            return 0;
+        }
+
+        let total = 0;
+
+        function walk(node) {
+            if (node.state === "pruned") {
+                total++;
+            }
+
+            for (const child of node.children) {
+                walk(child);
+            }
+        }
+
+        walk(tree);
+
+        return total;
+    }
+
+    function resetStatsDisplay() {
+        visitedCount.textContent = "0";
+        prunedCount.textContent = "0";
+        bestValue.textContent = "—";
+
+        progressBar.style.width = "0%";
+        progressText.textContent = "0%";
+    }
+
+    function setStatus(text, type) {
+        statusElement.textContent = "● " + text;
+        statusElement.className = "status";
+
+        if (type) {
+            statusElement.classList.add(type);
+        }
+    }
+
+    function renderTree() {
+        if (!tree) {
+            return;
+        }
+
+        const levels = [];
+        const queue = [
+            {
+                node: tree,
+                depth: 0
+            }
+        ];
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+
+            if (!levels[current.depth]) {
+                levels[current.depth] = [];
+            }
+
+            levels[current.depth].push(current.node);
+
+            for (const child of current.node.children) {
+                queue.push({
+                    node: child,
+                    depth: current.depth + 1
+                });
+            }
+        }
+
+        const levelHtml = levels.map(
+            (level, depth) => `
+                <div class="level">
+                    ${level.map(node => `
+                        <div class="node ${node.state}">
+                            <div class="node-value">
+                                ${
+                                    node.value !== null
+                                        ? node.value
+                                        : node.name
+                                }
+                            </div>
+
+                            <div class="node-label">
+                                ${
+                                    node.value !== null
+                                        ? node.name + " "
+                                        : node.name
+                                }
+                            </div>
+
+                            ${
+                                node.value === null
+                                    ? `
+                                        <div class="node-bound">
+                                            α = ${node.alpha}
+                                            · β = ${node.beta}
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+                            ${
+                                node.state === "pruned"
+                                    ? `
+                                        <div class="node-bound">
+                                            ✂ PRUNED
+                                        </div>
+                                    `
+                                    : ""
+                            }
+                        </div>
+                    `).join("")}
+                </div>
+            `
+        ).join("");
+
+        treeContainer.innerHTML = `
+            <div class="tree">
+                <div class="tree-title">
+                    Live Alpha-Beta Search Tree
+                </div>
+
+                <div class="levels">
+                    ${levelHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTimeline() {
+        timeline.innerHTML = `
+            <div class="event">
+                <div class="event-icon">
+                    ✨
+                </div>
+
+                <div>
+                    <strong>
+                        Search ready
+                    </strong>
+
+                    <p>
+                        Start the search to reveal Alpha-Beta's
+                        decisions step by step.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        stepCount.textContent = "0 events";
+    }
+
+    function addTimelineEvent(event) {
+        const wrapper = document.createElement("div");
+
+        wrapper.className =
+            "event " +
+            (event.type === "prune"
+                ? "prune"
+                : event.type === "evaluate"
+                    ? "evaluate"
+                    : "");
+
+        let icon = "🧠";
+
+        if (event.type === "prune") {
+            icon = "✂️";
+        } else if (event.type === "evaluate") {
+            icon = "🔎";
+        } else if (event.type === "bound") {
+            icon = "📐";
+        }
+
+        wrapper.innerHTML = `
+            <div class="event-icon">
+                ${icon}
+            </div>
+
+            <div>
+                <strong>
+                    ${
+                        event.type === "prune"
+                            ? "Branch pruned"
+                            : event.type === "evaluate"
+                                ? "Node evaluated"
+                                : event.type === "bound"
+                                    ? "Bounds updated"
+                                    : "Node visited"
+                    }
+                </strong>
+
+                <p>
+                    ${event.text}
+                </p>
+            </div>
+        `;
+
+        timeline.appendChild(wrapper);
+
+        timeline.scrollTop = timeline.scrollHeight;
+
+        stepCount.textContent =
+            `${eventIndex + 1} event${eventIndex === 0 ? "" : "s"}`;
+    }
+
+    resetBtn.addEventListener(
+        "click",
+        () => {
+            running = false;
+            clearTimeout(timer);
+
+            prepareSearch();
+
+            message.innerHTML =
+                "💡 Choose a tree and start the search to watch " +
+                "Alpha-Beta Pruning work.";
+        }
+    );
+
+    startBtn.addEventListener(
+        "click",
+        startSearch
+    );
+
+    stepBtn.addEventListener(
+        "click",
+        nextStep
+    );
+
+    treeSelect.addEventListener(
+        "change",
+        () => {
+            running = false;
+            clearTimeout(timer);
+
+            prepareSearch();
+
+            message.innerHTML =
+                "🌳 New search tree selected. Press " +
+                "<strong>Start Search</strong> to explore it.";
+        }
+    );
+
+    speedSelect.addEventListener(
+        "change",
+        () => {
+            if (running) {
+                showToast("Animation speed updated ⚡");
+            }
+        }
+    );
+
+    prepareSearch();
+</script>
+
+
+</body>
+</html>

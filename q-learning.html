@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Q-Learning">
+    <title>Q-Learning — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #d86f96;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #c99f36;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 10% 5%, rgba(255,220,232,0.68), transparent 25%),
+            radial-gradient(circle at 90% 10%, rgba(220,238,255,0.72), transparent 28%),
+            radial-gradient(circle at 50% 90%, rgba(223,247,235,0.68), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button,
+    select,
+    input {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255,250,242,0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: #6855ad;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(100deg, #7964c5, #d66d98, #6099d8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70,60,100,0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span:last-child {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .main-section {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .environment-panel {
+        background:
+            radial-gradient(circle at 100% 0%, rgba(220,238,255,0.72), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .q-panel {
+        background:
+            radial-gradient(circle at 0% 100%, rgba(255,220,232,0.62), transparent 35%),
+            rgba(255,255,255,0.88);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.learning {
+        background: var(--yellow);
+        color: #80631b;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .grid-wrap {
+        padding: 16px;
+        border-radius: 24px;
+        background: #faf9ff;
+        border: 1px solid var(--border);
+    }
+
+    .grid {
+        width: min(390px, 100%);
+        margin: auto;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+    }
+
+    .state {
+        aspect-ratio: 1;
+        border: 0;
+        border-radius: 15px;
+        background: white;
+        box-shadow:
+            inset 0 0 0 1px var(--border),
+            0 5px 15px rgba(60,50,80,0.04);
+        cursor: pointer;
+        transition: 0.18s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .state:hover:not(:disabled) {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 22px rgba(60,50,80,0.10);
+    }
+
+    .state.wall {
+        background: #eee9f8;
+        cursor: default;
+    }
+
+    .state.start {
+        background: var(--lavender);
+        color: #6855ad;
+    }
+
+    .state.goal {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .state.agent {
+        background: var(--pink);
+        color: #9b506e;
+        animation: agentPop 0.35s ease;
+    }
+
+    .state.path {
+        background: var(--blue);
+    }
+
+    .state .cell-symbol {
+        font-size: clamp(1.1rem, 4vw, 1.7rem);
+        font-weight: 950;
+    }
+
+    @keyframes agentPop {
+        0% {
+            transform: scale(0.75);
+        }
+        70% {
+            transform: scale(1.08);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 9px;
+        margin-top: 17px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 750;
+    }
+
+    .legend-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 5px;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn-yellow {
+        background: var(--yellow);
+        color: #80631b;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .message {
+        min-height: 28px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 750;
+        margin-top: 15px;
+    }
+
+    .settings {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .setting {
+        padding: 14px;
+        border-radius: 17px;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid var(--border);
+    }
+
+    .setting label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .setting strong {
+        font-size: 1rem;
+    }
+
+    .slider {
+        width: 100%;
+        accent-color: var(--purple);
+    }
+
+    .q-table-wrap {
+        overflow: auto;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: #fbfaff;
+    }
+
+    .q-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 6px;
+        min-width: 430px;
+    }
+
+    .q-table th {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 850;
+        padding: 5px;
+    }
+
+    .q-cell {
+        min-width: 65px;
+        height: 65px;
+        border-radius: 13px;
+        background: white;
+        box-shadow: inset 0 0 0 1px var(--border);
+        text-align: center;
+        padding: 5px;
+        transition: 0.25s ease;
+    }
+
+    .q-cell.active {
+        background: var(--yellow);
+        box-shadow: inset 0 0 0 2px rgba(201,159,54,0.35);
+    }
+
+    .q-cell.best {
+        background: var(--mint);
+        box-shadow: inset 0 0 0 2px rgba(88,166,124,0.35);
+    }
+
+    .q-value {
+        font-size: 0.78rem;
+        font-weight: 900;
+    }
+
+    .q-action {
+        display: block;
+        color: var(--muted);
+        font-size: 0.63rem;
+        margin-top: 3px;
+    }
+
+    .action-panel {
+        margin-top: 18px;
+        padding: 17px;
+        border-radius: 20px;
+        background: var(--blue);
+        color: #426e9e;
+    }
+
+    .action-panel strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .action-panel p {
+        font-size: 0.84rem;
+        line-height: 1.6;
+    }
+
+    .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 18px;
+    }
+
+    .metric {
+        padding: 13px;
+        border-radius: 16px;
+        text-align: center;
+        background: #faf8ff;
+    }
+
+    .metric small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-size: 0.7rem;
+    }
+
+    .metric strong {
+        font-size: 1.2rem;
+    }
+
+    .section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .concept {
+        padding: 25px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .concept:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .concept:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .concept:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .concept:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .concept-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: rgba(255,255,255,0.8);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .concept h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .concept p {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 0.9rem;
+    }
+
+    .episode-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .episode-card {
+        padding: 27px;
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(233,225,255,0.7), transparent 30%),
+            radial-gradient(circle at 10% 90%, rgba(255,220,232,0.7), transparent 30%),
+            white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .episode-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 17px;
+    }
+
+    .episode-header h2 {
+        font-size: 1.4rem;
+        letter-spacing: -0.04em;
+    }
+
+    .episode-list {
+        max-height: 330px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .episode {
+        display: grid;
+        grid-template-columns: 55px 1fr 100px 100px;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 15px;
+        background: #faf9ff;
+        border: 1px solid var(--border);
+        font-size: 0.82rem;
+    }
+
+    .episode-number {
+        color: var(--purple);
+        font-weight: 900;
+    }
+
+    .episode-action {
+        font-weight: 850;
+    }
+
+    .reward-positive {
+        color: var(--green);
+        font-weight: 900;
+    }
+
+    .reward-negative {
+        color: var(--pink-dark);
+        font-weight: 900;
+    }
+
+    .reward-neutral {
+        color: var(--muted);
+        font-weight: 900;
+    }
+
+    .code-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas,
+            "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.45rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .learning-path,
+        .concept-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+
+        .episode {
+            grid-template-columns: 45px 1fr 75px;
+        }
+
+        .episode-step {
+            display: none;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .panel,
+        .episode-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .settings {
+            grid-template-columns: 1fr;
+        }
+
+        .metrics {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">
+        AI <span>–</span> Behind The State
+    </a>
+
+
+<a class="back" href="../index.html">
+    ← Back to Explore
+</a>
+
+
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Reinforcement Learning · Q-Learning</div>
+
+
+<h1>
+    Teach the AI<br>
+    <span class="gradient">by letting it learn.</span>
+</h1>
+
+<p>
+    Watch a tiny AI agent learn how to reach a goal through trial,
+    feedback and repeated experience. No dataset is required —
+    the agent builds its own Q-table while it plays.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Explore</strong>
+    <span>Watch the agent navigate.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Learn</strong>
+    <span>See its Q-values change.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>Discover reinforcement learning.</span>
+</div>
+
+
+</section>
+
+<main>
+
+
+<section class="main-section">
+
+    <div class="layout">
+
+        <div class="panel environment-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🧭 Learning Environment</h2>
+                    <p>
+                        The agent learns to travel from Start to Goal.
+                    </p>
+                </div>
+
+                <div id="statusBadge" class="status">
+                    ● Ready
+                </div>
+            </div>
+
+            <div class="grid-wrap">
+
+                <div id="grid" class="grid" aria-label="Q-learning environment">
+                </div>
+
+                <div class="legend">
+
+                    <div class="legend-item">
+                        <span
+                            class="legend-dot"
+                            style="background:#e9e1ff;">
+                        </span>
+                        Start
+                    </div>
+
+                    <div class="legend-item">
+                        <span
+                            class="legend-dot"
+                            style="background:#ffdce8;">
+                        </span>
+                        Agent
+                    </div>
+
+                    <div class="legend-item">
+                        <span
+                            class="legend-dot"
+                            style="background:#dff7eb;">
+                        </span>
+                        Goal
+                    </div>
+
+                    <div class="legend-item">
+                        <span
+                            class="legend-dot"
+                            style="background:#eee9f8;">
+                        </span>
+                        Wall
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="message" class="message">
+                Press "Train Agent" to begin learning.
+            </div>
+
+            <div class="controls">
+
+                <button id="trainBtn" class="btn btn-primary">
+                    ✦ Train Agent
+                </button>
+
+                <button id="stepBtn" class="btn btn-blue">
+                    ▶ One Step
+                </button>
+
+                <button id="resetBtn" class="btn btn-secondary">
+                    ↻ Reset
+                </button>
+
+            </div>
+
+            <div class="settings">
+
+                <div class="setting">
+                    <label for="episodes">
+                        TRAINING EPISODES
+                    </label>
+
+                    <input
+                        id="episodes"
+                        class="slider"
+                        type="range"
+                        min="10"
+                        max="500"
+                        value="100"
+                    >
+
+                    <strong>
+                        <span id="episodesValue">100</span>
+                    </strong>
+                </div>
+
+                <div class="setting">
+                    <label for="epsilon">
+                        EXPLORATION
+                    </label>
+
+                    <input
+                        id="epsilon"
+                        class="slider"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="25"
+                    >
+
+                    <strong>
+                        <span id="epsilonValue">25%</span>
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="metrics">
+
+                <div class="metric">
+                    <small>Episodes</small>
+                    <strong id="episodeCount">0</strong>
+                </div>
+
+                <div class="metric">
+                    <small>Steps</small>
+                    <strong id="stepCount">0</strong>
+                </div>
+
+                <div class="metric">
+                    <small>Successes</small>
+                    <strong id="successCount">0</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="panel q-panel">
+
+            <div class="panel-title">
+                <div>
+                    <h2>🧠 Q-Table</h2>
+                    <p>
+                        Each value estimates how useful an action
+                        is from a particular state.
+                    </p>
+                </div>
+            </div>
+
+            <div class="q-table-wrap">
+
+                <table class="q-table">
+
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>↑</th>
+                            <th>↓</th>
+                            <th>←</th>
+                            <th>→</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="qTableBody">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="action-panel">
+
+                <strong>How is the AI learning?</strong>
+
+                <p id="learningExplanation">
+                    The agent tries actions, receives rewards,
+                    and updates its Q-values based on what it
+                    expects to happen next.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="episode-section">
+
+    <div class="episode-card">
+
+        <div class="episode-header">
+            <div>
+                <h2>📋 Learning History</h2>
+                <p style="color:var(--muted); margin-top:5px; font-size:0.84rem;">
+                    The latest actions taken by the learning agent.
+                </p>
+            </div>
+
+            <button
+                id="clearHistoryBtn"
+                class="btn btn-yellow">
+                Clear
+            </button>
+        </div>
+
+        <div id="episodeList" class="episode-list">
+            <div
+                style="
+                    padding:25px;
+                    text-align:center;
+                    color:var(--muted);
+                ">
+                No learning steps yet.
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="section">
+
+    <div class="section-heading">
+
+        <div class="mini">
+            Understand the algorithm
+        </div>
+
+        <h2>
+            What is Q-Learning?
+        </h2>
+
+        <p>
+            Q-Learning is a model-free reinforcement learning
+            algorithm. Instead of being given the correct answer,
+            an agent learns which actions are useful by interacting
+            with an environment and receiving rewards.
+        </p>
+
+    </div>
+
+    <div class="concept-grid">
+
+        <article class="concept">
+            <div class="concept-icon">🎯</div>
+
+            <h3>States</h3>
+
+            <p>
+                A state describes where the agent currently is.
+                Here, every walkable grid position represents
+                a possible state.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🎮</div>
+
+            <h3>Actions</h3>
+
+            <p>
+                At each state, the agent can try actions such as
+                moving up, down, left or right when those actions
+                are available.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">⭐</div>
+
+            <h3>Rewards</h3>
+
+            <p>
+                Reaching the goal gives a positive reward while
+                inefficient moves receive smaller feedback.
+                The reward guides future decisions.
+            </p>
+        </article>
+
+        <article class="concept">
+            <div class="concept-icon">🔄</div>
+
+            <h3>Experience</h3>
+
+            <p>
+                The agent repeatedly interacts with the environment.
+                Over time, useful actions receive stronger Q-values
+                and the learned policy becomes more effective.
+            </p>
+        </article>
+
+    </div>
+
+</section>
+
+<section class="code-section">
+
+    <div class="section-heading">
+
+        <div class="mini">
+            Implementation
+        </div>
+
+        <h2>
+            See the learning rule.
+        </h2>
+
+        <p>
+            The core Q-Learning update combines the current estimate,
+            the reward received, and the best estimated future value.
+        </p>
+
+    </div>
+
+    <div class="code-card">
+
+        <div class="code-top">
+
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+
+            <span class="code-title">
+                q-learning.js
+            </span>
+
+            <span></span>
+
+        </div>
+
+        <pre><code><span class="kw">function</span> <span class="fn">updateQValue</span>(
+state,
+action,
+reward,
+nextState
+
+
+) { <span class="kw">const</span> current =
+Q[state][action];
+
+
+<span class="kw">const</span> nextBest =
+    Math.<span class="fn">max</span>(...Q[nextState]);
+
+<span class="kw">const</span> target =
+    reward + gamma * nextBest;
+
+Q[state][action] =
+    current + alpha * (target - current);
+
+
+}</code></pre>
+
+
+    </div>
+
+</section>
+
+<section class="complexity">
+
+    <div class="complexity-card">
+        <span>Learning Style</span>
+        <strong>Model-Free</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Core Memory</span>
+        <strong>Q-Table</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Update Rule</span>
+        <strong>Bellman Equation</strong>
+    </div>
+
+</section>
+
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * Q-Learning Interactive Demonstration
+ *
+ * Everything runs locally in the browser.
+ * No dataset, library or external service is required.
+ *
+ * The agent learns through:
+ *   State
+ *   Action
+ *   Reward
+ *   Next State
+ *
+ * Q-learning update:
+ *
+ * Q(s,a) = Q(s,a) +
+ * alpha * (reward + gamma * max Q(s',a') - Q(s,a))
+ */
+
+const ROWS = 5;
+const COLS = 5;
+
+const START = 0;
+const GOAL = 24;
+
+const WALLS = new Set([
+    6,
+    7,
+    11,
+    13,
+    17,
+    18
+]);
+
+const ACTIONS = [
+    {
+        name: "Up",
+        symbol: "↑",
+        dr: -1,
+        dc: 0
+    },
+    {
+        name: "Down",
+        symbol: "↓",
+        dr: 1,
+        dc: 0
+    },
+    {
+        name: "Left",
+        symbol: "←",
+        dr: 0,
+        dc: -1
+    },
+    {
+        name: "Right",
+        symbol: "→",
+        dr: 0,
+        dc: 1
+    }
+];
+
+const ALPHA = 0.55;
+const GAMMA = 0.90;
+
+let qTable = [];
+let agentState = START;
+let episodeCount = 0;
+let stepCount = 0;
+let successCount = 0;
+let training = false;
+let history = [];
+let pathCells = new Set();
+
+const gridElement = document.getElementById("grid");
+const qTableBody = document.getElementById("qTableBody");
+const episodeList = document.getElementById("episodeList");
+
+const trainBtn = document.getElementById("trainBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+const statusBadge = document.getElementById("statusBadge");
+const message = document.getElementById("message");
+
+const episodeSlider = document.getElementById("episodes");
+const epsilonSlider = document.getElementById("epsilon");
+
+const episodesValue = document.getElementById("episodesValue");
+const epsilonValue = document.getElementById("epsilonValue");
+
+const episodeCountElement =
+    document.getElementById("episodeCount");
+
+const stepCountElement =
+    document.getElementById("stepCount");
+
+const successCountElement =
+    document.getElementById("successCount");
+
+const learningExplanation =
+    document.getElementById("learningExplanation");
+
+const toast = document.getElementById("toast");
+
+function createQTable() {
+    qTable = [];
+
+    for (let state = 0; state < ROWS * COLS; state++) {
+        qTable.push([0, 0, 0, 0]);
+    }
+}
+
+function rowOf(state) {
+    return Math.floor(state / COLS);
+}
+
+function colOf(state) {
+    return state % COLS;
+}
+
+function stateFromPosition(row, col) {
+    return row * COLS + col;
+}
+
+function isValidState(state) {
+    return (
+        state >= 0 &&
+        state < ROWS * COLS &&
+        !WALLS.has(state)
+    );
+}
+
+function nextState(state, actionIndex) {
+    const row = rowOf(state);
+    const col = colOf(state);
+
+    const action = ACTIONS[actionIndex];
+
+    const nextRow = row + action.dr;
+    const nextCol = col + action.dc;
+
+    if (
+        nextRow < 0 ||
+        nextRow >= ROWS ||
+        nextCol < 0 ||
+        nextCol >= COLS
+    ) {
+        return state;
+    }
+
+    const next = stateFromPosition(nextRow, nextCol);
+
+    if (!isValidState(next)) {
+        return state;
+    }
+
+    return next;
+}
+
+function availableActions(state) {
+    const available = [];
+
+    for (let i = 0; i < ACTIONS.length; i++) {
+        const next = nextState(state, i);
+
+        if (next !== state) {
+            available.push(i);
+        }
+    }
+
+    return available;
+}
+
+function randomChoice(array) {
+    return array[
+        Math.floor(Math.random() * array.length)
+    ];
+}
+
+function bestAction(state) {
+    const available = availableActions(state);
+
+    if (available.length === 0) {
+        return 0;
+    }
+
+    let bestValue = -Infinity;
+    let best = [];
+
+    for (const action of available) {
+        const value = qTable[state][action];
+
+        if (value > bestValue) {
+            bestValue = value;
+            best = [action];
+        } else if (value === bestValue) {
+            best.push(action);
+        }
+    }
+
+    return randomChoice(best);
+}
+
+function chooseAction(state, epsilon) {
+    const available = availableActions(state);
+
+    if (available.length === 0) {
+        return 0;
+    }
+
+    if (Math.random() < epsilon) {
+        return randomChoice(available);
+    }
+
+    return bestAction(state);
+}
+
+function rewardFor(next) {
+    if (next === GOAL) {
+        return 100;
+    }
+
+    return -1;
+}
+
+function updateQValue(state, action, reward, next) {
+    const current = qTable[state][action];
+
+    let nextBest = 0;
+
+    if (next !== GOAL) {
+        const available = availableActions(next);
+
+        if (available.length > 0) {
+            nextBest = Math.max(
+                ...available.map(
+                    actionIndex =>
+                        qTable[next][actionIndex]
+                )
+            );
+        }
+    }
+
+    const target =
+        reward + GAMMA * nextBest;
+
+    qTable[state][action] =
+        current + ALPHA * (target - current);
+}
+
+function runTrainingEpisode() {
+    let state = START;
+    let steps = 0;
+
+    const epsilon =
+        Number(epsilonSlider.value) / 100;
+
+    const maxSteps = 60;
+
+    while (state !== GOAL && steps < maxSteps) {
+
+        const action = chooseAction(state, epsilon);
+        const next = nextState(state, action);
+
+        const reward = rewardFor(next);
+
+        updateQValue(
+            state,
+            action,
+            reward,
+            next
+        );
+
+        state = next;
+        steps++;
+        stepCount++;
+
+        if (state === GOAL) {
+            successCount++;
+            break;
+        }
+    }
+
+    episodeCount++;
+
+    return {
+        steps,
+        success: state === GOAL
+    };
+}
+
+function trainAgent() {
+    if (training) {
+        return;
+    }
+
+    training = true;
+
+    setStatus("Learning...", "learning");
+
+    const requestedEpisodes =
+        Number(episodeSlider.value);
+
+    let completed = 0;
+
+    message.textContent =
+        "The agent is trying different actions and updating its Q-table...";
+
+    function trainBatch() {
+
+        const batchSize = 10;
+
+        for (
+            let i = 0;
+            i < batchSize &&
+            completed < requestedEpisodes;
+            i++
+        ) {
+            const result = runTrainingEpisode();
+
+            addHistory(
+                episodeCount,
+                "Episode",
+                result.success
+                    ? "Goal reached"
+                    : "Exploration",
+                result.steps
+            );
+
+            completed++;
+        }
+
+        renderAll();
+
+        if (completed < requestedEpisodes) {
+            window.requestAnimationFrame(trainBatch);
+        } else {
+            training = false;
+
+            setStatus("Learning complete", "done");
+
+            message.textContent =
+                "Training finished. Now watch the learned policy.";
+
+            showToast(
+                "Training complete — the Q-table has learned!"
+            );
+
+            showLearnedPath();
+        }
+    }
+
+    trainBatch();
+}
+
+function performOneStep() {
+    if (training) {
+        return;
+    }
+
+    if (agentState === GOAL) {
+        agentState = START;
+        pathCells = new Set([START]);
+    }
+
+    const state = agentState;
+
+    const action = bestAction(state);
+    const next = nextState(state, action);
+
+    const reward = rewardFor(next);
+
+    updateQValue(
+        state,
+        action,
+        reward,
+        next
+    );
+
+    agentState = next;
+
+    stepCount++;
+
+    pathCells.add(next);
+
+    if (next === GOAL) {
+        successCount++;
+        episodeCount++;
+
+        addHistory(
+            episodeCount,
+            "Manual",
+            "Goal reached",
+            pathCells.size - 1
+        );
+
+        message.textContent =
+            "The agent reached the goal using its current policy.";
+
+        setStatus("Goal reached", "done");
+
+        showToast("Goal reached!");
+    } else {
+        message.textContent =
+            "The agent selected " +
+            ACTIONS[action].name +
+            " using its current Q-values.";
+
+        setStatus("Agent moving");
+
+        addHistory(
+            episodeCount + 1,
+            "Step",
+            ACTIONS[action].name,
+            reward
+        );
+    }
+
+    renderAll();
+}
+
+function showLearnedPath() {
+    let current = START;
+
+    const path = new Set([START]);
+    const visited = new Set();
+
+    for (let i = 0; i < 30; i++) {
+
+        if (current === GOAL) {
+            break;
+        }
+
+        if (visited.has(current)) {
+            break;
+        }
+
+        visited.add(current);
+
+        const action = bestAction(current);
+        const next = nextState(current, action);
+
+        if (next === current) {
+            break;
+        }
+
+        current = next;
+        path.add(current);
+    }
+
+    pathCells = path;
+
+    renderGrid();
+}
+
+function addHistory(
+    episode,
+    type,
+    action,
+    value
+) {
+    history.unshift({
+        episode,
+        type,
+        action,
+        value
+    });
+
+    if (history.length > 80) {
+        history.length = 80;
+    }
+}
+
+function renderGrid() {
+    gridElement.innerHTML = "";
+
+    for (let state = 0; state < ROWS * COLS; state++) {
+
+        const button =
+            document.createElement("button");
+
+        button.className = "state";
+        button.disabled = true;
+
+        if (WALLS.has(state)) {
+            button.classList.add("wall");
+
+            button.innerHTML =
+                '<span class="cell-symbol">•</span>';
+        } else {
+
+            if (pathCells.has(state)) {
+                button.classList.add("path");
+            }
+
+            if (state === START) {
+                button.classList.add("start");
+                button.innerHTML =
+                    '<span class="cell-symbol">S</span>';
+            }
+
+            if (state === GOAL) {
+                button.classList.add("goal");
+                button.innerHTML =
+                    '<span class="cell-symbol">G</span>';
+            }
+
+            if (state === agentState) {
+                button.classList.add("agent");
+                button.innerHTML =
+                    '<span class="cell-symbol">●</span>';
+            }
+        }
+
+        gridElement.appendChild(button);
+    }
+}
+
+function renderQTable() {
+    qTableBody.innerHTML = "";
+
+    for (let state = 0; state < ROWS * COLS; state++) {
+
+        if (WALLS.has(state)) {
+            continue;
+        }
+
+        const row =
+            document.createElement("tr");
+
+        const stateHeader =
+            document.createElement("th");
+
+        stateHeader.textContent =
+            "S" + state;
+
+        row.appendChild(stateHeader);
+
+        const available =
+            availableActions(state);
+
+        let maxValue = -Infinity;
+
+        if (available.length > 0) {
+            maxValue = Math.max(
+                ...available.map(
+                    action => qTable[state][action]
+                )
+            );
+        }
+
+        for (let action = 0; action < 4; action++) {
+
+            const cell =
+                document.createElement("td");
+
+            cell.className = "q-cell";
+
+            if (state === agentState) {
+                cell.classList.add("active");
+            }
+
+            if (
+                available.includes(action) &&
+                qTable[state][action] === maxValue
+            ) {
+                cell.classList.add("best");
+            }
+
+            const value =
+                qTable[state][action];
+
+            const rounded =
+                Math.abs(value) < 0.01
+                    ? "0.00"
+                    : value.toFixed(2);
+
+            cell.innerHTML = `
+                <div class="q-value">${rounded}</div>
+                <span class="q-action">
+                    ${ACTIONS[action].symbol}
+                </span>
+            `;
+
+            row.appendChild(cell);
+        }
+
+        qTableBody.appendChild(row);
+    }
+}
+
+function renderHistory() {
+    if (history.length === 0) {
+        episodeList.innerHTML = `
+            <div style="
+                padding:25px;
+                text-align:center;
+                color:var(--muted);
+            ">
+                No learning steps yet.
+            </div>
+        `;
+
+        return;
+    }
+
+    episodeList.innerHTML =
+        history.map(item => {
+
+            let rewardClass =
+                "reward-neutral";
+
+            if (item.value > 0) {
+                rewardClass = "reward-positive";
+            }
+
+            if (item.value < 0) {
+                rewardClass = "reward-negative";
+            }
+
+            return `
+                <div class="episode">
+                    <span class="episode-number">
+                        #${item.episode}
+                    </span>
+
+                    <span class="episode-action">
+                        ${item.type}: ${item.action}
+                    </span>
+
+                    <span class="${rewardClass}">
+                        ${item.value > 0 ? "+" : ""}
+                        ${typeof item.value === "number"
+                            ? item.value
+                            : ""}
+                    </span>
+
+                    <span class="episode-step">
+                        learning
+                    </span>
+                </div>
+            `;
+        }).join("");
+}
+
+function updateMetrics() {
+    episodeCountElement.textContent =
+        episodeCount;
+
+    stepCountElement.textContent =
+        stepCount;
+
+    successCountElement.textContent =
+        successCount;
+}
+
+function renderAll() {
+    renderGrid();
+    renderQTable();
+    renderHistory();
+    updateMetrics();
+}
+
+function setStatus(text, type = "") {
+    statusBadge.textContent =
+        "● " + text;
+
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add("show");
+
+    window.clearTimeout(
+        showToast.timer
+    );
+
+    showToast.timer =
+        window.setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2400);
+}
+
+function resetAgent() {
+    if (training) {
+        return;
+    }
+
+    agentState = START;
+    pathCells = new Set([START]);
+
+    episodeCount = 0;
+    stepCount = 0;
+    successCount = 0;
+
+    history = [];
+
+    createQTable();
+
+    setStatus("Ready");
+
+    message.textContent =
+        'Press "Train Agent" to begin learning.';
+
+    learningExplanation.textContent =
+        "The agent starts with no useful knowledge. " +
+        "Every interaction gives it information that can " +
+        "change the Q-values.";
+
+    renderAll();
+
+    showToast("Agent reset.");
+}
+
+function clearHistory() {
+    history = [];
+    renderHistory();
+    showToast("Learning history cleared.");
+}
+
+episodeSlider.addEventListener("input", () => {
+    episodesValue.textContent =
+        episodeSlider.value;
+});
+
+epsilonSlider.addEventListener("input", () => {
+    epsilonValue.textContent =
+        epsilonSlider.value + "%";
+});
+
+trainBtn.addEventListener(
+    "click",
+    trainAgent
+);
+
+stepBtn.addEventListener(
+    "click",
+    performOneStep
+);
+
+resetBtn.addEventListener(
+    "click",
+    resetAgent
+);
+
+clearHistoryBtn.addEventListener(
+    "click",
+    clearHistory
+);
+
+createQTable();
+
+agentState = START;
+pathCells = new Set([START]);
+
+renderAll();
+
+</script>
+
+</body>
+</html>

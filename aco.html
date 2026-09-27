@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="AI Behind The State - Interactive Ant Colony Optimization">
+<title>Ant Colony Optimization — AI Behind The State</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --cream:#fffaf2;
+    --pink:#ffdce8;
+    --pink-dark:#d86f96;
+    --lavender:#e9e1ff;
+    --purple:#8069d2;
+    --blue:#dceeff;
+    --blue-dark:#5d94d2;
+    --mint:#dff7eb;
+    --green:#54a477;
+    --yellow:#fff0bf;
+    --yellow-dark:#c99d32;
+    --peach:#ffe3cf;
+    --orange:#e8945e;
+    --ink:#29263a;
+    --muted:#777386;
+    --white:#ffffff;
+    --border:rgba(55,48,80,.10);
+    --shadow:0 18px 50px rgba(79,66,108,.10);
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:
+        radial-gradient(circle at 8% 4%,rgba(255,220,232,.72),transparent 25%),
+        radial-gradient(circle at 92% 8%,rgba(220,238,255,.75),transparent 28%),
+        radial-gradient(circle at 50% 92%,rgba(223,247,235,.72),transparent 32%),
+        var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+}
+
+button{
+    font:inherit;
+}
+
+.nav{
+    position:sticky;
+    top:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 6%;
+    background:rgba(255,250,242,.88);
+    backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--border);
+}
+
+.brand{
+    color:var(--ink);
+    text-decoration:none;
+    font-weight:900;
+    letter-spacing:-.04em;
+    font-size:1.05rem;
+}
+
+.brand span{
+    color:var(--purple);
+}
+
+.back{
+    text-decoration:none;
+    color:var(--muted);
+    font-weight:700;
+    font-size:.9rem;
+    transition:.2s ease;
+}
+
+.back:hover{
+    color:var(--purple);
+    transform:translateX(-3px);
+}
+
+.hero{
+    width:min(1180px,92%);
+    margin:auto;
+    padding:70px 0 45px;
+    text-align:center;
+}
+
+.eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 14px;
+    border-radius:999px;
+    background:var(--lavender);
+    color:#6855ad;
+    font-size:.78rem;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin-bottom:18px;
+}
+
+.eyebrow::before{
+    content:"✦";
+    color:var(--purple);
+}
+
+h1{
+    font-size:clamp(3rem,8vw,6.4rem);
+    line-height:.92;
+    letter-spacing:-.075em;
+    font-weight:950;
+    margin-bottom:22px;
+}
+
+.gradient{
+    background:linear-gradient(100deg,#7964c5,#d66d98,#6099d8);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.hero p{
+    max-width:700px;
+    margin:auto;
+    color:var(--muted);
+    line-height:1.75;
+    font-size:1.08rem;
+}
+
+.learning-path{
+    width:min(1000px,92%);
+    margin:0 auto 50px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+}
+
+.path-card{
+    padding:18px;
+    border:1px solid var(--border);
+    border-radius:22px;
+    background:rgba(255,255,255,.72);
+    box-shadow:0 8px 30px rgba(70,60,100,.05);
+}
+
+.path-card.active{
+    border-color:rgba(139,114,216,.35);
+    background:linear-gradient(135deg,#f1edff,#fff);
+}
+
+.path-number{
+    display:inline-flex;
+    width:32px;
+    height:32px;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:var(--lavender);
+    color:var(--purple);
+    font-weight:900;
+    margin-bottom:9px;
+}
+
+.path-card strong{
+    display:block;
+    margin-bottom:4px;
+}
+
+.path-card span:last-child{
+    color:var(--muted);
+    font-size:.84rem;
+}
+
+.main-section{
+    width:min(1180px,92%);
+    margin:auto;
+    padding-bottom:80px;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:24px;
+}
+
+.panel{
+    background:rgba(255,255,255,.86);
+    border:1px solid var(--border);
+    border-radius:30px;
+    box-shadow:var(--shadow);
+    padding:28px;
+}
+
+.visual-panel{
+    background:
+        radial-gradient(circle at 100% 0%,rgba(220,238,255,.72),transparent 34%),
+        rgba(255,255,255,.88);
+}
+
+.analysis-panel{
+    background:
+        radial-gradient(circle at 0% 100%,rgba(255,220,232,.65),transparent 36%),
+        rgba(255,255,255,.88);
+}
+
+.panel-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.panel-title h2{
+    font-size:1.45rem;
+    letter-spacing:-.04em;
+}
+
+.panel-title p{
+    color:var(--muted);
+    font-size:.87rem;
+    margin-top:5px;
+}
+
+.status{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 12px;
+    border-radius:999px;
+    background:var(--mint);
+    color:#39765a;
+    font-size:.76rem;
+    font-weight:900;
+    white-space:nowrap;
+}
+
+.status.running{
+    background:var(--yellow);
+    color:#886c1f;
+}
+
+.status.done{
+    background:var(--lavender);
+    color:#6855ad;
+}
+
+.canvas-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:1.15;
+    min-height:360px;
+    border-radius:24px;
+    background:
+        radial-gradient(circle at 20% 20%,rgba(255,255,255,.95),transparent 22%),
+        linear-gradient(135deg,#fbf8ff,#f4fbff);
+    border:1px solid var(--border);
+    overflow:hidden;
+}
+
+#acoCanvas{
+    width:100%;
+    height:100%;
+    display:block;
+}
+
+.legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-top:13px;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 10px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-size:.75rem;
+    font-weight:750;
+}
+
+.legend-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+}
+
+.dot-city{background:#8069d2}
+.dot-ant{background:#e8945e}
+.dot-best{background:#54a477}
+
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:18px;
+}
+
+.btn{
+    border:0;
+    border-radius:14px;
+    padding:12px 18px;
+    cursor:pointer;
+    font-weight:850;
+    transition:.2s ease;
+}
+
+.btn:hover{
+    transform:translateY(-2px);
+}
+
+.btn-primary{
+    background:var(--purple);
+    color:#fff;
+    box-shadow:0 8px 20px rgba(139,114,216,.25);
+}
+
+.btn-secondary{
+    background:var(--pink);
+    color:#8b4862;
+}
+
+.btn-blue{
+    background:var(--blue);
+    color:#4779ad;
+}
+
+.btn-green{
+    background:var(--mint);
+    color:#39765a;
+}
+
+.btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+    transform:none;
+}
+
+.slider-area{
+    margin-top:20px;
+    display:grid;
+    gap:13px;
+}
+
+.slider-row{
+    display:grid;
+    grid-template-columns:130px 1fr 45px;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+}
+
+.slider-row label{
+    font-size:.82rem;
+    font-weight:800;
+}
+
+.slider-row input{
+    width:100%;
+    accent-color:var(--purple);
+}
+
+.slider-value{
+    text-align:right;
+    color:var(--purple);
+    font-weight:900;
+    font-size:.82rem;
+}
+
+.metrics{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:20px;
+}
+
+.metric{
+    padding:14px;
+    border-radius:17px;
+    background:#fff;
+    border:1px solid var(--border);
+}
+
+.metric small{
+    color:var(--muted);
+    display:block;
+    margin-bottom:5px;
+    font-size:.72rem;
+}
+
+.metric strong{
+    font-size:1.2rem;
+}
+
+.analysis-box{
+    min-height:340px;
+    padding:16px;
+    border-radius:22px;
+    background:#fbfaff;
+    border:1px solid var(--border);
+    overflow:auto;
+}
+
+.empty-state{
+    min-height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:var(--muted);
+    padding:30px;
+}
+
+.empty-icon{
+    font-size:2.7rem;
+    display:block;
+    margin-bottom:10px;
+}
+
+.iteration-list{
+    display:grid;
+    gap:9px;
+}
+
+.iteration{
+    padding:13px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid var(--border);
+}
+
+.iteration.latest{
+    background:var(--mint);
+    border-color:rgba(84,164,119,.28);
+}
+
+.iteration-top{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:5px;
+}
+
+.iteration-top strong{
+    font-size:.86rem;
+}
+
+.iteration-top span{
+    font-size:.74rem;
+    color:var(--muted);
+}
+
+.iteration-route{
+    color:#5f5870;
+    font-size:.76rem;
+    line-height:1.5;
+}
+
+.analysis-summary{
+    margin-top:13px;
+    padding:15px;
+    border-radius:17px;
+    background:var(--blue);
+    color:#426e9e;
+    line-height:1.55;
+    font-size:.84rem;
+}
+
+.section{
+    width:min(1000px,92%);
+    margin:0 auto 80px;
+}
+
+.section-heading{
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.section-heading .mini{
+    color:var(--purple);
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    font-size:.75rem;
+    margin-bottom:10px;
+}
+
+.section-heading h2{
+    font-size:clamp(2rem,5vw,3.6rem);
+    letter-spacing:-.06em;
+}
+
+.section-heading p{
+    max-width:680px;
+    margin:10px auto 0;
+    color:var(--muted);
+    line-height:1.7;
+}
+
+.concept-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+}
+
+.concept{
+    padding:25px;
+    border-radius:24px;
+    border:1px solid var(--border);
+    background:#fff;
+}
+
+.concept:nth-child(1){background:#fff1f5}
+.concept:nth-child(2){background:#eef7ff}
+.concept:nth-child(3){background:#f2efff}
+.concept:nth-child(4){background:#effaf4}
+
+.concept-icon{
+    width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:13px;
+    background:rgba(255,255,255,.82);
+    margin-bottom:15px;
+    font-size:1.2rem;
+}
+
+.concept h3{
+    margin-bottom:8px;
+    letter-spacing:-.03em;
+}
+
+.concept p{
+    color:var(--muted);
+    line-height:1.65;
+    font-size:.9rem;
+}
+
+.pheromone-section{
+    width:min(1180px,92%);
+    margin:0 auto 80px;
+}
+
+.pheromone-card{
+    border-radius:32px;
+    padding:38px;
+    background:
+        radial-gradient(circle at 90% 10%,rgba(233,225,255,.82),transparent 28%),
+        radial-gradient(circle at 10% 90%,rgba(255,220,232,.82),transparent 28%),
+        #fff;
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+}
+
+.pheromone-top{
+    display:flex;
+    justify-content:space-between;
+    gap:30px;
+    align-items:flex-end;
+    margin-bottom:25px;
+}
+
+.pheromone-top h2{
+    font-size:clamp(2rem,4vw,3.2rem);
+    letter-spacing:-.06em;
+}
+
+.pheromone-top p{
+    color:var(--muted);
+    max-width:600px;
+    line-height:1.7;
+    margin-top:8px;
+}
+
+.heatmap{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:8px;
+}
+
+.heat-cell{
+    aspect-ratio:1;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-size:.7rem;
+    font-weight:900;
+    text-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+.code-section{
+    width:min(1000px,92%);
+    margin:0 auto 80px;
+}
+
+.code-card{
+    overflow:hidden;
+    border-radius:27px;
+    background:#29263a;
+    box-shadow:0 20px 50px rgba(41,38,58,.18);
+}
+
+.code-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:15px 19px;
+    background:#343047;
+    color:#d8d4e5;
+}
+
+.dots{
+    display:flex;
+    gap:7px;
+}
+
+.dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+}
+
+.dot.red{background:#ff9db6}
+.dot.yellow{background:#ffd98a}
+.dot.green{background:#9ee3bd}
+
+.code-title{
+    font-size:.78rem;
+    opacity:.8;
+}
+
+pre{
+    overflow-x:auto;
+    padding:25px;
+    color:#f1eef9;
+    line-height:1.75;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+    font-size:.81rem;
+}
+
+.kw{color:#d6b9ff}
+.fn{color:#9fd8ff}
+.num{color:#ffd899}
+.comment{color:#9993ad}
+.str{color:#a9e6c5}
+
+.complexity{
+    width:min(1000px,92%);
+    margin:0 auto 80px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+}
+
+.complexity-card{
+    padding:24px;
+    border-radius:23px;
+    background:rgba(255,255,255,.8);
+    border:1px solid var(--border);
+}
+
+.complexity-card span{
+    color:var(--muted);
+    font-size:.8rem;
+    display:block;
+    margin-bottom:7px;
+}
+
+.complexity-card strong{
+    font-size:1.3rem;
+}
+
+footer{
+    padding:35px 6%;
+    border-top:1px solid var(--border);
+    text-align:center;
+    color:var(--muted);
+    background:rgba(255,255,255,.55);
+}
+
+footer strong{
+    color:var(--ink);
+}
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:25px;
+    transform:translate(-50%,120px);
+    z-index:200;
+    padding:13px 19px;
+    border-radius:999px;
+    background:var(--ink);
+    color:#fff;
+    font-size:.86rem;
+    font-weight:800;
+    box-shadow:0 12px 35px rgba(0,0,0,.18);
+    transition:transform .3s ease;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+}
+
+@media(max-width:850px){
+    .dashboard{
+        grid-template-columns:1fr;
+    }
+
+    .pheromone-top{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .concept-grid{
+        grid-template-columns:1fr;
+    }
+
+    .complexity{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:600px){
+    .nav{
+        padding:15px 5%;
+    }
+
+    .hero{
+        padding-top:48px;
+    }
+
+    .learning-path{
+        grid-template-columns:1fr;
+    }
+
+    .panel,
+    .pheromone-card{
+        padding:20px;
+        border-radius:24px;
+    }
+
+    .panel-title{
+        flex-direction:column;
+    }
+
+    .canvas-wrap{
+        min-height:300px;
+    }
+
+    .slider-row{
+        grid-template-columns:105px 1fr 40px;
+    }
+
+    .heatmap{
+        grid-template-columns:repeat(3,1fr);
+    }
+}
+
+@media(prefers-reduced-motion:reduce){
+    *{
+        scroll-behavior:auto!important;
+        animation-duration:.01ms!important;
+        transition-duration:.01ms!important;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">AI <span>–</span> Behind The State</a>
+    <a class="back" href="../index.html">← Back to Explore</a>
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">Optimization · Swarm Intelligence · ACO</div>
+
+
+
+<h1>
+    Let the ants<br>
+    <span class="gradient">find the path.</span>
+</h1>
+
+<p>
+    Explore Ant Colony Optimization through an interactive travelling-salesperson
+    simulation. Watch artificial ants construct tours, leave pheromones,
+    evaporate old trails, and collectively discover shorter routes.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Explore</strong>
+    <span>Watch ants construct routes.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Observe</strong>
+    <span>See pheromone trails evolve.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Understand</strong>
+    <span>Connect the simulation to ACO.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="main-section">
+
+<div class="dashboard">
+
+<div class="panel visual-panel">
+
+
+<div class="panel-title">
+    <div>
+        <h2>🐜 Ant Colony Lab</h2>
+        <p>Each ant builds a complete tour using pheromone and heuristic information.</p>
+    </div>
+
+    <div id="statusBadge" class="status">
+        ● Ready
+    </div>
+</div>
+
+<div class="canvas-wrap">
+    <canvas id="acoCanvas"></canvas>
+</div>
+
+<div class="legend">
+    <div class="legend-item">
+        <span class="legend-dot dot-city"></span>
+        Cities
+    </div>
+
+    <div class="legend-item">
+        <span class="legend-dot dot-ant"></span>
+        Ants
+    </div>
+
+    <div class="legend-item">
+        <span class="legend-dot dot-best"></span>
+        Best route
+    </div>
+</div>
+
+<div class="controls">
+    <button id="startBtn" class="btn btn-primary">▶ Run ACO</button>
+    <button id="stepBtn" class="btn btn-blue">→ Next Iteration</button>
+    <button id="resetBtn" class="btn btn-secondary">↻ New Problem</button>
+    <button id="clearBtn" class="btn btn-green">✦ Reset Trails</button>
+</div>
+
+<div class="slider-area">
+
+    <div class="slider-row">
+        <label for="antSlider">Ants</label>
+        <input id="antSlider" type="range" min="4" max="40" value="18">
+        <span id="antValue" class="slider-value">18</span>
+    </div>
+
+    <div class="slider-row">
+        <label for="alphaSlider">Pheromone α</label>
+        <input id="alphaSlider" type="range" min="0" max="30" value="12">
+        <span id="alphaValue" class="slider-value">1.2</span>
+    </div>
+
+    <div class="slider-row">
+        <label for="betaSlider">Heuristic β</label>
+        <input id="betaSlider" type="range" min="0" max="50" value="28">
+        <span id="betaValue" class="slider-value">2.8</span>
+    </div>
+
+    <div class="slider-row">
+        <label for="evapSlider">Evaporation</label>
+        <input id="evapSlider" type="range" min="5" max="90" value="35">
+        <span id="evapValue" class="slider-value">0.35</span>
+    </div>
+
+</div>
+
+
+</div>
+
+<div class="panel analysis-panel">
+
+
+<div class="panel-title">
+    <div>
+        <h2>✦ Colony Intelligence</h2>
+        <p>Live measurements from the optimization process.</p>
+    </div>
+</div>
+
+<div id="analysisBox" class="analysis-box">
+
+    <div class="empty-state">
+        <div>
+            <span class="empty-icon">🧭</span>
+            <strong>Start the colony.</strong>
+            <p>
+                Run ACO or advance one iteration to watch
+                the population search for a shorter tour.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<div class="metrics">
+
+    <div class="metric">
+        <small>Iteration</small>
+        <strong id="iterationMetric">0</strong>
+    </div>
+
+    <div class="metric">
+        <small>Best Distance</small>
+        <strong id="bestMetric">—</strong>
+    </div>
+
+    <div class="metric">
+        <small>Average Distance</small>
+        <strong id="averageMetric">—</strong>
+    </div>
+
+    <div class="metric">
+        <small>Pheromone Total</small>
+        <strong id="pheromoneMetric">—</strong>
+    </div>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+<section class="pheromone-section">
+
+<div class="pheromone-card">
+
+
+<div class="pheromone-top">
+
+    <div>
+        <div class="eyebrow">Pheromone Memory</div>
+
+        <h2>The colony remembers.</h2>
+
+        <p>
+            Stronger pheromone values indicate edges that have accumulated
+            more collective reinforcement. Evaporation prevents old decisions
+            from dominating forever.
+        </p>
+    </div>
+
+    <button id="heatmapBtn" class="btn btn-blue">
+        Refresh Heatmap
+    </button>
+
+</div>
+
+<div id="heatmap" class="heatmap"></div>
+
+
+</div>
+
+</section>
+
+<section class="section">
+
+
+<div class="section-heading">
+
+    <div class="mini">Understand the algorithm</div>
+
+    <h2>How does ACO work?</h2>
+
+    <p>
+        Ant Colony Optimization is a population-based optimization method
+        inspired by how real ants use pheromone trails to collectively
+        discover efficient paths.
+    </p>
+
+</div>
+
+<div class="concept-grid">
+
+    <article class="concept">
+
+        <div class="concept-icon">🐜</div>
+
+        <h3>Construct solutions</h3>
+
+        <p>
+            Each artificial ant builds a solution step by step.
+            In this travelling-salesperson problem, an ant chooses
+            the next unvisited city probabilistically.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">🧪</div>
+
+        <h3>Pheromone trails</h3>
+
+        <p>
+            Edges receive pheromone reinforcement according to the quality
+            of the tours that used them. Better routes therefore receive
+            stronger collective feedback.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">💨</div>
+
+        <h3>Evaporation</h3>
+
+        <p>
+            Existing pheromone is multiplied by an evaporation factor.
+            This reduces the influence of outdated paths and helps maintain
+            exploration.
+        </p>
+
+    </article>
+
+    <article class="concept">
+
+        <div class="concept-icon">⚖️</div>
+
+        <h3>Explore + exploit</h3>
+
+        <p>
+            The transition probability combines pheromone intensity with
+            a distance-based heuristic, balancing learned experience
+            with the attractiveness of nearby cities.
+        </p>
+
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+
+    <div class="mini">Implementation</div>
+
+    <h2>The core ACO rule.</h2>
+
+    <p>
+        The simulation uses the standard probabilistic transition rule
+        followed by pheromone evaporation and solution-dependent deposition.
+    </p>
+
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">aco.js</span>
+
+        <span></span>
+
+    </div>
+
+
+<pre><code><span class="comment">// Probability of choosing city j from city i</span>
+<span class="kw">function</span> <span class="fn">transitionProbability</span>(i, j, visited) {
+
+    <span class="kw">if</span> (visited[j]) {
+        <span class="kw">return</span> <span class="num">0</span>;
+    }
+
+    <span class="kw">const</span> pheromone =
+        Math.pow(tau[i][j], alpha);
+
+    <span class="kw">const</span> heuristic =
+        Math.pow(<span class="num">1</span> / distance[i][j], beta);
+
+    <span class="kw">return</span> pheromone * heuristic;
+}
+
+<span class="comment">// Evaporation</span>
+<span class="kw">for</span> (edge <span class="kw">of</span> edges) {
+    tau[edge] *= (<span class="num">1</span> - evaporation);
+}
+
+<span class="comment">// Deposit pheromone</span>
+<span class="kw">for</span> (tour <span class="kw">of</span> ants) {
+
+    <span class="kw">const</span> contribution =
+        Q / tour.length;
+
+    <span class="kw">for</span> (edge <span class="kw">of</span> tour) {
+        tau[edge.from][edge.to] += contribution;
+        tau[edge.to][edge.from] += contribution;
+    }
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity">
+
+
+<div class="complexity-card">
+    <span>Construction</span>
+    <strong>O(m · n²)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Pheromone Update</span>
+    <strong>O(m · n)</strong>
+</div>
+
+<div class="complexity-card">
+    <span>Memory</span>
+    <strong>O(n²)</strong>
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * Ant Colony Optimization
+ *
+ * Problem:
+ * Travelling Salesperson Problem (TSP)
+ *
+ * Algorithm:
+ * Ant Colony Optimization using:
+ * 1. Pheromone trail matrix
+ * 2. Distance heuristic
+ * 3. Probabilistic transition
+ * 4. Pheromone evaporation
+ * 5. Ant-dependent pheromone deposition
+ * 6. Elitist reinforcement of the global best route
+ */
+
+const canvas = document.getElementById("acoCanvas");
+const ctx = canvas.getContext("2d");
+
+const startBtn = document.getElementById("startBtn");
+const stepBtn = document.getElementById("stepBtn");
+const resetBtn = document.getElementById("resetBtn");
+const clearBtn = document.getElementById("clearBtn");
+const heatmapBtn = document.getElementById("heatmapBtn");
+
+const statusBadge = document.getElementById("statusBadge");
+const analysisBox = document.getElementById("analysisBox");
+
+const iterationMetric = document.getElementById("iterationMetric");
+const bestMetric = document.getElementById("bestMetric");
+const averageMetric = document.getElementById("averageMetric");
+const pheromoneMetric = document.getElementById("pheromoneMetric");
+
+const antSlider = document.getElementById("antSlider");
+const alphaSlider = document.getElementById("alphaSlider");
+const betaSlider = document.getElementById("betaSlider");
+const evapSlider = document.getElementById("evapSlider");
+
+const antValue = document.getElementById("antValue");
+const alphaValue = document.getElementById("alphaValue");
+const betaValue = document.getElementById("betaValue");
+const evapValue = document.getElementById("evapValue");
+
+const heatmap = document.getElementById("heatmap");
+const toast = document.getElementById("toast");
+
+const CITY_COUNT = 12;
+const Q = 100;
+
+let cities = [];
+let distances = [];
+let pheromone = [];
+
+let iteration = 0;
+let bestRoute = null;
+let bestDistance = Infinity;
+
+let lastAnts = [];
+let iterationHistory = [];
+
+let running = false;
+let animationTimer = null;
+
+let antCount = 18;
+let alpha = 1.2;
+let beta = 2.8;
+let evaporation = 0.35;
+
+function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    draw();
+}
+
+function randomCityLayout(){
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    const marginX = Math.max(38,width * .09);
+    const marginY = Math.max(38,height * .09);
+
+    cities = [];
+
+    for(let i=0;i<CITY_COUNT;i++){
+
+        let candidate;
+        let valid = false;
+
+        let attempts = 0;
+
+        while(!valid && attempts < 1000){
+
+            candidate = {
+                x: marginX + Math.random() * (width - marginX * 2),
+                y: marginY + Math.random() * (height - marginY * 2)
+            };
+
+            valid = cities.every(city => {
+                const dx = candidate.x - city.x;
+                const dy = candidate.y - city.y;
+                return Math.sqrt(dx*dx + dy*dy) > 48;
+            });
+
+            attempts++;
+        }
+
+        cities.push(candidate);
+    }
+
+    buildDistanceMatrix();
+    initializePheromone();
+
+    iteration = 0;
+    bestRoute = null;
+    bestDistance = Infinity;
+    lastAnts = [];
+    iterationHistory = [];
+
+    updateMetrics();
+    renderAnalysis();
+    renderHeatmap();
+    draw();
+}
+
+function buildDistanceMatrix(){
+
+    distances = Array.from(
+        {length:CITY_COUNT},
+        () => Array(CITY_COUNT).fill(0)
+    );
+
+    for(let i=0;i<CITY_COUNT;i++){
+
+        for(let j=i+1;j<CITY_COUNT;j++){
+
+            const dx = cities[i].x - cities[j].x;
+            const dy = cities[i].y - cities[j].y;
+
+            const distance = Math.sqrt(dx*dx + dy*dy);
+
+            distances[i][j] = distance;
+            distances[j][i] = distance;
+        }
+    }
+}
+
+function initializePheromone(){
+
+    pheromone = Array.from(
+        {length:CITY_COUNT},
+        () => Array(CITY_COUNT).fill(1)
+    );
+
+    for(let i=0;i<CITY_COUNT;i++){
+        pheromone[i][i] = 0;
+    }
+}
+
+function routeDistance(route){
+
+    let total = 0;
+
+    for(let i=0;i<route.length-1;i++){
+        total += distances[route[i]][route[i+1]];
+    }
+
+    total += distances[
+        route[route.length-1]
+    ][route[0]];
+
+    return total;
+}
+
+function chooseNextCity(current, visited){
+
+    const candidates = [];
+
+    let denominator = 0;
+
+    for(let city=0;city<CITY_COUNT;city++){
+
+        if(visited.has(city)){
+            continue;
+        }
+
+        const tau = Math.max(
+            pheromone[current][city],
+            0.000001
+        );
+
+        const eta = 1 /
+            Math.max(distances[current][city],0.000001);
+
+        const weight =
+            Math.pow(tau,alpha) *
+            Math.pow(eta,beta);
+
+        candidates.push({
+            city,
+            weight
+        });
+
+        denominator += weight;
+    }
+
+    if(candidates.length === 0){
+        return null;
+    }
+
+    if(!Number.isFinite(denominator) || denominator <= 0){
+
+        return candidates[
+            Math.floor(Math.random() * candidates.length)
+        ].city;
+    }
+
+    let random = Math.random() * denominator;
+
+    for(const candidate of candidates){
+
+        random -= candidate.weight;
+
+        if(random <= 0){
+            return candidate.city;
+        }
+    }
+
+    return candidates[candidates.length - 1].city;
+}
+
+function constructAntTour(){
+
+    const start =
+        Math.floor(Math.random() * CITY_COUNT);
+
+    const route = [start];
+
+    const visited = new Set([start]);
+
+    let current = start;
+
+    while(route.length < CITY_COUNT){
+
+        const next =
+            chooseNextCity(current,visited);
+
+        if(next === null){
+            break;
+        }
+
+        route.push(next);
+        visited.add(next);
+        current = next;
+    }
+
+    return {
+        route,
+        distance:routeDistance(route)
+    };
+}
+
+function constructColony(){
+
+    const ants = [];
+
+    for(let i=0;i<antCount;i++){
+        ants.push(constructAntTour());
+    }
+
+    return ants;
+}
+
+function evaporatePheromone(){
+
+    for(let i=0;i<CITY_COUNT;i++){
+
+        for(let j=0;j<CITY_COUNT;j++){
+
+            if(i === j){
+                continue;
+            }
+
+            pheromone[i][j] *= (1 - evaporation);
+
+            pheromone[i][j] =
+                Math.max(pheromone[i][j],0.0001);
+        }
+    }
+}
+
+function depositPheromone(ants){
+
+    for(const ant of ants){
+
+        if(!Number.isFinite(ant.distance) ||
+           ant.distance <= 0){
+            continue;
+        }
+
+        const contribution =
+            Q / ant.distance;
+
+        for(let i=0;i<ant.route.length;i++){
+
+            const from = ant.route[i];
+
+            const to =
+                ant.route[(i + 1) % ant.route.length];
+
+            pheromone[from][to] += contribution;
+            pheromone[to][from] += contribution;
+        }
+    }
+
+    /*
+     * Elitist reinforcement:
+     * the global best route receives additional
+     * pheromone, helping the colony exploit
+     * its strongest solution.
+     */
+
+    if(bestRoute){
+
+        const eliteContribution =
+            (2 * Q) / bestDistance;
+
+        for(let i=0;i<bestRoute.length;i++){
+
+            const from = bestRoute[i];
+
+            const to =
+                bestRoute[(i + 1) % bestRoute.length];
+
+            pheromone[from][to] += eliteContribution;
+            pheromone[to][from] += eliteContribution;
+        }
+    }
+}
+
+function runIteration(){
+
+    const ants = constructColony();
+
+    lastAnts = ants;
+
+    const distancesThisIteration =
+        ants.map(ant => ant.distance);
+
+    const iterationBest =
+        Math.min(...distancesThisIteration);
+
+    const iterationAverage =
+        distancesThisIteration.reduce(
+            (sum,value) => sum + value,
+            0
+        ) / distancesThisIteration.length;
+
+    const winningAnt =
+        ants.find(
+            ant => ant.distance === iterationBest
+        );
+
+    if(iterationBest < bestDistance){
+
+        bestDistance = iterationBest;
+        bestRoute = [...winningAnt.route];
+    }
+
+    evaporatePheromone();
+    depositPheromone(ants);
+
+    iteration++;
+
+    iterationHistory.unshift({
+        iteration,
+        best:iterationBest,
+        average:iterationAverage,
+        globalBest:bestDistance
+    });
+
+    if(iterationHistory.length > 8){
+        iterationHistory.pop();
+    }
+
+    updateMetrics();
+    renderAnalysis();
+    renderHeatmap();
+    draw();
+}
+
+function updateMetrics(){
+
+    iterationMetric.textContent = iteration;
+
+    bestMetric.textContent =
+        Number.isFinite(bestDistance)
+        ? bestDistance.toFixed(1)
+        : "—";
+
+    if(lastAnts.length){
+
+        const avg =
+            lastAnts.reduce(
+                (sum,ant) => sum + ant.distance,
+                0
+            ) / lastAnts.length;
+
+        averageMetric.textContent =
+            avg.toFixed(1);
+
+    }else{
+        averageMetric.textContent = "—";
+    }
+
+    let total = 0;
+
+    for(let i=0;i<CITY_COUNT;i++){
+
+        for(let j=i+1;j<CITY_COUNT;j++){
+            total += pheromone[i][j];
+        }
+    }
+
+    pheromoneMetric.textContent =
+        total.toFixed(1);
+}
+
+function renderAnalysis(){
+
+    if(!lastAnts.length){
+
+        analysisBox.innerHTML = `
+            <div class="empty-state">
+                <div>
+                    <span class="empty-icon">🧭</span>
+                    <strong>Start the colony.</strong>
+                    <p>
+                        Run ACO or advance one iteration to watch
+                        the population search for a shorter tour.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+    const sorted = [...iterationHistory];
+
+    const rows = sorted.map(
+        (item,index) => `
+            <div class="iteration ${index === 0 ? "latest" : ""}">
+                <div class="iteration-top">
+                    <strong>
+                        ${index === 0 ? "Current iteration" : "Iteration"}
+                        ${item.iteration}
+                    </strong>
+
+                    <span>
+                        Global best ${item.globalBest.toFixed(1)}
+                    </span>
+                </div>
+
+                <div class="iteration-route">
+                    Colony best:
+                    <strong>${item.best.toFixed(1)}</strong>
+                    &nbsp;·&nbsp;
+                    Colony average:
+                    <strong>${item.average.toFixed(1)}</strong>
+                </div>
+            </div>
+        `
+    ).join("");
+
+    const improvement =
+        iterationHistory.length >= 2
+        ? iterationHistory[0].globalBest -
+          iterationHistory[iterationHistory.length - 1].globalBest
+        : 0;
+
+    analysisBox.innerHTML = `
+        <div class="iteration-list">
+            ${rows}
+        </div>
+
+        <div class="analysis-summary">
+            <strong>What the colony is doing</strong><br>
+            Each ant selects its next city using
+            <strong>τ<sup>α</sup> × η<sup>β</sup></strong>,
+            where τ represents pheromone and η is the
+            distance heuristic. After all tours are constructed,
+            pheromone evaporates and successful tours reinforce
+            their edges.
+            ${
+                improvement > 0
+                ? `The displayed global best has improved by
+                   <strong>${improvement.toFixed(1)}</strong> pixels
+                   across the visible iterations.`
+                : `The colony is currently exploring the search space
+                   while building its pheromone memory.`
+            }
+        </div>
+    `;
+}
+
+function renderHeatmap(){
+
+    const edges = [];
+
+    for(let i=0;i<CITY_COUNT;i++){
+
+        for(let j=i+1;j<CITY_COUNT;j++){
+
+            edges.push({
+                from:i,
+                to:j,
+                value:pheromone[i][j]
+            });
+        }
+    }
+
+    const max =
+        Math.max(...edges.map(edge => edge.value));
+
+    const min =
+        Math.min(...edges.map(edge => edge.value));
+
+    const sorted =
+        [...edges].sort((a,b) => b.value-a.value)
+        .slice(0,18);
+
+    heatmap.innerHTML = sorted.map(edge => {
+
+        const normalized =
+            max === min
+            ? .5
+            : (edge.value-min)/(max-min);
+
+        const hue =
+            260 - normalized * 95;
+
+        const lightness =
+            65 - normalized * 20;
+
+        return `
+            <div
+                class="heat-cell"
+                title="City ${edge.from + 1} ↔ City ${edge.to + 1} · Pheromone ${edge.value.toFixed(2)}"
+                style="
+                    background:
+                    hsl(${hue},72%,${lightness}%)
+                "
+            >
+                ${edge.from + 1}—${edge.to + 1}
+            </div>
+        `;
+
+    }).join("");
+}
+
+function draw(){
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    if(!width || !height){
+        return;
+    }
+
+    ctx.clearRect(0,0,width,height);
+
+    drawPheromoneEdges();
+
+    if(bestRoute){
+        drawBestRoute();
+    }
+
+    drawAnts();
+
+    drawCities();
+}
+
+function drawPheromoneEdges(){
+
+    if(!pheromone.length){
+        return;
+    }
+
+    let maxPheromone = 0;
+
+    for(let i=0;i<CITY_COUNT;i++){
+        for(let j=i+1;j<CITY_COUNT;j++){
+            maxPheromone =
+                Math.max(maxPheromone,pheromone[i][j]);
+        }
+    }
+
+    for(let i=0;i<CITY_COUNT;i++){
+
+        for(let j=i+1;j<CITY_COUNT;j++){
+
+            const value = pheromone[i][j];
+
+            const normalized =
+                value / Math.max(maxPheromone,.0001);
+
+            if(normalized < .035){
+                continue;
+            }
+
+            const a = cities[i];
+            const b = cities[j];
+
+            ctx.beginPath();
+            ctx.moveTo(a.x,a.y);
+            ctx.lineTo(b.x,b.y);
+
+            ctx.strokeStyle =
+                `rgba(128,105,210,${.035 + normalized * .23})`;
+
+            ctx.lineWidth =
+                .5 + normalized * 3.5;
+
+            ctx.stroke();
+        }
+    }
+}
+
+function drawBestRoute(){
+
+    if(!bestRoute || bestRoute.length !== CITY_COUNT){
+        return;
+    }
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    for(let i=0;i<=bestRoute.length;i++){
+
+        const city =
+            cities[bestRoute[i % bestRoute.length]];
+
+        if(i === 0){
+            ctx.moveTo(city.x,city.y);
+        }else{
+            ctx.lineTo(city.x,city.y);
+        }
+    }
+
+    ctx.strokeStyle = "rgba(84,164,119,.82)";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.shadowColor = "rgba(84,164,119,.25)";
+    ctx.shadowBlur = 12;
+
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawAnts(){
+
+    if(!lastAnts.length){
+        return;
+    }
+
+    const displayCount =
+        Math.min(lastAnts.length,14);
+
+    for(let i=0;i<displayCount;i++){
+
+        const ant = lastAnts[i];
+
+        if(!ant.route.length){
+            continue;
+        }
+
+        const cityIndex =
+            ant.route[
+                Math.floor(
+                    (Date.now() / 700 + i) %
+                    ant.route.length
+                )
+            ];
+
+        const city = cities[cityIndex];
+
+        ctx.beginPath();
+        ctx.arc(city.x,city.y,4.5,0,Math.PI*2);
+
+        ctx.fillStyle = "#e8945e";
+        ctx.shadowColor = "rgba(232,148,94,.4)";
+        ctx.shadowBlur = 9;
+
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+}
+
+function drawCities(){
+
+    cities.forEach((city,index) => {
+
+        ctx.beginPath();
+        ctx.arc(city.x,city.y,10,0,Math.PI*2);
+
+        ctx.fillStyle = "#8069d2";
+        ctx.shadowColor = "rgba(128,105,210,.28)";
+        ctx.shadowBlur = 12;
+
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+
+        ctx.beginPath();
+        ctx.arc(city.x,city.y,5,0,Math.PI*2);
+
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+
+        ctx.fillStyle = "#514585";
+        ctx.font = "800 10px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(
+            String(index + 1),
+            city.x,
+            city.y - 19
+        );
+    });
+}
+
+function setStatus(text,type=""){
+
+    statusBadge.textContent = "● " + text;
+    statusBadge.className = "status";
+
+    if(type){
+        statusBadge.classList.add(type);
+    }
+}
+
+function showToast(message){
+
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer =
+        setTimeout(() => {
+            toast.classList.remove("show");
+        },2400);
+}
+
+function startSimulation(){
+
+    if(running){
+        stopSimulation();
+        return;
+    }
+
+    running = true;
+
+    startBtn.textContent = "Ⅱ Pause ACO";
+    setStatus("Optimizing...","running");
+
+    animationTimer = setInterval(() => {
+
+        runIteration();
+
+        if(iteration >= 120){
+            stopSimulation();
+            setStatus("Optimization complete","done");
+            showToast("ACO completed 120 iterations.");
+        }
+
+    },170);
+}
+
+function stopSimulation(){
+
+    running = false;
+
+    clearInterval(animationTimer);
+    animationTimer = null;
+
+    startBtn.textContent = "▶ Run ACO";
+
+    if(iteration > 0){
+        setStatus("Paused","done");
+    }else{
+        setStatus("Ready");
+    }
+}
+
+function resetTrails(){
+
+    stopSimulation();
+
+    initializePheromone();
+
+    iteration = 0;
+    bestRoute = null;
+    bestDistance = Infinity;
+    lastAnts = [];
+    iterationHistory = [];
+
+    updateMetrics();
+    renderAnalysis();
+    renderHeatmap();
+    draw();
+
+    setStatus("Trails reset");
+    showToast("Pheromone memory cleared.");
+}
+
+function newProblem(){
+
+    stopSimulation();
+
+    randomCityLayout();
+
+    setStatus("Ready");
+
+    showToast("A new city problem was generated.");
+}
+
+function updateSliders(){
+
+    antCount =
+        Number(antSlider.value);
+
+    alpha =
+        Number(alphaSlider.value) / 10;
+
+    beta =
+        Number(betaSlider.value) / 10;
+
+    evaporation =
+        Number(evapSlider.value) / 100;
+
+    antValue.textContent =
+        antCount;
+
+    alphaValue.textContent =
+        alpha.toFixed(1);
+
+    betaValue.textContent =
+        beta.toFixed(1);
+
+    evapValue.textContent =
+        evaporation.toFixed(2);
+}
+
+antSlider.addEventListener("input",updateSliders);
+alphaSlider.addEventListener("input",updateSliders);
+betaSlider.addEventListener("input",updateSliders);
+evapSlider.addEventListener("input",updateSliders);
+
+startBtn.addEventListener("click",startSimulation);
+
+stepBtn.addEventListener("click",() => {
+
+    if(running){
+        showToast("Pause the simulation before stepping manually.");
+        return;
+    }
+
+    runIteration();
+
+    setStatus("Iteration complete","done");
+});
+
+resetBtn.addEventListener("click",newProblem);
+
+clearBtn.addEventListener("click",resetTrails);
+
+heatmapBtn.addEventListener("click",() => {
+
+    renderHeatmap();
+
+    showToast("Pheromone map refreshed.");
+});
+
+window.addEventListener("resize",resizeCanvas);
+
+/*
+ * Lightweight animation loop for moving ant markers.
+ * The optimization itself is performed only when an
+ * iteration is executed.
+ */
+
+function animationLoop(){
+
+    if(lastAnts.length){
+        draw();
+    }
+
+    requestAnimationFrame(animationLoop);
+}
+
+updateSliders();
+
+requestAnimationFrame(() => {
+
+    randomCityLayout();
+    resizeCanvas();
+    animationLoop();
+
+});
+
+</script>
+
+</body>
+</html>

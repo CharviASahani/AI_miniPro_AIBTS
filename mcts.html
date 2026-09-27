@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI Behind The State - Interactive Monte Carlo Tree Search">
+    <title>MCTS — AI Behind The State</title>
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --cream: #fffaf2;
+        --pink: #ffdce8;
+        --pink-dark: #e989aa;
+        --lavender: #e9e1ff;
+        --purple: #8b72d8;
+        --purple-dark: #6855ad;
+        --blue: #dceeff;
+        --blue-dark: #6099d8;
+        --mint: #dff7eb;
+        --green: #58a67c;
+        --yellow: #fff0bf;
+        --yellow-dark: #d4a83e;
+        --peach: #ffe3cf;
+        --orange: #e99461;
+        --ink: #29263a;
+        --muted: #777386;
+        --white: #ffffff;
+        --border: rgba(55, 48, 80, 0.10);
+        --shadow: 0 18px 50px rgba(79, 66, 108, 0.10);
+        --shadow-heavy: 0 25px 70px rgba(79, 66, 108, 0.16);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(circle at 8% 4%, rgba(255,220,232,0.70), transparent 24%),
+            radial-gradient(circle at 92% 7%, rgba(220,238,255,0.75), transparent 27%),
+            radial-gradient(circle at 50% 95%, rgba(223,247,235,0.70), transparent 30%),
+            var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+    }
+
+    button {
+        font: inherit;
+    }
+
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 6%;
+        background: rgba(255,250,242,0.88);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.05rem;
+    }
+
+    .brand span {
+        color: var(--purple);
+    }
+
+    .back {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: 0.2s ease;
+    }
+
+    .back:hover {
+        color: var(--purple);
+        transform: translateX(-3px);
+    }
+
+    .hero {
+        width: min(1180px, 92%);
+        margin: 0 auto;
+        padding: 70px 0 45px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--lavender);
+        color: var(--purple-dark);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+    }
+
+    .eyebrow::before {
+        content: "✦";
+        color: var(--purple);
+    }
+
+    h1 {
+        font-size: clamp(3rem, 8vw, 6.5rem);
+        line-height: 0.92;
+        letter-spacing: -0.075em;
+        font-weight: 950;
+        margin-bottom: 22px;
+    }
+
+    h1 .gradient {
+        background: linear-gradient(
+            100deg,
+            #7964c5,
+            #d66d98,
+            #6099d8
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .hero p {
+        max-width: 720px;
+        margin: auto;
+        color: var(--muted);
+        line-height: 1.75;
+        font-size: 1.08rem;
+    }
+
+    .learning-path {
+        width: min(1000px, 92%);
+        margin: 0 auto 50px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .path-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.72);
+        box-shadow: 0 8px 30px rgba(70,60,100,0.05);
+    }
+
+    .path-card.active {
+        border-color: rgba(139,114,216,0.35);
+        background: linear-gradient(135deg, #f1edff, #ffffff);
+    }
+
+    .path-number {
+        display: inline-flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--lavender);
+        color: var(--purple);
+        font-weight: 900;
+        margin-bottom: 9px;
+    }
+
+    .path-card strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .path-card span:last-child {
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .workspace {
+        width: min(1180px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .workspace-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 24px;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid var(--border);
+        border-radius: 30px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+    }
+
+    .sim-panel {
+        background:
+            radial-gradient(
+                circle at 100% 0%,
+                rgba(220,238,255,0.72),
+                transparent 35%
+            ),
+            rgba(255,255,255,0.90);
+    }
+
+    .tree-panel {
+        background:
+            radial-gradient(
+                circle at 0% 100%,
+                rgba(255,220,232,0.60),
+                transparent 38%
+            ),
+            rgba(255,255,255,0.90);
+    }
+
+    .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .panel-title h2 {
+        font-size: 1.45rem;
+        letter-spacing: -0.04em;
+    }
+
+    .panel-title p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-top: 5px;
+        line-height: 1.5;
+    }
+
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: #39765a;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status.running {
+        background: var(--yellow);
+        color: #886c1f;
+    }
+
+    .status.done {
+        background: var(--lavender);
+        color: var(--purple-dark);
+    }
+
+    .board {
+        width: min(370px, 100%);
+        aspect-ratio: 1;
+        margin: 5px auto 22px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+    }
+
+    .cell {
+        border: 0;
+        border-radius: 20px;
+        background: #fffdf9;
+        box-shadow:
+            inset 0 0 0 1px var(--border),
+            0 5px 15px rgba(60,50,80,0.04);
+        color: var(--ink);
+        font-size: clamp(2.7rem, 8vw, 4.2rem);
+        font-weight: 950;
+        cursor: pointer;
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease,
+            background 0.18s ease;
+    }
+
+    .cell:hover:not(:disabled) {
+        transform: translateY(-3px) rotate(-1deg);
+        box-shadow: 0 10px 22px rgba(60,50,80,0.10);
+        background: #fff7fb;
+    }
+
+    .cell:disabled {
+        cursor: default;
+    }
+
+    .cell.x {
+        color: #d86f96;
+    }
+
+    .cell.o {
+        color: #6099d8;
+    }
+
+    .cell.win {
+        background: var(--mint);
+        box-shadow:
+            inset 0 0 0 2px rgba(88,166,124,0.35),
+            0 8px 20px rgba(88,166,124,0.10);
+    }
+
+    .game-message {
+        text-align: center;
+        min-height: 28px;
+        color: var(--muted);
+        font-weight: 750;
+        margin-bottom: 12px;
+    }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        justify-content: center;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 17px;
+        cursor: pointer;
+        font-weight: 850;
+        transition: 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--purple);
+        color: white;
+        box-shadow: 0 8px 20px rgba(139,114,216,0.25);
+    }
+
+    .btn-secondary {
+        background: var(--pink);
+        color: #8b4862;
+    }
+
+    .btn-blue {
+        background: var(--blue);
+        color: #4779ad;
+    }
+
+    .btn-green {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .stat {
+        padding: 12px;
+        text-align: center;
+        border-radius: 15px;
+        background: #faf8ff;
+    }
+
+    .stat small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+
+    .stat strong {
+        font-size: 1.2rem;
+    }
+
+    .metric-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 17px;
+    }
+
+    .metric {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid var(--border);
+    }
+
+    .metric span {
+        color: var(--muted);
+        font-size: 0.74rem;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .metric strong {
+        font-size: 1.3rem;
+    }
+
+    .algorithm-stage {
+        border-radius: 23px;
+        background: #fbfaff;
+        border: 1px solid var(--border);
+        padding: 18px;
+        min-height: 330px;
+        overflow: hidden;
+    }
+
+    .stage-empty {
+        min-height: 290px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 30px;
+    }
+
+    .stage-icon {
+        font-size: 2.8rem;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .stage-empty strong {
+        color: var(--ink);
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .phase-list {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 7px;
+        margin-bottom: 18px;
+    }
+
+    .phase {
+        padding: 10px 7px;
+        border-radius: 12px;
+        text-align: center;
+        background: white;
+        color: var(--muted);
+        font-size: 0.70rem;
+        font-weight: 850;
+        border: 1px solid var(--border);
+        transition: 0.2s ease;
+    }
+
+    .phase.active {
+        background: var(--lavender);
+        color: var(--purple-dark);
+        border-color: rgba(139,114,216,0.30);
+        transform: translateY(-2px);
+    }
+
+    .phase.complete {
+        background: var(--mint);
+        color: #39765a;
+    }
+
+    .tree-visual {
+        position: relative;
+        height: 220px;
+        overflow: hidden;
+        border-radius: 18px;
+        background:
+            radial-gradient(
+                circle at center,
+                rgba(233,225,255,0.55),
+                transparent 45%
+            ),
+            #ffffff;
+        border: 1px solid var(--border);
+    }
+
+    .tree-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .tree-lines line {
+        stroke: #cfc7e8;
+        stroke-width: 2;
+        opacity: 0.75;
+    }
+
+    .node {
+        position: absolute;
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        border: 2px solid #ded8f5;
+        box-shadow: 0 7px 17px rgba(80,70,110,0.09);
+        font-weight: 900;
+        font-size: 0.8rem;
+        transition: 0.35s ease;
+    }
+
+    .node small {
+        color: var(--muted);
+        font-size: 0.57rem;
+        margin-top: 2px;
+    }
+
+    .node.root {
+        left: calc(50% - 27px);
+        top: 15px;
+        background: var(--lavender);
+        border-color: #c9bbed;
+    }
+
+    .node.n1 {
+        left: 16%;
+        top: 92px;
+    }
+
+    .node.n2 {
+        left: calc(50% - 27px);
+        top: 92px;
+    }
+
+    .node.n3 {
+        right: 16%;
+        top: 92px;
+    }
+
+    .node.n4 {
+        left: 7%;
+        top: 162px;
+    }
+
+    .node.n5 {
+        left: 25%;
+        top: 162px;
+    }
+
+    .node.n6 {
+        left: calc(50% - 27px);
+        top: 162px;
+    }
+
+    .node.n7 {
+        right: 25%;
+        top: 162px;
+    }
+
+    .node.n8 {
+        right: 7%;
+        top: 162px;
+    }
+
+    .node.selected {
+        background: var(--mint);
+        border-color: #94ceb0;
+        box-shadow: 0 10px 25px rgba(88,166,124,0.20);
+        transform: scale(1.10);
+    }
+
+    .node.simulating {
+        background: var(--yellow);
+        border-color: #e5ca78;
+        animation: pulseNode 0.8s infinite alternate;
+    }
+
+    @keyframes pulseNode {
+        from {
+            transform: scale(0.96);
+        }
+        to {
+            transform: scale(1.08);
+        }
+    }
+
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .move-result {
+        padding: 14px;
+        border-radius: 18px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .move-result.best {
+        background: var(--mint);
+        border-color: rgba(88,166,124,0.35);
+    }
+
+    .move-result .move-label {
+        font-weight: 900;
+        margin-bottom: 7px;
+    }
+
+    .win-rate {
+        height: 8px;
+        border-radius: 99px;
+        background: #eeeaf7;
+        overflow: hidden;
+        margin: 8px 0;
+    }
+
+    .win-rate span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #8b72d8, #6099d8);
+    }
+
+    .move-result.best .win-rate span {
+        background: linear-gradient(90deg, #58a67c, #7dc99c);
+    }
+
+    .move-result small {
+        color: var(--muted);
+        font-size: 0.70rem;
+    }
+
+    .insight {
+        margin-top: 16px;
+        padding: 15px;
+        border-radius: 17px;
+        background: var(--blue);
+        color: #426e9e;
+        line-height: 1.55;
+        font-size: 0.86rem;
+    }
+
+    .insight strong {
+        color: #315d8e;
+    }
+
+    .how-section,
+    .code-section,
+    .complexity-section {
+        width: min(1000px, 92%);
+        margin: 0 auto 80px;
+    }
+
+    .section-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .section-heading .mini {
+        color: var(--purple);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: -0.06em;
+    }
+
+    .section-heading p {
+        max-width: 680px;
+        margin: 10px auto 0;
+        color: var(--muted);
+        line-height: 1.7;
+    }
+
+    .phase-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .phase-card {
+        padding: 23px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+    }
+
+    .phase-card:nth-child(1) {
+        background: #fff1f5;
+    }
+
+    .phase-card:nth-child(2) {
+        background: #eef7ff;
+    }
+
+    .phase-card:nth-child(3) {
+        background: #f2efff;
+    }
+
+    .phase-card:nth-child(4) {
+        background: #effaf4;
+    }
+
+    .phase-icon {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.82);
+        margin-bottom: 15px;
+        font-size: 1.25rem;
+    }
+
+    .phase-card h3 {
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .phase-card p {
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.88rem;
+    }
+
+    .code-card {
+        overflow: hidden;
+        border-radius: 27px;
+        background: #29263a;
+        box-shadow: 0 20px 50px rgba(41,38,58,0.18);
+    }
+
+    .code-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 19px;
+        background: #343047;
+        color: #d8d4e5;
+    }
+
+    .dots {
+        display: flex;
+        gap: 7px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .dot.red {
+        background: #ff9db6;
+    }
+
+    .dot.yellow {
+        background: #ffd98a;
+    }
+
+    .dot.green {
+        background: #9ee3bd;
+    }
+
+    .code-title {
+        font-size: 0.78rem;
+        opacity: 0.8;
+    }
+
+    pre {
+        overflow-x: auto;
+        padding: 25px;
+        color: #f1eef9;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas,
+            "Liberation Mono", monospace;
+        font-size: 0.83rem;
+    }
+
+    .kw {
+        color: #d6b9ff;
+    }
+
+    .fn {
+        color: #9fd8ff;
+    }
+
+    .num {
+        color: #ffd899;
+    }
+
+    .comment {
+        color: #9993ad;
+    }
+
+    .str {
+        color: #a9e6c5;
+    }
+
+    .complexity {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .complexity-card {
+        padding: 24px;
+        border-radius: 23px;
+        background: rgba(255,255,255,0.80);
+        border: 1px solid var(--border);
+    }
+
+    .complexity-card span {
+        color: var(--muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    .complexity-card strong {
+        font-size: 1.35rem;
+    }
+
+    footer {
+        padding: 35px 6%;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        background: rgba(255,255,255,0.55);
+    }
+
+    footer strong {
+        color: var(--ink);
+    }
+
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 25px;
+        transform: translate(-50%, 120px);
+        z-index: 200;
+        padding: 13px 19px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+        transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+        transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 950px) {
+        .workspace-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .phase-cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .learning-path {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .complexity {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .nav {
+            padding: 15px 5%;
+        }
+
+        .hero {
+            padding-top: 48px;
+        }
+
+        .learning-path,
+        .phase-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .panel-title {
+            flex-direction: column;
+        }
+
+        .board {
+            gap: 6px;
+        }
+
+        .cell {
+            border-radius: 14px;
+        }
+
+        .metric-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .tree-visual {
+            height: 205px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+<nav class="nav">
+    <a class="brand" href="../index.html">
+        AI <span>–</span> Behind The State
+    </a>
+
+
+<a class="back" href="../index.html">
+    ← Back to Explore
+</a>
+
+
+</nav>
+
+<header class="hero">
+    <div class="eyebrow">
+        Search · Games · Probabilistic Planning
+    </div>
+
+
+<h1>
+    Search smarter.<br>
+    <span class="gradient">Simulate the future.</span>
+</h1>
+
+<p>
+    Explore Monte Carlo Tree Search through an interactive
+    Tic-Tac-Toe environment. Watch the algorithm balance
+    exploration and exploitation through Selection, Expansion,
+    Simulation and Backpropagation.
+</p>
+
+
+</header>
+
+<section class="learning-path" aria-label="Learning path">
+
+
+<div class="path-card active">
+    <span class="path-number">01</span>
+    <strong>Select</strong>
+    <span>Choose a promising tree node.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">02</span>
+    <strong>Expand</strong>
+    <span>Add a new possible state.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">03</span>
+    <strong>Simulate</strong>
+    <span>Play a random rollout.</span>
+</div>
+
+<div class="path-card">
+    <span class="path-number">04</span>
+    <strong>Backpropagate</strong>
+    <span>Send the result upward.</span>
+</div>
+
+
+</section>
+
+<main>
+
+<section class="workspace">
+
+
+<div class="workspace-grid">
+
+    <!-- GAME -->
+    <div class="panel sim-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>🎮 MCTS Arena</h2>
+                <p>
+                    You are <strong>X</strong>. MCTS controls
+                    <strong>O</strong>.
+                </p>
+            </div>
+
+            <div id="statusBadge" class="status">
+                ● Ready
+            </div>
+        </div>
+
+        <div id="gameMessage" class="game-message">
+            Make a move and let MCTS search the tree.
+        </div>
+
+        <div id="board" class="board">
+            <button class="cell" data-index="0"
+                aria-label="Top left"></button>
+            <button class="cell" data-index="1"
+                aria-label="Top middle"></button>
+            <button class="cell" data-index="2"
+                aria-label="Top right"></button>
+
+            <button class="cell" data-index="3"
+                aria-label="Middle left"></button>
+            <button class="cell" data-index="4"
+                aria-label="Center"></button>
+            <button class="cell" data-index="5"
+                aria-label="Middle right"></button>
+
+            <button class="cell" data-index="6"
+                aria-label="Bottom left"></button>
+            <button class="cell" data-index="7"
+                aria-label="Bottom middle"></button>
+            <button class="cell" data-index="8"
+                aria-label="Bottom right"></button>
+        </div>
+
+        <div class="controls">
+            <button id="resetBtn" class="btn btn-secondary">
+                ↻ New Game
+            </button>
+
+            <button id="runBtn" class="btn btn-primary">
+                ✦ Run MCTS
+            </button>
+
+            <button id="stepBtn" class="btn btn-blue">
+                Step Search
+            </button>
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <small>Iterations</small>
+                <strong id="iterationCount">0</strong>
+            </div>
+
+            <div class="stat">
+                <small>Tree Nodes</small>
+                <strong id="nodeCount">1</strong>
+            </div>
+
+            <div class="stat">
+                <small>Best Move</small>
+                <strong id="bestMove">—</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ALGORITHM STATE -->
+    <div class="panel tree-panel">
+
+        <div class="panel-title">
+            <div>
+                <h2>✦ Behind The Search</h2>
+                <p>
+                    Watch the four MCTS phases operate on
+                    the current game state.
+                </p>
+            </div>
+        </div>
+
+        <div class="metric-row">
+
+            <div class="metric">
+                <span>Root Visits</span>
+                <strong id="rootVisits">0</strong>
+            </div>
+
+            <div class="metric">
+                <span>Root Win Rate</span>
+                <strong id="rootRate">0%</strong>
+            </div>
+
+        </div>
+
+        <div class="algorithm-stage">
+
+            <div class="phase-list">
+
+                <div id="phase-selection" class="phase">
+                    01 · Selection
+                </div>
+
+                <div id="phase-expansion" class="phase">
+                    02 · Expansion
+                </div>
+
+                <div id="phase-simulation" class="phase">
+                    03 · Simulation
+                </div>
+
+                <div id="phase-backprop" class="phase">
+                    04 · Backprop
+                </div>
+
+            </div>
+
+            <div id="treeVisual" class="tree-visual">
+
+                <svg
+                    class="tree-lines"
+                    viewBox="0 0 1000 220"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                >
+                    <line x1="500" y1="45"
+                          x2="180" y2="115"></line>
+
+                    <line x1="500" y1="45"
+                          x2="500" y2="115"></line>
+
+                    <line x1="500" y1="45"
+                          x2="820" y2="115"></line>
+
+                    <line x1="180" y1="140"
+                          x2="90" y2="190"></line>
+
+                    <line x1="180" y1="140"
+                          x2="270" y2="190"></line>
+
+                    <line x1="500" y1="140"
+                          x2="410" y2="190"></line>
+
+                    <line x1="500" y1="140"
+                          x2="590" y2="190"></line>
+
+                    <line x1="820" y1="140"
+                          x2="730" y2="190"></line>
+
+                    <line x1="820" y1="140"
+                          x2="910" y2="190"></line>
+                </svg>
+
+                <div class="node root" data-node="root">
+                    ROOT
+                    <small id="rootNodeVisits">0</small>
+                </div>
+
+                <div class="node n1" data-node="n1">
+                    A
+                    <small>0</small>
+                </div>
+
+                <div class="node n2" data-node="n2">
+                    B
+                    <small>0</small>
+                </div>
+
+                <div class="node n3" data-node="n3">
+                    C
+                    <small>0</small>
+                </div>
+
+                <div class="node n4" data-node="n4">
+                    A1
+                    <small>0</small>
+                </div>
+
+                <div class="node n5" data-node="n5">
+                    A2
+                    <small>0</small>
+                </div>
+
+                <div class="node n6" data-node="n6">
+                    B1
+                    <small>0</small>
+                </div>
+
+                <div class="node n7" data-node="n7">
+                    B2
+                    <small>0</small>
+                </div>
+
+                <div class="node n8" data-node="n8">
+                    C1
+                    <small>0</small>
+                </div>
+
+            </div>
+
+            <div id="searchResults">
+                <div class="stage-empty">
+                    <div>
+                        <span class="stage-icon">🌳</span>
+                        <strong>Search tree is waiting.</strong>
+                        <p>
+                            Run MCTS to populate the tree with
+                            actual visit counts and simulation results.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</section>
+
+<section class="how-section">
+
+
+<div class="section-heading">
+    <div class="mini">Understand the algorithm</div>
+
+    <h2>Four steps. One decision.</h2>
+
+    <p>
+        Unlike exhaustive search, MCTS spends computational effort
+        where simulations suggest it matters most.
+    </p>
+</div>
+
+<div class="phase-cards">
+
+    <article class="phase-card">
+        <div class="phase-icon">🔎</div>
+        <h3>Selection</h3>
+        <p>
+            Starting from the root, MCTS repeatedly chooses a child
+            using the UCT rule to balance exploitation and exploration.
+        </p>
+    </article>
+
+    <article class="phase-card">
+        <div class="phase-icon">🌱</div>
+        <h3>Expansion</h3>
+        <p>
+            When an expandable state is reached, one of its
+            unvisited actions becomes a new tree node.
+        </p>
+    </article>
+
+    <article class="phase-card">
+        <div class="phase-icon">🎲</div>
+        <h3>Simulation</h3>
+        <p>
+            The new state is played out using a rollout policy.
+            Here the simulation uses randomized legal moves.
+        </p>
+    </article>
+
+    <article class="phase-card">
+        <div class="phase-icon">↩</div>
+        <h3>Backpropagation</h3>
+        <p>
+            The simulation result travels back through the selected
+            path, updating visit counts and accumulated rewards.
+        </p>
+    </article>
+
+</div>
+
+
+</section>
+
+<section class="code-section">
+
+
+<div class="section-heading">
+    <div class="mini">Implementation</div>
+
+    <h2>The engine behind MCTS.</h2>
+
+    <p>
+        The implementation below uses the standard UCT selection
+        formula and performs genuine randomized rollouts.
+    </p>
+</div>
+
+<div class="code-card">
+
+    <div class="code-top">
+
+        <div class="dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+
+        <span class="code-title">mcts.js</span>
+
+        <span></span>
+
+    </div>
+
+    <pre><code><span class="kw">function</span> <span class="fn">uctValue</span>(node) {
+<span class="kw">if</span> (node.visits === <span class="num">0</span>) {
+    <span class="kw">return</span> Infinity;
+}
+
+<span class="kw">const</span> exploitation =
+    node.wins / node.visits;
+
+<span class="kw">const</span> exploration =
+    Math.sqrt(
+        <span class="num">2</span> *
+        Math.log(node.parent.visits) /
+        node.visits
+    );
+
+<span class="kw">return</span> exploitation + exploration;
+
+
+}
+
+<span class="kw">function</span> <span class="fn">select</span>(node) { <span class="kw">while</span> (
+node.children.length > <span class="num">0</span> &&
+node.untriedMoves.length === <span class="num">0</span>
+) {
+node = node.children
+.reduce((best, child) => <span class="fn">uctValue</span>(child) > <span class="fn">uctValue</span>(best)
+? child
+: best
+);
+}
+
+
+<span class="kw">return</span> node;
+
+
+}
+
+<span class="kw">function</span> <span class="fn">expand</span>(node) { <span class="kw">if</span> (node.untriedMoves.length === <span class="num">0</span>) { <span class="kw">return</span> node;
+}
+
+
+<span class="kw">const</span> move =
+    node.untriedMoves
+        .splice(
+            Math.floor(
+                Math.random() *
+                node.untriedMoves.length
+            ),
+            <span class="num">1</span>
+        )[<span class="num">0</span>];
+
+<span class="kw">return</span> node.addChild(move);
+
+
+}
+
+<span class="kw">function</span> <span class="fn">simulate</span>(state) { <span class="kw">while</span> (!<span class="fn">terminal</span>(state)) { <span class="fn">randomMove</span>(state);
+}
+
+
+<span class="kw">return</span> <span class="fn">result</span>(state);
+
+
+}
+
+<span class="kw">function</span> <span class="fn">backpropagate</span>(node, result) { <span class="kw">while</span> (node !== <span class="kw">null</span>) {
+node.visits++;
+node.wins += result;
+node = node.parent;
+result = -result;
+}
+}</code></pre>
+
+
+</div>
+
+
+</section>
+
+<section class="complexity-section">
+
+
+<div class="complexity">
+
+    <div class="complexity-card">
+        <span>Selection</span>
+        <strong>UCT-guided</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Simulation Policy</span>
+        <strong>Random Rollout</strong>
+    </div>
+
+    <div class="complexity-card">
+        <span>Search Budget</span>
+        <strong>Adaptive Iterations</strong>
+    </div>
+
+</div>
+
+
+</section>
+
+</main>
+
+<footer>
+    <strong>AI – Behind The State</strong>
+    <br>
+    <span>Where Algorithms Become Learning Experiences.</span>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+/*
+ * AI – Behind The State
+ * Monte Carlo Tree Search
+ *
+ * X = Human
+ * O = MCTS
+ *
+ * Implementation:
+ * 1. Selection using UCT
+ * 2. Expansion
+ * 3. Random Simulation
+ * 4. Backpropagation
+ *
+ * The algorithm searches the actual current Tic-Tac-Toe state.
+ */
+
+const cells = Array.from(
+    document.querySelectorAll(".cell")
+);
+
+const gameMessage =
+    document.getElementById("gameMessage");
+
+const statusBadge =
+    document.getElementById("statusBadge");
+
+const resetBtn =
+    document.getElementById("resetBtn");
+
+const runBtn =
+    document.getElementById("runBtn");
+
+const stepBtn =
+    document.getElementById("stepBtn");
+
+const iterationCount =
+    document.getElementById("iterationCount");
+
+const nodeCount =
+    document.getElementById("nodeCount");
+
+const bestMoveElement =
+    document.getElementById("bestMove");
+
+const rootVisitsElement =
+    document.getElementById("rootVisits");
+
+const rootRateElement =
+    document.getElementById("rootRate");
+
+const rootNodeVisits =
+    document.getElementById("rootNodeVisits");
+
+const searchResults =
+    document.getElementById("searchResults");
+
+const toast =
+    document.getElementById("toast");
+
+const WINNING_COMBINATIONS = [
+    [0,1,2],
+    [3,4,5],
+    [6,7,8],
+    [0,3,6],
+    [1,4,7],
+    [2,5,8],
+    [0,4,8],
+    [2,4,6]
+];
+
+let board = Array(9).fill("");
+
+let gameOver = false;
+let aiThinking = false;
+
+let root = null;
+
+let totalIterations = 0;
+
+const AI = "O";
+const HUMAN = "X";
+
+
+/* ---------------------------------------------------------
+   GAME LOGIC
+--------------------------------------------------------- */
+
+function getAvailableMoves(state) {
+
+    const moves = [];
+
+    for (let i = 0; i < state.length; i++) {
+
+        if (state[i] === "") {
+            moves.push(i);
+        }
+
+    }
+
+    return moves;
+}
+
+
+function checkWinner(state) {
+
+    for (const combo of WINNING_COMBINATIONS) {
+
+        const [a,b,c] = combo;
+
+        if (
+            state[a] !== "" &&
+            state[a] === state[b] &&
+            state[a] === state[c]
+        ) {
+
+            return {
+                winner: state[a],
+                combination: combo
+            };
+        }
+    }
+
+    if (state.every(cell => cell !== "")) {
+
+        return {
+            winner: "draw",
+            combination: []
+        };
+    }
+
+    return null;
+}
+
+
+function opponent(player) {
+    return player === AI ? HUMAN : AI;
+}
+
+
+function terminalUtility(state) {
+
+    const result = checkWinner(state);
+
+    if (!result) {
+        return null;
+    }
+
+    if (result.winner === AI) {
+        return 1;
+    }
+
+    if (result.winner === HUMAN) {
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/* ---------------------------------------------------------
+   MCTS NODE
+--------------------------------------------------------- */
+
+class MCTSNode {
+
+    constructor(
+        state,
+        playerToMove,
+        parent = null,
+        move = null
+    ) {
+
+        this.state = state.slice();
+
+        this.playerToMove = playerToMove;
+
+        this.parent = parent;
+
+        this.move = move;
+
+        this.children = [];
+
+        this.visits = 0;
+
+        this.wins = 0;
+
+        this.untriedMoves =
+            getAvailableMoves(this.state);
+    }
+
+    isTerminal() {
+        return checkWinner(this.state) !== null;
+    }
+
+    isFullyExpanded() {
+        return this.untriedMoves.length === 0;
+    }
+
+    addChild(move) {
+
+        const nextState =
+            this.state.slice();
+
+        nextState[move] =
+            this.playerToMove;
+
+        const child =
+            new MCTSNode(
+                nextState,
+                opponent(this.playerToMove),
+                this,
+                move
+            );
+
+        this.children.push(child);
+
+        return child;
+    }
+}
+
+
+/* ---------------------------------------------------------
+   UCT
+--------------------------------------------------------- */
+
+function uctValue(node) {
+
+    if (node.visits === 0) {
+        return Infinity;
+    }
+
+    if (!node.parent) {
+        return 0;
+    }
+
+    const exploitation =
+        node.wins / node.visits;
+
+    const exploration =
+        Math.sqrt(
+            2 *
+            Math.log(node.parent.visits) /
+            node.visits
+        );
+
+    return exploitation + exploration;
+}
+
+
+/* ---------------------------------------------------------
+   SELECTION
+--------------------------------------------------------- */
+
+function selectNode(node) {
+
+    while (
+        !node.isTerminal() &&
+        node.isFullyExpanded()
+    ) {
+
+        let bestChild = null;
+        let bestValue = -Infinity;
+
+        for (const child of node.children) {
+
+            const value =
+                uctValue(child);
+
+            if (value > bestValue) {
+
+                bestValue = value;
+                bestChild = child;
+            }
+        }
+
+        node = bestChild;
+    }
+
+    return node;
+}
+
+
+/* ---------------------------------------------------------
+   EXPANSION
+--------------------------------------------------------- */
+
+function expandNode(node) {
+
+    if (
+        node.isTerminal() ||
+        node.untriedMoves.length === 0
+    ) {
+        return node;
+    }
+
+    const randomIndex =
+        Math.floor(
+            Math.random() *
+            node.untriedMoves.length
+        );
+
+    const move =
+        node.untriedMoves.splice(
+            randomIndex,
+            1
+        )[0];
+
+    return node.addChild(move);
+}
+
+
+/* ---------------------------------------------------------
+   SIMULATION
+--------------------------------------------------------- */
+
+function simulate(state, playerToMove) {
+
+    const simulationState =
+        state.slice();
+
+    let player =
+        playerToMove;
+
+    while (true) {
+
+        const result =
+            checkWinner(simulationState);
+
+        if (result) {
+
+            if (result.winner === AI) {
+                return 1;
+            }
+
+            if (result.winner === HUMAN) {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        const moves =
+            getAvailableMoves(simulationState);
+
+        if (moves.length === 0) {
+            return 0;
+        }
+
+        /*
+         * Random rollout.
+         *
+         * This deliberately does not use
+         * Minimax or heuristic evaluation.
+         */
+        const move =
+            moves[
+                Math.floor(
+                    Math.random() *
+                    moves.length
+                )
+            ];
+
+        simulationState[move] =
+            player;
+
+        player =
+            opponent(player);
+    }
+}
+
+
+/* ---------------------------------------------------------
+   BACKPROPAGATION
+--------------------------------------------------------- */
+
+function backpropagate(node, result) {
+
+    while (node !== null) {
+
+        node.visits++;
+
+        /*
+         * Store reward from the AI perspective.
+         *
+         * This keeps the statistics directly
+         * interpretable as AI success.
+         */
+        node.wins += result;
+
+        node = node.parent;
+    }
+}
+
+
+/* ---------------------------------------------------------
+   SINGLE MCTS ITERATION
+--------------------------------------------------------- */
+
+function runIteration() {
+
+    let selected =
+        selectNode(root);
+
+    let expanded =
+        expandNode(selected);
+
+    const result =
+        simulate(
+            expanded.state,
+            expanded.playerToMove
+        );
+
+    backpropagate(
+        expanded,
+        result
+    );
+
+    totalIterations++;
+
+    return expanded;
+}
+
+
+/* ---------------------------------------------------------
+   BEST MOVE
+--------------------------------------------------------- */
+
+function getBestChild() {
+
+    if (!root || root.children.length === 0) {
+        return null;
+    }
+
+    let best = root.children[0];
+
+    for (const child of root.children) {
+
+        if (child.visits > best.visits) {
+            best = child;
+        }
+    }
+
+    return best;
+}
+
+
+/* ---------------------------------------------------------
+   TREE SIZE
+--------------------------------------------------------- */
+
+function countNodes(node) {
+
+    let count = 1;
+
+    for (const child of node.children) {
+        count += countNodes(child);
+    }
+
+    return count;
+}
+
+
+/* ---------------------------------------------------------
+   DISPLAY
+--------------------------------------------------------- */
+
+function cellName(index) {
+
+    const row =
+        Math.floor(index / 3) + 1;
+
+    const column =
+        (index % 3) + 1;
+
+    return `R${row} · C${column}`;
+}
+
+
+function formatPercent(value) {
+
+    return Math.round(value * 100) + "%";
+}
+
+
+function setStatus(text, type = "") {
+
+    statusBadge.textContent =
+        "● " + text;
+
+    statusBadge.className = "status";
+
+    if (type) {
+        statusBadge.classList.add(type);
+    }
+}
+
+
+function showToast(message) {
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer =
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2200);
+}
+
+
+function renderBoard() {
+
+    cells.forEach((cell, index) => {
+
+        const value =
+            board[index];
+
+        cell.textContent =
+            value;
+
+        cell.classList.remove(
+            "x",
+            "o",
+            "win"
+        );
+
+        if (value === HUMAN) {
+            cell.classList.add("x");
+        }
+
+        if (value === AI) {
+            cell.classList.add("o");
+        }
+
+        cell.disabled =
+            gameOver ||
+            aiThinking ||
+            value !== "";
+    });
+}
+
+
+function highlightWinner(result) {
+
+    if (!result || !result.combination) {
+        return;
+    }
+
+    result.combination.forEach(index => {
+
+        cells[index]
+            .classList.add("win");
+
+    });
+}
+
+
+/* ---------------------------------------------------------
+   TREE VISUAL
+--------------------------------------------------------- */
+
+function updateTreeVisual(activeNode = null) {
+
+    const nodeElements =
+        document.querySelectorAll(".node");
+
+    nodeElements.forEach(node => {
+
+        node.classList.remove(
+            "selected",
+            "simulating"
+        );
+    });
+
+    if (activeNode) {
+
+        const rootNode =
+            document.querySelector(
+                '[data-node="root"]'
+            );
+
+        if (rootNode) {
+            rootNode.classList.add("selected");
+        }
+    }
+
+    const rootElement =
+        document.querySelector(
+            '[data-node="root"]'
+        );
+
+    if (rootElement) {
+
+        rootElement
+            .querySelector("small")
+            .textContent =
+            root ? root.visits : 0;
+    }
+
+    if (!root) {
+        return;
+    }
+
+    const children =
+        root.children
+            .slice()
+            .sort(
+                (a,b) =>
+                    b.visits - a.visits
+            );
+
+    const visualNodes =
+        [
+            "n1",
+            "n2",
+            "n3"
+        ];
+
+    children
+        .slice(0,3)
+        .forEach((child, index) => {
+
+            const element =
+                document.querySelector(
+                    `[data-node="${visualNodes[index]}"]`
+                );
+
+            if (!element) {
+                return;
+            }
+
+            element
+                .querySelector("small")
+                .textContent =
+                child.visits;
+
+            if (
+                activeNode &&
+                child === activeNode
+            ) {
+                element.classList.add(
+                    "simulating"
+                );
+            }
+        });
+}
+
+
+/* ---------------------------------------------------------
+   SEARCH RESULTS
+--------------------------------------------------------- */
+
+function renderSearchResults() {
+
+    if (!root) {
+
+        searchResults.innerHTML = `
+            <div class="stage-empty">
+                <div>
+                    <span class="stage-icon">🌳</span>
+                    <strong>Search tree is waiting.</strong>
+                    <p>
+                        Run MCTS to populate the tree
+                        with actual statistics.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+    const children =
+        root.children
+            .slice()
+            .sort(
+                (a,b) =>
+                    b.visits - a.visits
+            );
+
+    if (children.length === 0) {
+
+        searchResults.innerHTML = `
+            <div class="stage-empty">
+                <div>
+                    <span class="stage-icon">🔍</span>
+                    <strong>More simulations required.</strong>
+                    <p>
+                        Continue running MCTS so
+                        candidate moves can be compared.
+                    </p>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+    const cards =
+        children.map((child, index) => {
+
+            const rate =
+                child.visits === 0
+                    ? 0
+                    : Math.max(
+                        0,
+                        Math.min(
+                            1,
+                            child.wins /
+                            child.visits
+                        )
+                    );
+
+            const best =
+                child === getBestChild();
+
+            return `
+                <div class="move-result ${best ? "best" : ""}">
+
+                    <div class="move-label">
+                        ${best ? "⭐ " : ""}
+                        ${cellName(child.move)}
+                    </div>
+
+                    <strong>
+                        ${child.visits}
+                    </strong>
+                    visits
+
+                    <div class="win-rate">
+                        <span style="width:${rate * 100}%"></span>
+                    </div>
+
+                    <small>
+                        AI reward:
+                        ${child.wins.toFixed(1)}
+                    </small>
+
+                </div>
+            `;
+        }).join("");
+
+    const bestChild =
+        getBestChild();
+
+    searchResults.innerHTML = `
+        <div class="result-grid">
+            ${cards}
+        </div>
+
+        <div class="insight">
+            <strong>Why this move?</strong><br>
+            After
+            <strong>${totalIterations}</strong>
+            simulations, MCTS recommends
+            <strong>${cellName(bestChild.move)}</strong>
+            because it accumulated the highest
+            visit count among the explored root actions.
+            MCTS does not need to exhaustively evaluate
+            every possible future state.
+        </div>
+    `;
+}
+
+
+/* ---------------------------------------------------------
+   METRICS
+--------------------------------------------------------- */
+
+function updateMetrics() {
+
+    if (!root) {
+
+        iterationCount.textContent =
+            totalIterations;
+
+        nodeCount.textContent = "1";
+
+        bestMoveElement.textContent =
+            "—";
+
+        rootVisitsElement.textContent =
+            "0";
+
+        rootRateElement.textContent =
+            "0%";
+
+        rootNodeVisits.textContent =
+            "0";
+
+        return;
+    }
+
+    const best =
+        getBestChild();
+
+    iterationCount.textContent =
+        totalIterations;
+
+    nodeCount.textContent =
+        countNodes(root);
+
+    bestMoveElement.textContent =
+        best
+            ? cellName(best.move)
+            : "—";
+
+    rootVisitsElement.textContent =
+        root.visits;
+
+    const rootRate =
+        root.visits === 0
+            ? 0
+            : root.wins /
+              root.visits;
+
+    rootRateElement.textContent =
+        formatPercent(
+            Math.max(
+                0,
+                Math.min(1, rootRate)
+            )
+        );
+
+    rootNodeVisits.textContent =
+        root.visits;
+}
+
+
+/* ---------------------------------------------------------
+   PHASE ANIMATION
+--------------------------------------------------------- */
+
+function clearPhases() {
+
+    document
+        .querySelectorAll(".phase")
+        .forEach(phase => {
+
+            phase.classList.remove(
+                "active",
+                "complete"
+            );
+        });
+}
+
+
+function setPhase(name) {
+
+    clearPhases();
+
+    const phases = [
+        "selection",
+        "expansion",
+        "simulation",
+        "backprop"
+    ];
+
+    const currentIndex =
+        phases.indexOf(name);
+
+    phases.forEach((phase, index) => {
+
+        const element =
+            document.getElementById(
+                "phase-" + phase
+            );
+
+        if (!element) {
+            return;
+        }
+
+        if (index < currentIndex) {
+            element.classList.add(
+                "complete"
+            );
+        }
+
+        if (index === currentIndex) {
+            element.classList.add(
+                "active"
+            );
+        }
+    });
+}
+
+
+/* ---------------------------------------------------------
+   MCTS SEARCH
+--------------------------------------------------------- */
+
+function createRoot() {
+
+    root =
+        new MCTSNode(
+            board,
+            AI,
+            null,
+            null
+        );
+
+    totalIterations = 0;
+
+    updateMetrics();
+    updateTreeVisual();
+    renderSearchResults();
+}
+
+
+async function runSearch(iterations = 700) {
+
+    if (gameOver) {
+
+        showToast(
+            "Start a new game before searching."
+        );
+
+        return;
+    }
+
+    if (aiThinking) {
+        return;
+    }
+
+    aiThinking = true;
+
+    setStatus(
+        "Searching...",
+        "running"
+    );
+
+    gameMessage.textContent =
+        "MCTS is exploring possible futures...";
+
+    renderBoard();
+
+    createRoot();
+
+    /*
+     * Chunking the search keeps the browser responsive.
+     * The algorithm itself is still genuine MCTS.
+     */
+    const chunkSize = 35;
+
+    for (
+        let completed = 0;
+        completed < iterations;
+        completed += chunkSize
+    ) {
+
+        const end =
+            Math.min(
+                completed + chunkSize,
+                iterations
+            );
+
+        for (
+            let i = completed;
+            i < end;
+            i++
+        ) {
+
+            const selected =
+                runIteration();
+
+            if (i % 7 === 0) {
+                updateTreeVisual(
+                    selected
+                );
+            }
+        }
+
+        updateMetrics();
+        renderSearchResults();
+
+        await new Promise(
+            resolve =>
+                requestAnimationFrame(resolve)
+        );
+    }
+
+    updateTreeVisual();
+    renderSearchResults();
+
+    aiThinking = false;
+
+    const best =
+        getBestChild();
+
+    if (best) {
+
+        board =
+            best.state.slice();
+
+        gameMessage.textContent =
+            `MCTS selected ${cellName(best.move)} after ${totalIterations} simulations.`;
+    }
+
+    renderBoard();
+
+    const result =
+        checkWinner(board);
+
+    if (result) {
+
+        finishGame(result);
+
+    } else {
+
+        setStatus(
+            "Your turn"
+        );
+    }
+}
+
+
+/* ---------------------------------------------------------
+   STEP MODE
+--------------------------------------------------------- */
+
+async function stepSearch() {
+
+    if (gameOver || aiThinking) {
+        return;
+    }
+
+    if (!root) {
+        createRoot();
+    }
+
+    aiThinking = true;
+
+    setStatus(
+        "Stepping...",
+        "running"
+    );
+
+    renderBoard();
+
+    const phases = [
+        "selection",
+        "expansion",
+        "simulation",
+        "backprop"
+    ];
+
+    for (const phase of phases) {
+
+        setPhase(phase);
+
+        await new Promise(
+            resolve =>
+                setTimeout(resolve, 260)
+        );
+    }
+
+    const expanded =
+        runIteration();
+
+    updateTreeVisual(expanded);
+    updateMetrics();
+    renderSearchResults();
+
+    aiThinking = false;
+
+    setStatus(
+        "Search ready",
+        "done"
+    );
+
+    gameMessage.textContent =
+        `Iteration ${totalIterations} complete: Selection → Expansion → Simulation → Backpropagation.`;
+
+    showToast(
+        "One complete MCTS iteration finished."
+    );
+}
+
+
+/* ---------------------------------------------------------
+   HUMAN TURN
+--------------------------------------------------------- */
+
+function humanMove(index) {
+
+    if (
+        gameOver ||
+        aiThinking ||
+        board[index] !== ""
+    ) {
+        return;
+    }
+
+    board[index] =
+        HUMAN;
+
+    renderBoard();
+
+    const result =
+        checkWinner(board);
+
+    if (result) {
+
+        finishGame(result);
+        return;
+    }
+
+    /*
+     * Rebuild the MCTS root for the
+     * new current game state.
+     */
+    root = null;
+    totalIterations = 0;
+
+    runSearch(700);
+}
+
+
+/* ---------------------------------------------------------
+   FINISH GAME
+--------------------------------------------------------- */
+
+function finishGame(result) {
+
+    gameOver = true;
+    aiThinking = false;
+
+    highlightWinner(result);
+
+    if (result.winner === HUMAN) {
+
+        gameMessage.textContent =
+            "You found a winning path.";
+
+        setStatus(
+            "You won",
+            "done"
+        );
+
+        showToast(
+            "The game ended before MCTS could respond."
+        );
+
+    } else if (result.winner === AI) {
+
+        gameMessage.textContent =
+            "MCTS found a winning path.";
+
+        setStatus(
+            "MCTS wins",
+            "done"
+        );
+
+        showToast(
+            "MCTS discovered a winning rollout."
+        );
+
+    } else {
+
+        gameMessage.textContent =
+            "Draw — the board is completely filled.";
+
+        setStatus(
+            "Draw",
+            "done"
+        );
+
+        showToast(
+            "No winning state was reached."
+        );
+    }
+
+    renderBoard();
+}
+
+
+/* ---------------------------------------------------------
+   RESET
+--------------------------------------------------------- */
+
+function resetGame() {
+
+    board =
+        Array(9).fill("");
+
+    gameOver = false;
+    aiThinking = false;
+
+    root = null;
+
+    totalIterations = 0;
+
+    clearPhases();
+
+    setStatus("Ready");
+
+    gameMessage.textContent =
+        "Make a move and let MCTS search the tree.";
+
+    renderBoard();
+
+    updateMetrics();
+
+    updateTreeVisual();
+
+    renderSearchResults();
+}
+
+
+/* ---------------------------------------------------------
+   EVENTS
+--------------------------------------------------------- */
+
+cells.forEach(cell => {
+
+    cell.addEventListener(
+        "click",
+        () => {
+
+            humanMove(
+                Number(
+                    cell.dataset.index
+                )
+            );
+        }
+    );
+});
+
+
+resetBtn.addEventListener(
+    "click",
+    resetGame
+);
+
+
+runBtn.addEventListener(
+    "click",
+    () => runSearch(700)
+);
+
+
+stepBtn.addEventListener(
+    "click",
+    stepSearch
+);
+
+
+/* ---------------------------------------------------------
+   INITIALIZE
+--------------------------------------------------------- */
+
+renderBoard();
+updateMetrics();
+renderSearchResults();
+
+</script>
+
+</body>
+</html>
